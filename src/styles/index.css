@@ -1,6 +1,306 @@
-@import './base.css';
-@import './menu.css';
-@import './gallery.css';
-@import './transitions.css';
-@import './residences.css';
-@import './unit-finder.css';
+@import "tailwindcss";
+@import "./brand-fonts.css";
+
+/* ---------- Breakpoints & variants ----------
+   Tailwind's defaults stop at 2xl (1536px). Large displays get their own
+   steps: 3xl = 1920 (1080p), 4xl = 2560 (1440p / ultrawide), 5xl = 3840 (4K). */
+@custom-variant short (@media (max-height: 34rem));
+@custom-variant compact-h (@media (max-height: 44rem));
+/* Two-column pages on laptops and also on short landscape phones; stacked
+   pages on portrait phones and tablets. */
+@custom-variant split {
+  @media (min-width: 64rem), (max-height: 34rem) { @slot; }
+}
+@custom-variant stack (@media (max-width: 63.999rem) and (min-height: 34.001rem));
+@custom-variant fold-h (@media (horizontal-viewport-segments: 2));
+@custom-variant fold-v (@media (vertical-viewport-segments: 2));
+@custom-variant tone-light (&:where([data-tone="light"], [data-tone="light"] *));
+
+@theme {
+  --breakpoint-3xl: 120rem;
+  --breakpoint-4xl: 160rem;
+  --breakpoint-5xl: 240rem;
+
+  /* Brochure typefaces first (see brand-fonts.css), then the closest free faces. */
+  --font-display: "Billie Eilish", "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif;
+  --font-serif: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Gotham", "Montserrat", "Helvetica Neue", Arial, sans-serif;
+  --font-logo: "Avenir LT Std", "Avenir", "Avenir Next", "Montserrat", Arial, sans-serif;
+
+  /* Palette sampled from the brochure spreads. */
+  --color-ink: #120b0d;
+  --color-espresso: #1b1113;   /* cover */
+  --color-plum-950: #21161a;
+  --color-plum-900: #2d1e22;
+  --color-plum-800: #3d2a2f;
+  --color-plum-700: #4e373c;   /* secondary: page 3 ground, page 5 panel */
+  --color-plum-600: #634a50;
+  --color-plum-500: #7c6168;
+  --color-gold-100: #f6e7cc;
+  --color-gold-200: #ecd3a8;   /* accent: champagne glow */
+  --color-gold-300: #dfbc8a;
+  --color-gold-400: #cea572;   /* page 2 ground */
+  --color-gold-500: #c49a6c;   /* primary: headline gold */
+  --color-gold-600: #a67c50;
+  --color-gold-700: #7f5b37;
+  --color-gold-800: #5a3f26;
+  --color-cream-50: #fbf8ec;
+  --color-cream-100: #f4edcc;  /* map and floor plan ground */
+  --color-cream-200: #e8dcb2;
+  --color-ivory: #f6efe4;
+
+  --ease-silk: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-curtain: cubic-bezier(0.76, 0, 0.24, 1);
+  --tracking-luxe: 0.42em;
+  --tracking-plus: 0.24em;
+}
+
+/* Tone-aware colours: a page sets data-tone="light" on cream grounds and
+   every fg / muted / line / accent utility follows. */
+@theme inline {
+  --color-fg: var(--tone-fg);
+  --color-muted: var(--tone-muted);
+  --color-line: var(--tone-line);
+  --color-accent: var(--tone-accent);
+  --color-panel: var(--tone-panel);
+}
+
+:root {
+  --tone-fg: var(--color-ivory);
+  --tone-muted: color-mix(in oklab, var(--color-gold-200) 72%, transparent);
+  --tone-line: color-mix(in oklab, var(--color-gold-500) 34%, transparent);
+  --tone-accent: var(--color-gold-500);
+  --tone-panel: color-mix(in oklab, var(--color-plum-950) 62%, transparent);
+  --header-h: clamp(4rem, 9vh, 6.25rem);
+  --gutter: clamp(1rem, 4.2vw, 4.5rem);
+}
+[data-tone="dark"] {
+  --tone-fg: var(--color-ivory);
+  --tone-muted: color-mix(in oklab, var(--color-gold-200) 72%, transparent);
+  --tone-line: color-mix(in oklab, var(--color-gold-500) 34%, transparent);
+  --tone-accent: var(--color-gold-500);
+  --tone-panel: color-mix(in oklab, var(--color-plum-950) 62%, transparent);
+}
+[data-tone="light"] {
+  --tone-fg: var(--color-plum-800);
+  --tone-muted: color-mix(in oklab, var(--color-plum-700) 78%, transparent);
+  --tone-line: color-mix(in oklab, var(--color-plum-700) 24%, transparent);
+  --tone-accent: var(--color-gold-700);
+  --tone-panel: color-mix(in oklab, var(--color-cream-50) 70%, transparent);
+}
+
+/* Proportional growth on large displays. Percentages keep the visitor's own
+   browser font-size preference in the calculation. */
+html { font-size: 100%; }
+@media (min-width: 120rem) { html { font-size: 112.5%; } }
+@media (min-width: 160rem) { html { font-size: 137.5%; } }
+@media (min-width: 240rem) { html { font-size: 200%; } }
+
+@layer base {
+  html, body, #root { height: 100%; }
+  /* A single fixed presentation surface. Pages fit the viewport; where a very
+     short window or 200% zoom cannot fit them, .page-scroll regions scroll. */
+  body {
+    margin: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    background: var(--color-espresso);
+    color: var(--color-ivory);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+  button, [role="button"] { cursor: pointer; }
+  button:disabled { cursor: default; }
+  :focus-visible { outline: 1.5px solid var(--color-gold-200); outline-offset: 4px; }
+  [data-tone="light"] :focus-visible { outline-color: var(--color-plum-700); }
+  ::selection { background: color-mix(in oklab, var(--color-gold-500) 45%, transparent); color: inherit; }
+  img { user-select: none; -webkit-user-drag: none; }
+}
+
+@layer components {
+  /* Every page sizes from its usable panel, including one foldable segment. */
+  .page-frame {
+    position: absolute;
+    inset: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    container-type: size;
+    container-name: frame;
+    isolation: isolate;
+    overflow: hidden;
+  }
+  @media (horizontal-viewport-segments: 2) {
+    .page-frame { left: env(viewport-segment-left 0 0, 0px); width: env(viewport-segment-width 0 0, 50%); right: auto; }
+  }
+  @media (vertical-viewport-segments: 2) {
+    .page-frame { top: env(viewport-segment-top 0 0, 0px); height: env(viewport-segment-height 0 0, 50svh); bottom: auto; }
+  }
+
+  .page {
+    position: absolute; inset: 0;
+    padding: calc(var(--header-h) + 0.5rem) var(--gutter) clamp(1rem, 4vh, 3rem);
+    color: var(--tone-fg);
+  }
+  .page-scroll {
+    overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
+    scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--color-gold-500) 50%, transparent) transparent;
+  }
+
+  .eyebrow {
+    font-family: var(--font-sans); font-weight: 500; text-transform: uppercase;
+    font-size: clamp(0.6rem, 0.55rem + 0.18vw, 0.72rem); letter-spacing: var(--tracking-luxe);
+    color: var(--tone-accent);
+  }
+  .display {
+    font-family: var(--font-display); font-weight: 400; line-height: 0.95;
+    letter-spacing: 0.01em; text-transform: uppercase;
+  }
+  /* Upright, lining, even-width figures for every number: areas, levels,
+     distances and counters. */
+  .num {
+    font-family: var(--font-sans); font-weight: 300; font-style: normal;
+    font-variant-numeric: lining-nums tabular-nums; letter-spacing: 0.02em;
+  }
+  .body-copy {
+    font-size: clamp(0.8rem, 0.74rem + 0.22vw, 0.98rem); line-height: 1.85;
+    color: var(--tone-muted); font-weight: 400;
+  }
+
+  /* Satin gold lettering with a slow travelling sheen. */
+  .gold-text {
+    background: linear-gradient(100deg, #9c7447 0%, #d9b584 22%, #f6e2bd 34%, #c49a6c 48%, #8f6a40 62%, #e6c898 80%, #b38657 100%);
+    background-size: 260% 100%;
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    animation: sheen 9s var(--ease-silk) infinite;
+  }
+  [data-tone="light"] .gold-text {
+    background-image: linear-gradient(100deg, #6b4a2c 0%, #a67c50 25%, #c79b62 36%, #7f5b37 52%, #5a3f26 66%, #a67c50 84%, #6b4a2c 100%);
+  }
+  @keyframes sheen { 0% { background-position: 100% 0; } 55%, 100% { background-position: 0% 0; } }
+
+  .hairline { height: 1px; background: linear-gradient(90deg, transparent, var(--tone-line) 18%, var(--tone-line) 82%, transparent); }
+  .hairline-v { width: 1px; background: linear-gradient(180deg, transparent, var(--tone-line) 20%, var(--tone-line) 80%, transparent); }
+
+  /* Pill button: gold hairline, a satin sweep fills it on hover or focus. */
+  .btn-lux {
+    position: relative; isolation: isolate; overflow: hidden;
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.9rem;
+    min-height: 2.9rem; min-width: 2.75rem; padding: 0 1.6rem;
+    border: 1px solid color-mix(in oklab, var(--tone-accent) 75%, transparent); border-radius: 999px;
+    font-size: 0.68rem; font-weight: 500; letter-spacing: var(--tracking-plus); text-transform: uppercase;
+    color: var(--tone-fg); background: color-mix(in oklab, var(--color-plum-950) 18%, transparent);
+    transition: color .5s var(--ease-silk), border-color .5s var(--ease-silk), transform .3s var(--ease-silk);
+  }
+  .btn-lux::before {
+    content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+    background: linear-gradient(110deg, #a67c50, #e8cc9d 45%, #c49a6c);
+    transform: translateX(-102%); transition: transform .65s var(--ease-silk);
+  }
+  .btn-lux:where(:hover, :focus-visible, [aria-pressed="true"]) { color: var(--color-espresso); border-color: transparent; }
+  .btn-lux:where(:hover, :focus-visible, [aria-pressed="true"])::before { transform: translateX(0); }
+  .btn-lux:active { transform: scale(0.97); }
+  .btn-lux svg { width: 1.6rem; height: 0.6rem; stroke: currentColor; stroke-width: 1.1; fill: none; transition: transform .5s var(--ease-silk); }
+  .btn-lux:where(:hover, :focus-visible) svg { transform: translateX(4px); }
+  .btn-lux:disabled { opacity: .35; pointer-events: none; }
+
+  .btn-icon {
+    display: inline-grid; place-items: center; width: 2.9rem; height: 2.9rem; flex: none;
+    border: 1px solid color-mix(in oklab, var(--tone-accent) 60%, transparent); border-radius: 999px; color: var(--tone-fg);
+    background: color-mix(in oklab, var(--color-plum-950) 25%, transparent);
+    backdrop-filter: blur(6px);
+    transition: background .4s var(--ease-silk), color .4s var(--ease-silk), transform .3s var(--ease-silk), border-color .4s;
+  }
+  .btn-icon:where(:hover, :focus-visible) { background: var(--color-gold-500); color: var(--color-espresso); border-color: var(--color-gold-500); }
+  .btn-icon:active { transform: scale(.94); }
+  .btn-icon:disabled { opacity: .3; pointer-events: none; }
+  .btn-icon svg { width: 40%; height: 40%; stroke: currentColor; stroke-width: 1.3; fill: none; }
+
+  /* Selectable chip used for filters and tabs. */
+  .chip {
+    min-height: 2.75rem; padding: 0 1.1rem; border-radius: 999px;
+    border: 1px solid var(--tone-line); color: var(--tone-muted);
+    font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500;
+    transition: color .4s, border-color .4s, background .4s;
+  }
+  .chip:where(:hover, :focus-visible) { color: var(--tone-fg); border-color: var(--tone-accent); }
+  @media (max-width: 40rem) { .chip { padding: 0 0.85rem; letter-spacing: 0.14em; } }
+  .chip[aria-pressed="true"], .chip[aria-selected="true"] { color: var(--color-espresso); background: var(--color-gold-500); border-color: var(--color-gold-500); }
+
+  /* Frosted plum panel, after the NEU GEN box on page 4. */
+  .glass-panel {
+    background: linear-gradient(160deg, color-mix(in oklab, var(--color-plum-900) 78%, transparent), color-mix(in oklab, var(--color-espresso) 70%, transparent));
+    border: 1px solid color-mix(in oklab, var(--color-gold-500) 22%, transparent);
+    backdrop-filter: blur(14px) saturate(1.1);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  }
+  [data-tone="light"] .glass-panel {
+    background: linear-gradient(160deg, color-mix(in oklab, var(--color-cream-50) 82%, transparent), color-mix(in oklab, var(--color-cream-100) 70%, transparent));
+    border-color: color-mix(in oklab, var(--color-plum-700) 16%, transparent);
+  }
+
+  /* Styled range input (floor, elevation). 44px hit area, slim gold track. */
+  .range-lux { appearance: none; -webkit-appearance: none; background: transparent; height: 2.75rem; cursor: pointer; touch-action: none; }
+  .range-lux::-webkit-slider-runnable-track { height: 1px; background: linear-gradient(90deg, var(--color-gold-500) var(--fill, 50%), var(--tone-line) var(--fill, 50%)); }
+  .range-lux::-moz-range-track { height: 1px; background: var(--tone-line); }
+  .range-lux::-moz-range-progress { height: 1px; background: var(--color-gold-500); }
+  .range-lux::-webkit-slider-thumb { -webkit-appearance: none; width: 1.15rem; height: 1.15rem; margin-top: -0.55rem; border-radius: 50%; background: var(--color-gold-200); border: 4px solid var(--color-espresso); box-shadow: 0 0 0 1px var(--color-gold-500), 0 0 18px color-mix(in oklab, var(--color-gold-300) 55%, transparent); }
+  .range-lux::-moz-range-thumb { width: 0.8rem; height: 0.8rem; border-radius: 50%; background: var(--color-gold-200); border: 4px solid var(--color-espresso); box-shadow: 0 0 0 1px var(--color-gold-500); }
+
+  /* Home Enter: a capsule whose gold hairline carries a travelling light;
+     a satin fill rises on hover or focus. */
+  .enter-lux {
+    position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; gap: 1.2rem;
+    min-height: 3.75rem; padding: 0 2.6rem 0 2.9rem; border-radius: 999px; overflow: hidden;
+    font-size: 0.72rem; font-weight: 500; letter-spacing: 0.46em; text-transform: uppercase; color: var(--color-ivory);
+    background: radial-gradient(120% 160% at 50% 0%, rgba(98, 70, 72, .55), rgba(27, 17, 19, .6));
+    box-shadow: 0 0 0 1px rgba(196, 154, 108, .18), 0 20px 60px -20px rgba(0, 0, 0, .7), 0 0 60px -10px rgba(236, 211, 168, .18);
+    transition: color .6s var(--ease-silk), scale .3s var(--ease-silk);
+  }
+  .enter-lux::before {
+    content: ''; position: absolute; inset: 0; z-index: 1; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: conic-gradient(from var(--enter-spin), rgba(196,154,108,.2), rgba(250,236,210,1) 7%, rgba(196,154,108,.2) 16%, rgba(196,154,108,.2) 50%, rgba(250,236,210,1) 57%, rgba(196,154,108,.2) 66%);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    animation: enter-spin 7s linear infinite;
+  }
+  .enter-lux::after {
+    content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
+    background: linear-gradient(110deg, #a67c50, #f1d9ae 45%, #c49a6c);
+    transform: scaleX(0); transform-origin: 50% 50%; transition: transform .8s var(--ease-silk);
+  }
+  .enter-lux:where(:hover, :focus-visible) { color: var(--color-espresso); }
+  .enter-lux:where(:hover, :focus-visible)::after { transform: scaleX(1); }
+  .enter-lux:active { scale: .97; }
+  @keyframes enter-spin { to { --enter-spin: 360deg; } }
+
+  .menu-caption { animation: caption-in 1s var(--ease-silk) both; }
+  @keyframes caption-in { from { opacity: 0; transform: translateY(10px); filter: blur(4px); } }
+
+  /* Film grain over the whole presentation, very faint. */
+  .grain {
+    pointer-events: none; position: absolute; inset: -50%; z-index: 60; opacity: .05; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+    animation: grain 1.2s steps(4) infinite;
+  }
+  @keyframes grain { 0% { transform: translate(0, 0); } 25% { transform: translate(-3%, 2%); } 50% { transform: translate(2%, -3%); } 75% { transform: translate(-2%, -1%); } }
+
+  .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+  /* SplitText line masks. */
+  .split-line { overflow: clip; padding-bottom: .08em; margin-bottom: -.08em; }
+}
+
+@property --enter-spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+
+/* The header gains a soft ground once page content scrolls beneath it. */
+.site-header::before {
+  content: ''; position: absolute; inset: 0 0 -1.5rem; pointer-events: none; opacity: 0; transition: opacity .5s;
+  background: linear-gradient(to bottom, rgba(18, 11, 13, .92), rgba(18, 11, 13, .6) 60%, transparent);
+}
+.site-header[data-tone="light"]::before { background: linear-gradient(to bottom, rgba(248, 243, 222, .96), rgba(248, 243, 222, .7) 60%, transparent); }
+:root[data-scrolled] .site-header::before { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
+  .grain { display: none; }
+}

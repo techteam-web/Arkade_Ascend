@@ -43,3 +43,14 @@ runtime, so it can be moved out of `public/` if the ~2.2 MB matters.
 Asset: `public/residences/tower-concept.png` (transparent PNG, reused for two independently interactive matching towers). Generated using OpenAI imagegen. Illustrative concept, not verified project architecture.
 
 Full prompt: Create a photorealistic architectural concept asset with a truly transparent background, portrait 1024x1536. One complete freestanding luxury residential tower in Mumbai, full building from rooftop to landscaped podium visible, no cropping. Tall slender 35-storey contemporary tower, dark bronze vertical fins and warm charcoal stone, numerous balconies and glass windows illuminated with restrained champagne-gold light at dusk, elaborate elegant stepped rooftop crown. Three-quarter architectural view with front and right facade visible, nearly straight verticals, camera at mid-building height. Small integrated 3-storey podium with trees at base. Building occupies 85% image height and 65% width, centered with transparent space around all silhouette edges. High-end realistic architectural visualization, dark bronze and warm amber, crisp fine detail. No skyline, no sky, no ground plane outside podium, no ribbons, no text, no logos, no watermark, no labels. Transparent alpha background. This is illustrative concept architecture, not a claimed actual building.
+
+## Brochure extracts (`public/brochure/`)
+
+Taken from `brochure design.pdf` (Adobe Illustrator, September 2026). The embedded photos are CMYK JPEGs inverted by a PDF Decode array; they were decoded, negated back to positive and graded with sharp. The vector pages were rendered with mutool at 220 dpi and cropped.
+
+- `lifestyle-arrival.webp`: page 4 photograph (the brochure marks it "All representational image").
+- `cover-satin.webp`: page 1 satin fabric, remapped to the cover's plum-brown tones.
+- `silk-fallback.webp`: page 2 silk photograph multiplied at 50% over the #cea572 ground, matching the spread. Kept as a static reference or fallback for the 3D silk.
+- `location-map.webp`: page 5 map, left two-thirds. The brochure marks it "Indicative map, not to scale".
+- `floor-plan-unit-1.webp`, `key-plan.webp`: page 6 plan and key plan. The brochure marks the plan "Dummy render".
+- `favicon.svg` and the `ArkadeMark` component use the Arkade logo paths from page 2's vector artwork.

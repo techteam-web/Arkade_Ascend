@@ -1,0 +1,30 @@
+/* Brochure typefaces. All three are commercial fonts and are not bundled:
+     Billie Eilish (Zane Studio, commercial licence via Creative Fabrica) — display
+     Gotham (Hoefler&Co.)                                                 — text
+     Avenir LT Std Black (Linotype)                                       — logo lettering
+   The local() sources pick them up on machines where they are installed
+   (Avenir ships with macOS and iOS). To serve them to every visitor, put the
+   licensed web-font files in public/fonts/ with the names below and uncomment
+   the url() sources. Until then the stacks in index.css fall back to Bodoni
+   Moda and Montserrat. */
+
+@font-face {
+  font-family: "Billie Eilish";
+  src: local("Billie Eilish"), local("BillieEilish-Regular") /*, url("/fonts/BillieEilish-Regular.woff2") format("woff2") */;
+  font-weight: 400; font-display: swap;
+}
+@font-face {
+  font-family: "Gotham";
+  src: local("Gotham Book"), local("Gotham-Book") /*, url("/fonts/Gotham-Book.woff2") format("woff2") */;
+  font-weight: 300 400; font-display: swap;
+}
+@font-face {
+  font-family: "Gotham";
+  src: local("Gotham Medium"), local("Gotham-Medium") /*, url("/fonts/Gotham-Medium.woff2") format("woff2") */;
+  font-weight: 500 700; font-display: swap;
+}
+@font-face {
+  font-family: "Avenir LT Std";
+  src: local("Avenir LT Std 95 Black"), local("AvenirLTStd-Black"), local("Avenir Black"), local("Avenir-Black") /*, url("/fonts/AvenirLTStd-Black.woff2") format("woff2") */;
+  font-weight: 700 900; font-display: swap;
+}

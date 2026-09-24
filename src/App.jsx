@@ -1,89 +1,91 @@
-﻿import { useState, useEffect, useRef } from 'react'
-import GoldRibbonBackground from './scenes/gold-ribbon/GoldRibbonBackground.jsx'
-import MenuPage from './pages/menu/MenuPage.jsx'
-import GalleryPage from './pages/gallery/GalleryPage.jsx'
-import ResidencesExperience from './pages/residences/ResidencesExperience.jsx'
-import useResidencesTransition from './transitions/useResidencesTransition.js'
-import useIntroTransition from './transitions/useIntroTransition.js'
-import useGalleryTransition from './transitions/useGalleryTransition.js'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router'
+import SilkScene from './scenes/silk/SilkScene.jsx'
+import { sceneStore, setScenePreset } from './scenes/sceneStore.js'
+import FullscreenGate from './app/FullscreenGate.jsx'
+import SiteHeader from './app/SiteHeader.jsx'
+import MenuOverlay from './app/MenuOverlay.jsx'
+import TransitionStage from './app/TransitionStage.jsx'
+import { ShellContext } from './app/ShellContext.js'
+import { routeForPath, routes } from './app/routes.js'
+import useFullscreen from './hooks/useFullscreen.js'
+import useMediaQuery from './hooks/useMediaQuery.js'
+
+// Development-only escape hatch for automated screenshots: ?fullscreen=off
+const bypassGate = import.meta.env.DEV && new URLSearchParams(location.search).get('fullscreen') === 'off'
+if (import.meta.env.DEV) window.__sceneStore = sceneStore   // for automated checks
 
 export default function App() {
-  const [entered, setEntered] = useState(false)
-  const [page, setPage] = useState('home')
-  const [busy, setBusy] = useState(false)
-  const enterRef = useRef(null)
-  const frameRef = useRef(null)
-  const motion = useRef({ progress: 0, energy: 0, gallery: 0, residences: 0, residenceLight: 0 })
-  const menuPreview = useRef({ outward: 0, flat: 0, energy: 0, shift: 0 })
-  const intro = useIntroTransition(frameRef, motion, entered, page, enterRef)
-  const { openGallery, returnMenu } = useGalleryTransition({ root: frameRef, motion, intro, setPage, setEntered, setBusy })
-  const { openResidences, returnResidenceMenu } = useResidencesTransition({ root: frameRef, motion, intro, setPage, setEntered, setBusy })
-  const [compactRendering, setCompactRendering] = useState(false)
-  useEffect(() => {
-    const query = matchMedia('(max-width: 900px), (pointer: coarse)')
-    const update = () => setCompactRendering(query.matches)
-    update()
-    query.addEventListener('change', update)
-    return () => query.removeEventListener('change', update)
+  const location = useLocation()
+  const navigate = useNavigate()
+  const route = routeForPath(location.pathname)
+  const index = routes.indexOf(route)
+  const compact = useMediaQuery('(max-width: 900px), (pointer: coarse)')
+  const fullscreen = useFullscreen()
+  const [started, setStarted] = useState(false)
+  const [everStarted, setEverStarted] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuButton = useRef(null)
+
+  // Where the Fullscreen API exists it is required; where it does not (for
+  // example iPhone Safari) the gate becomes a one-time start screen.
+  const gated = !bypassGate && (fullscreen.supported ? !fullscreen.active : !started)
+  useEffect(() => { if (!gated) setEverStarted(true) }, [gated])
+  useEffect(() => { if (gated) setMenuOpen(false) }, [gated])
+  // The menu has its own mood (mist, threads, the gold emblem). Closing it
+  // without navigating restores the page's own mood; after a navigation the
+  // new page's mood (set by the route effect) stands.
+  const beforeMenu = useRef(null)
+  useLayoutEffect(() => {
+    sceneStore.menuOpen = menuOpen
+    sceneStore.emblem.visible = menuOpen
+    if (menuOpen) {
+      beforeMenu.current = { preset: sceneStore.preset, path: location.pathname }
+      setScenePreset('menu')
+    } else if (beforeMenu.current) {
+      if (beforeMenu.current.path === location.pathname) setScenePreset(beforeMenu.current.preset)
+      beforeMenu.current = null
+    }
+  }, [menuOpen])
+  useLayoutEffect(() => { setScenePreset(route.scene) }, [route.scene])
+
+  const enter = async () => {
+    if (!fullscreen.supported || !(await fullscreen.request())) setStarted(true)
+  }
+
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false)
+    requestAnimationFrame(() => menuButton.current?.focus({ preventScroll: true }))
   }, [])
-  const closeWelcome = () => {
-    setEntered(false)
+  // From the menu the old page is already hidden, so the stage swaps straight
+  // to the new page instead of replaying the old page's exit behind it.
+  // React Router renders navigations as low-priority transitions; closing the
+  // menu separately would paint a frame of the old page. So the menu closes
+  // in the same commit as the new location (layout effect below).
+  const menuOpenRef = useRef(menuOpen)
+  menuOpenRef.current = menuOpen
+  const go = useCallback(path => {
+    if (menuOpenRef.current && path === location.pathname) { setMenuOpen(false); return }
+    navigate(path, { state: { instant: menuOpenRef.current } })
+  }, [navigate, location.pathname])
+  useLayoutEffect(() => { setMenuOpen(false) }, [location.key])
+  const shell = useMemo(() => ({ openMenu: () => setMenuOpen(true), go, menuOpen }), [go, menuOpen])
 
-  }
-  const resetMagnet = () => {
-    enterRef.current?.style.setProperty('--magnet-x', '0px')
-    enterRef.current?.style.setProperty('--magnet-y', '0px')
-  }
-  const moveMagnet = (event) => {
-    if (event.pointerType !== 'mouse' || matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    const bounds = event.currentTarget.getBoundingClientRect()
-    const x = (event.clientX - bounds.left - bounds.width / 2) * .12
-    const y = (event.clientY - bounds.top - bounds.height / 2) * .12
-    enterRef.current?.style.setProperty('--magnet-x', `${Math.max(-7, Math.min(7, x))}px`)
-    enterRef.current?.style.setProperty('--magnet-y', `${Math.max(-7, Math.min(7, y))}px`)
-  }
-  return (
-    <main className="landing"><div ref={frameRef} className={`page-frame home-experience${busy ? ' is-navigating' : ''}`}>
-      <GoldRibbonBackground className="ribbon-scene" motion={motion} preview={menuPreview} quality={compactRendering ? 'low' : 'high'} bgColor="#28150e" backdrop="transparent" />
-      <><div className="atmosphere" aria-hidden="true" />
-      <div className="cityscape" aria-hidden="true" />
-
-
-      <div className="scene-shade" aria-hidden="true" />
-      <aside className="corner-copy corner-copy--top"><span>Spaces</span><span>People</span><span>Possibilities</span><span>A higher you</span></aside>
-      <div className="ascend-mark" aria-hidden="true"><i /><i /><i /><i /><i /></div>
-      <section className="identity" aria-label="Arkade Ascend, Malad West">
-        <p className="brand">Arkade</p>
-        <h1>Ascend</h1>
-        <p className="locality">Malad West</p>
-      </section>
-      <div className="entry">
-        <div className="entry-line" aria-hidden="true" />
-        <p className="tagline">A higher way of living</p>
-        <div className="enter-hit-area" onPointerMove={moveMagnet} onPointerLeave={resetMagnet} onPointerCancel={resetMagnet}>
-        <button ref={enterRef} className="enter-button" disabled={entered} onBlur={resetMagnet} onClick={() => { resetMagnet(); setEntered(true) }} aria-label="Enter Arkade Ascend">
-          <span>Enter</span><svg viewBox="0 0 32 12" fill="none" aria-hidden="true"><path d="M1 6h28m-5-5 5 5-5 5" /></svg>
-        </button>
+  return <ShellContext.Provider value={shell}>
+    <main className="fixed inset-0 overflow-hidden bg-espresso">
+      <SilkScene quality={compact ? 'low' : 'high'} />
+      <div className={`page-frame transition-opacity duration-700 ${gated ? 'opacity-0' : 'opacity-100'}`}
+        inert={gated ? '' : undefined} aria-hidden={gated || undefined}>
+        <div className={`absolute inset-0 transition-opacity duration-700 ${menuOpen ? 'opacity-0' : 'opacity-100'}`} inert={menuOpen ? '' : undefined}>
+          <TransitionStage active={!gated} />
         </div>
+        <SiteHeader route={route} index={index} hidden={route.id === 'home' || menuOpen} menuOpen={menuOpen}
+          onMenu={() => setMenuOpen(true)} menuButton={menuButton} />
+        <MenuOverlay open={menuOpen} currentId={route.id} onClose={closeMenu} onNavigate={go} />
       </div>
-      <aside className="corner-copy corner-copy--bottom"><span>Mumbai</span><span>Rising</span><span>Higher</span></aside>
-      </>
-      <GalleryPage sharedScene visible interactive={page === 'gallery' && !busy} quality={compactRendering ? 'low' : 'high'} onExplore={() => returnMenu()} onHome={() => returnMenu(true)} />
-
-      <ResidencesExperience interactive={page === 'residences' && !busy} motion={motion} onExplore={() => returnResidenceMenu()} onHome={() => returnResidenceMenu(true)} />
-      <MenuPage preview={menuPreview} sharedScene open={entered && page === 'home' && !busy} onClose={closeWelcome} onNavigate={destination => { if (busy) return; if (destination === 'gallery') openGallery(); else if (destination === 'residences') openResidences(); else if (destination === 'home') setEntered(false) }} quality={compactRendering ? 'low' : 'high'} />
-    </div></main>
-  )
+      <div className="grain" aria-hidden="true" />
+      <FullscreenGate open={gated} resumed={everStarted} supported={fullscreen.supported}
+        keyboardLocked={fullscreen.keyboardLocked} onEnter={enter} />
+    </main>
+  </ShellContext.Provider>
 }
-
-
-
-
-
-
-
-
-
-
-
-
