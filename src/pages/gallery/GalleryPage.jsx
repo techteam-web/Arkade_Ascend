@@ -1,5 +1,5 @@
 ﻿import { useEffect, useRef, useState } from 'react'
-import GoldRibbonBackground from './GoldRibbon.jsx'
+import GoldRibbonBackground from '../../scenes/gold-ribbon/GoldRibbonBackground.jsx'
 
 const images = [
   { src: '/gallery/exterior.png', category: 'Exterior', alt: 'Concept view of a bronze-toned residential tower illuminated at dusk' },
@@ -10,7 +10,7 @@ const images = [
 const categories = ['All', 'Exterior', 'Interior', 'Amenities', 'Lifestyle']
 const pad = value => String(value).padStart(2, '0')
 
-export default function GalleryPage({ onExplore, onHome, quality, visible = true }) {
+export default function GalleryPage({ onExplore, onHome, quality, visible = true, sharedScene = false, interactive = true }) {
   const [category, setCategory] = useState('All')
   const [index, setIndex] = useState(1)
   const [lightbox, setLightbox] = useState(false)
@@ -19,8 +19,8 @@ export default function GalleryPage({ onExplore, onHome, quality, visible = true
   const filtered = category === 'All' ? images : images.filter(image => image.category === category)
   const selected = filtered[index] || filtered[0]
   const step = direction => setIndex(value => (value + direction + filtered.length) % filtered.length)
-  useEffect(() => { if (visible) heading.current?.focus() }, [visible])
-  useEffect(() => { if (!visible) setLightbox(false) }, [visible])
+  useEffect(() => { if (visible && interactive) heading.current?.focus() }, [visible, interactive])
+  useEffect(() => { if (!visible) setLightbox(false) }, [visible, interactive])
   useEffect(() => {
     // Decode the small gallery up front so moving cards never reveal an empty frame.
     images.forEach(({ src }) => { const image = new Image(); image.src = src; image.decode?.().catch(() => {}) })
@@ -36,9 +36,9 @@ export default function GalleryPage({ onExplore, onHome, quality, visible = true
     return () => window.removeEventListener('keydown', onKey)
   }, [lightbox, filtered.length])
   const chooseCategory = value => { setCategory(value); setIndex(value === 'All' ? 1 : 0) }
-  return <section className="gallery-page" aria-label="Gallery" hidden={!visible}>
+  return <section className={`gallery-page${sharedScene ? ' gallery-page--shared' : ''}`} aria-label="Gallery" hidden={!visible} aria-hidden={!interactive} inert={interactive ? undefined : ''}>
     <div className="atmosphere" aria-hidden="true" />
-    {visible && <GoldRibbonBackground composition="gallery" quality={quality} bgColor="#28150e" backdrop="transparent" />}
+    {visible && !sharedScene && <GoldRibbonBackground composition="gallery" quality={quality} bgColor="#28150e" backdrop="transparent" />}
     <header className="gallery-header">
       <button className="gallery-brand menu-logo" onClick={onHome} aria-label="Arkade Ascend home">
         <span className="menu-logo-brand">Arkade</span><span className="menu-logo-name">Ascend</span><span className="menu-logo-locality">Malad West</span>
@@ -87,3 +87,4 @@ export default function GalleryPage({ onExplore, onHome, quality, visible = true
     </div>}
   </section>
 }
+
