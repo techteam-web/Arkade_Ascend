@@ -9,7 +9,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Keep the 3D stack in its own long-cached chunk.
-        manualChunks: { three: ['three', '@react-three/fiber', '@react-three/postprocessing', 'postprocessing'] },
+        manualChunks: { three: ['three', '@react-three/fiber'] },
       },
     },
   },

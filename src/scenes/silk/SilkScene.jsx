@@ -1,17 +1,11 @@
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { EffectComposer, Bloom, SMAA } from '@react-three/postprocessing'
 import * as THREE from 'three'
 import { presets, sceneStore } from '../sceneStore.js'
-import { silkVertex, silkFragment, backdropVertex, backdropFragment, dustVertex, dustFragment } from './shaders.js'
-import TowerModel from '../tower/TowerModel.jsx'
-import GoldThreads from '../threads/GoldThreads.jsx'
-import ArkadeEmblem from '../emblem/ArkadeEmblem.jsx'
+import { silkVertex, silkFragment, backdropVertex, backdropFragment } from './shaders.js'
 
-const COLOR_KEYS = ['top', 'bottom', 'glow', 'shadow', 'mid', 'high', 'dustColor', 'threadColor', 'mistColor']
-const NUMBER_KEYS = ['glowStrength', 'vignette', 'opacity', 'glitter', 'sheer', 'dust', 'speed', 'threads', 'threadLight', 'mist']
-// Effects a preset does not mention stay off.
-const DEFAULTS = { threads: 0, threadLight: 0, mist: 0, threadColor: '#e3c292', mistColor: '#b88a58', threadPose: { y: 0, rot: -0.06 } }
+const COLOR_KEYS = ['top', 'bottom', 'glow', 'shadow', 'mid', 'high']
+const NUMBER_KEYS = ['glowStrength', 'vignette', 'opacity', 'sheer', 'speed']
 const POSE_KEYS = ['x', 'y', 'rot', 'scale']
 const CAMERA_Z = 12
 const FOV = 35
@@ -28,35 +22,44 @@ const LENGTH = 34
 
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches
 
-export default function SilkScene({ quality = 'high', paused = false }) {
+// Renders on demand: continuously while the silk is on screen or a mood is
+// still blending, and not at all once a still page has settled. The silk is
+// the presentation's only 3D element.
+export default function SilkScene({ quality = 'high' }) {
   return (
     <div className="absolute inset-0" aria-hidden="true">
       <Canvas
-        frameloop={paused ? 'never' : 'always'}
+        frameloop="demand"
         dpr={quality === 'high' ? [1, 2] : [1, 1.5]}
         camera={{ position: [0, 0, CAMERA_Z], fov: FOV, near: 0.5, far: 60 }}
-        gl={{ antialias: false, alpha: false, stencil: false, powerPreference: 'high-performance' }}
+        gl={{ antialias: true, alpha: false, stencil: false, powerPreference: 'high-performance' }}
         onCreated={({ gl }) => { gl.toneMapping = THREE.NoToneMapping }}
       >
+        <Pacer />
         <World quality={quality} />
-        {/* Bloom threshold sits near 1 so only HDR glints and hot creases
-            bloom, never the cream or gold grounds themselves. */}
-        {quality === 'high'
-          ? <EffectComposer multisampling={4} disableNormalPass>
-              <Bloom intensity={0.9} luminanceThreshold={0.98} luminanceSmoothing={0.25} mipmapBlur radius={0.72} />
-            </EffectComposer>
-          : <EffectComposer multisampling={0} disableNormalPass>
-              <Bloom intensity={0.7} luminanceThreshold={0.98} luminanceSmoothing={0.25} mipmapBlur radius={0.72} />
-              <SMAA />
-            </EffectComposer>}
       </Canvas>
     </div>
   )
 }
 
-function createTheme(source) {
-  const preset = { ...DEFAULTS, ...source }
-  const theme = { glowPos: new THREE.Vector2(...preset.glowPos), pose: { ...preset.pose }, threadPose: { ...preset.threadPose } }
+function Pacer() {
+  const invalidate = useThree(state => state.invalidate)
+  useEffect(() => {
+    let frame
+    const wake = () => { sceneStore.dirty = true }
+    const tick = () => {
+      if (!document.hidden && sceneStore.dirty) invalidate()
+      frame = requestAnimationFrame(tick)
+    }
+    tick()
+    window.addEventListener('resize', wake)
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('resize', wake) }
+  }, [invalidate])
+  return null
+}
+
+function createTheme(preset) {
+  const theme = { glowPos: new THREE.Vector2(...preset.glowPos), pose: { ...preset.pose } }
   COLOR_KEYS.forEach(key => { theme[key] = new THREE.Color(preset[key]) })
   NUMBER_KEYS.forEach(key => { theme[key] = preset[key] })
   return theme
@@ -74,16 +77,16 @@ function World({ quality }) {
     COLOR_KEYS.forEach(key => theme[key].lerp(target[key], k))
     NUMBER_KEYS.forEach(key => { theme[key] += (target[key] - theme[key]) * k })
     POSE_KEYS.forEach(key => { theme.pose[key] += (target.pose[key] - theme.pose[key]) * kPose })
-    theme.threadPose.y += (target.threadPose.y - theme.threadPose.y) * kPose
-    theme.threadPose.rot += (target.threadPose.rot - theme.threadPose.rot) * kPose
     theme.glowPos.lerp(target.glowPos, k)
+    // Keep rendering while the mood blends or the silk is moving.
+    const blending = COLOR_KEYS.some(key => Math.abs(theme[key].r - target[key].r) + Math.abs(theme[key].g - target[key].g) + Math.abs(theme[key].b - target[key].b) > 0.002)
+      || NUMBER_KEYS.some(key => Math.abs(theme[key] - target[key]) > 0.002)
+      || POSE_KEYS.some(key => Math.abs(theme.pose[key] - target.pose[key]) > 0.002)
+    sceneStore.dirty = blending || (theme.opacity > 0.004 && !reducedMotion())
   }, -2)
   return <>
     <Backdrop theme={theme} />
     <Veil theme={theme} pointer={pointer} quality={quality} />
-    <GoldThreads theme={theme} quality={quality} />
-    <TowerModel />
-    <ArkadeEmblem quality={quality} />
     <CameraRig pointer={pointer} />
   </>
 }
@@ -96,12 +99,9 @@ function Backdrop({ theme }) {
     uniforms: {
       uTop: { value: theme.top }, uBottom: { value: theme.bottom }, uGlow: { value: theme.glow },
       uGlowPos: { value: theme.glowPos }, uGlowStrength: { value: 0 }, uVignette: { value: 0 }, uAspect: { value: 1 },
-      uMistColor: { value: theme.mistColor }, uMist: { value: 0 }, uTime: { value: 0 },
     },
   }), [theme])
-  useFrame((_, delta) => {
-    if (!reducedMotion()) material.uniforms.uTime.value += Math.min(delta, 0.05)
-    material.uniforms.uMist.value = theme.mist
+  useFrame(() => {
     material.uniforms.uGlowStrength.value = theme.glowStrength
     material.uniforms.uVignette.value = theme.vignette
     material.uniforms.uAspect.value = size.width / Math.max(size.height, 1)
@@ -111,7 +111,7 @@ function Backdrop({ theme }) {
 }
 
 function Veil({ theme, pointer, quality }) {
-  const { size, viewport } = useThree()
+  const { size } = useThree()
   const group = useRef()
   const clock = useRef(6)
   const lightDir = useMemo(() => new THREE.Vector3(), [])
@@ -127,16 +127,15 @@ function Veil({ theme, pointer, quality }) {
       uPhase: { value: layer.phase }, uBillow: { value: layer.billow }, uSeed: { value: layer.seed },
       uPointer: { value: new THREE.Vector3() }, uPointerAmt: { value: 0 },
       uShadow: { value: theme.shadow }, uMid: { value: theme.mid }, uHigh: { value: theme.high },
-      uLightDir: { value: lightDir }, uOpacity: { value: 0 }, uGlitter: { value: 0 }, uSheer: { value: 0.3 },
+      uLightDir: { value: lightDir }, uOpacity: { value: 0 }, uSheer: { value: 0.3 },
     },
   })), [theme, lightDir])
-  const dust = useDust(quality === 'high' ? 950 : 480, theme)
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05)
     if (!reducedMotion()) clock.current += dt * theme.speed
-    // Skip the veil's draw calls entirely on pages that use the threads.
-    group.current.visible = theme.opacity > 0.004 || theme.dust > 0.004
+    // Skip the veil's draw calls entirely on still pages.
+    group.current.visible = theme.opacity > 0.004
     if (!group.current.visible) return
     const aspect = size.width / Math.max(size.height, 1)
     const halfW = HALF_HEIGHT * aspect
@@ -159,40 +158,14 @@ function Veil({ theme, pointer, quality }) {
       u.uPointerAmt.value = p.amount
       u.uOpacity.value = theme.opacity * LAYERS[index].opacity
       u.uSheer.value = Math.min(1, theme.sheer * LAYERS[index].sheer)
-      u.uGlitter.value = theme.glitter
     })
-    dust.material.uniforms.uTime.value = clock.current
-    dust.material.uniforms.uAmount.value = theme.dust
-    dust.material.uniforms.uPixelRatio.value = viewport.dpr
   })
   useLayoutEffect(() => () => { geometry.dispose(); materials.forEach(m => m.dispose()) }, [geometry, materials])
 
   return <group ref={group}>
     {LAYERS.map((layer, index) => <mesh key={index} geometry={geometry} material={materials[index]}
       position-z={layer.z} renderOrder={index} frustumCulled={false} />)}
-    <points geometry={dust.geometry} material={dust.material} renderOrder={5} frustumCulled={false} />
   </group>
-}
-
-function useDust(count, theme) {
-  const dust = useMemo(() => {
-    const seeds = new Float32Array(count * 4)
-    for (let i = 0; i < seeds.length; i++) seeds[i] = Math.random()
-    const geometry = new THREE.BufferGeometry()
-    geometry.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3))
-    geometry.setAttribute('aSeed', new THREE.BufferAttribute(seeds, 4))
-    const material = new THREE.ShaderMaterial({
-      vertexShader: dustVertex, fragmentShader: dustFragment,
-      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
-      uniforms: {
-        uTime: { value: 0 }, uSpan: { value: LENGTH * 0.9 }, uAmp: { value: LAYERS[1].amp }, uFreq: { value: LAYERS[1].freq },
-        uPixelRatio: { value: 1 }, uSize: { value: 1 }, uColor: { value: theme.dustColor }, uAmount: { value: 0 },
-      },
-    })
-    return { geometry, material }
-  }, [count, theme])
-  useLayoutEffect(() => () => { dust.geometry.dispose(); dust.material.dispose() }, [dust])
-  return dust
 }
 
 // Mouse position in NDC and on the z = 0 plane, damped. Touch never moves
@@ -235,8 +208,8 @@ function usePointer() {
 function CameraRig({ pointer }) {
   useFrame(({ camera }, delta) => {
     const k = 1 - Math.exp(-Math.min(delta, 0.05) * 1.6)
-    camera.position.x += (pointer.current.x * 0.38 - camera.position.x) * k
-    camera.position.y += (pointer.current.y * 0.24 - camera.position.y) * k
+    camera.position.x += (pointer.current.x * 0.18 - camera.position.x) * k
+    camera.position.y += (pointer.current.y * 0.12 - camera.position.y) * k
     camera.lookAt(0, 0, 0)
   })
   return null

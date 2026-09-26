@@ -18,11 +18,10 @@ export default function SpecificationsPage() {
     if (prefersReducedMotion()) return
     const context = gsap.context(() => {
       gsap.timeline({ defaults: { ease: 'silk' } })
-        .from('[data-spec-image]', { clipPath: 'inset(0% 0% 0% 100%)', duration: 1.1, ease: 'curtain' }, 0)
-        .from('[data-spec-image] > *', { scale: 1.15, duration: 1.8 }, 0)
-        .from('[data-spec-title]', { autoAlpha: 0, y: 24, filter: 'blur(6px)', duration: 0.9 }, 0.15)
-        .from('[data-spec-rule]', { scaleX: 0, transformOrigin: '0 50%', duration: 1, stagger: 0.07, ease: 'curtain' }, 0.25)
-        .from('[data-spec-item]', { autoAlpha: 0, x: 18, duration: 0.8, stagger: 0.07 }, 0.3)
+        .from('[data-spec-image] > *', { autoAlpha: 0, scale: 1.03, duration: 1 }, 0)
+        .from('[data-spec-title]', { autoAlpha: 0, y: 12, duration: 0.8 }, 0.15)
+        .from('[data-spec-rule]', { scaleX: 0, transformOrigin: '0 50%', duration: 0.9, stagger: 0.06 }, 0.2)
+        .from('[data-spec-item]', { autoAlpha: 0, y: 8, duration: 0.7, stagger: 0.06 }, 0.25)
     }, panel)
     return () => context.revert()
   }, [index])

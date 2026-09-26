@@ -21,14 +21,14 @@ To deliver enquiries, set `VITE_ENQUIRY_ENDPOINT` to a JSON webhook (CRM or form
 |---|---|---|---|
 | 01 | `/` | Home: ASCEND over the flowing silk; Enter opens the menu | brochure pp. 1–2 |
 | 02 | `/neu-gen` | Neu Gen Life: four chapters (cover satin, gilded silk, *want it all*, Neu Gen Heart) | brochure pp. 1–4 |
-| 03 | `/tower` | Illustrative 3D twin-tower massing at night: drag to rotate; hover, click or tap a floor (or use the slider) to light it | template |
+| 03 | `/tower` | The concept render with a gold level band: hover, click or tap the facade, or use the slider or arrow keys | concept render (levels indicative) |
 | 04 | `/residences` | Tower concept art, paths to Floor Plans and a Unit Finder over the unit data | brochure p. 6 |
 | 05 | `/floor-plans` | Unit 1 (4 BHK) plan: zoom/pan, room schedule that locates each room, full-screen plan viewer, key plan | brochure p. 6 |
 | 06 | `/specifications` | Category tabs with image slots | template |
-| 07 | `/amenities` | 3D ring carousel | template |
+| 07 | `/amenities` | Framed feature image with a numbered index | template |
 | 08 | `/views` | Draggable skyline panorama: three elevations, morning/sunset/night | template |
-| 09 | `/location` | Brochure map with animated routes to each connectivity point and distance | brochure p. 5 |
-| 10 | `/gallery` | 3D card carousel, filters, full-screen lightbox | existing concept images + brochure p. 4 |
+| 09 | `/location` | Tilted 3D MapLibre map in the brochure palette with extruded buildings: category tabs (roads, rail & metro, airports, upcoming), pins, road routes drawn to each place, a 3D / 2D switch, and the brochure map as a toggle and offline fallback | brochure p. 5 + OpenStreetMap |
+| 10 | `/gallery` | Flat filmstrip carousel, filters, full-screen lightbox | existing concept images + brochure p. 4 |
 | 11 | `/enquire` | Validated enquiry form | — |
 
 Navigation: the Explore menu (arrow keys, Enter, Esc), the Arkade logo (home), and on stepped pages the wheel, swipe or arrow keys.
@@ -36,21 +36,21 @@ Navigation: the Explore menu (arrow keys, Enter, Esc), the Arkade logo (home), a
 ## Design system
 
 - **Palette** (from the brochure, in `src/styles/index.css`): primary gold `#c49a6c`, secondary plum `#4e373c` (page 3), accent champagne `#ecd3a8`. Espresso `#1b1113` (cover), cream `#f4edcc` (map and plan pages) and the page-2 gold ground `#cea572` complete it.
-- **Type:** the brochure's faces are Billie Eilish (display), Gotham (text) and Avenir LT Std Black (logo). All three are commercial, so they are not bundled. `src/styles/brand-fonts.css` uses them wherever they are installed (Avenir ships with macOS and iOS); to serve them to every visitor, add the licensed web-font files to `public/fonts/` and uncomment the `url()` lines. Fallbacks: Bodoni Moda and Montserrat. All numbers use the `.num` style: upright, lining, even-width figures.
+- **Type:** the brochure's own fonts, served as WOFF2 from `public/fonts/` (`src/styles/brand-fonts.css`): Billie Eilish (headlines), Gotham Book and Medium (text, labels, figures), Avenir LT Std Black (lockup), Swiss 721 Condensed (map labels) and Myriad Pro (north arrow). They are commercial fonts: serving them on a public site needs web-embedding rights under their licences. All numbers use the `.num` style (upright Gotham); counters hold their final width because Gotham's figures are proportional.
 - **Breakpoints:** Tailwind defaults plus `3xl` 1920px, `4xl` 2560px and `5xl` 3840px. The root font size steps up at each, so layouts scale proportionally to 4K. Layout variants: `split`, `stack` and `short` (see AGENTS.md).
-- **Motion:** `src/app/reveal.js` choreographs every `data-reveal` element when a route arrives (lines, chars, masks, rules, count-ups) and releases them on exit. A champagne light sweep crosses the screen between pages. `prefers-reduced-motion` shows final states directly.
+- **Motion:** deliberately quiet. `src/app/reveal.js` brings each `data-reveal` element in with a short fade or rise (lines, rules, masks, count-ups) when a route arrives, and pages cross-fade between routes. No blur, glitter, glows or overshoot. `prefers-reduced-motion` shows final states directly.
 
 ## 3D scene
 
-A single persistent canvas (`src/scenes/silk/SilkScene.jsx`) sits behind every page and blends between brochure moods defined in `src/scenes/sceneStore.js`: `home`, `cover`, `gilded`, `plum`, `heart`, `cream`, `menu` and others. Half the pages use the silk (Home, Neu Gen, Tower, Residences, Enquire). The other half use gold threads with mist (Specifications, Amenities, Gallery, Floor Plans, Location).
+A single persistent canvas (`src/scenes/silk/SilkScene.jsx`) sits behind every page and blends between brochure moods defined in `src/scenes/sceneStore.js`. The silk is the site's only 3D element. The canvas renders on demand: continuously only while the silk is on screen or a mood is blending, and not at all on still pages.
 
-- **Silk veil** (`shaders.js`): a three-layer recreation of the page-2 silk. It has a travelling S-curve with a slow roll, breathing width and billows. The fabric is sheer where it faces the camera and dense at folds, with Ward anisotropic satin highlights, pearl speckle and drifting clusters of twinkling glitter (HDR, so only glints bloom). The mouse lifts the cloth and moves the key light.
-- **Gold dust:** additive motes travelling with the veil.
-- **Gold threads** (`src/scenes/threads/GoldThreads.jsx`): a surface woven from fine gold strands flowing in slow waves. Light gathers where strands bunch into folds, and beads of light travel along them.
-- **Golden mist:** a domain-warped smoke drifting in the backdrop shader.
-- **Menu emblem** (`src/scenes/emblem/ArkadeEmblem.jsx`): the Arkade mark extruded from the brochure's vector paths in polished gold. It sits inside two thin rings and an orbiting glitter halo, fits the menu's anchor, and half-turns as you move between sections.
-- **Tower massing** (`src/scenes/tower/TowerModel.jsx`): instanced floors rise into place on arrival. It has smoked glass with sparse warm windows (anti-aliased mullions, no pulsing bloom), bronze slabs and fins, glowing crown lanterns and a light-ring plinth. It raycasts the pointer to find the floor under it, fits a DOM anchor on the Tower page, and reports the shown floor's screen position for the callout.
-- **Quality tiers:** screens ≤900px wide or with a coarse pointer render at lower DPR, with fewer segments and particles and SMAA instead of MSAA.
+- **Silk veil** (`shaders.js`): a three-layer recreation of the page-2 silk, on Home and the Neu Gen gilded chapter only. It has a travelling S-curve with a slow roll, breathing width and billows, sheer where it faces the camera and dense at folds, with soft Ward anisotropic satin highlights. No glitter or particles. The mouse lifts the cloth slightly.
+- **Still grounds:** every other page uses a still gradient with one soft pool of light and a vignette.
+- **Quality tiers:** screens ≤900px wide or with a coarse pointer render at a lower pixel ratio with fewer segments.
+
+## Location map
+
+`src/pages/location/LiveMap.jsx` follows our other projects' location maps (Zenith, Hariko). It uses [MapLibre GL](https://maplibre.org/) with [OpenFreeMap](https://openfreemap.org/)'s Positron style (free, no API key, OpenStreetMap data), recoloured to the brochure's cream map page. It adds extruded 3D buildings, with the project's plot in gold, and a tilted camera (pitch 55°, bearing −18°) that flies to frame each journey. Visitors can drag to pan, right-drag or two-finger-drag to rotate and tilt, or switch to a flat 2D view. Routes follow the roads, from the public [OSRM](https://project-osrm.org/) demo server; if it is unreachable, a gentle arc stands in. The map loads only with the Location page. Positions come from OpenStreetMap and are indicative: the project pin sits on Liberty Garden Cross Road No. 4, Malad West; confirm it against the site plan in `src/content/project.js`. Distances shown are the brochure's. Without a connection the page shows the brochure map instead (`BrochureMap.jsx`).
 
 ## Content
 
@@ -64,8 +64,8 @@ A single persistent canvas (`src/scenes/silk/SilkScene.jsx`) sits behind every p
 src/
   App.jsx                 gate, canvas, header, menu, stage
   app/                    routes, transitions, reveal choreography, header, menu, gate
-  pages/                  one component per route
-  scenes/                 sceneStore, silk/ (veil, dust, mist backdrop), threads/, emblem/, tower/
+  pages/                  one component per route (location/ holds the live and brochure maps)
+  scenes/                 sceneStore, silk/ (veil and still backdrop), tower/
   components/             brand mark, page kit (heading, image slot, figures)
   content/                brochure facts, template content, enquiry delivery
   hooks/                  fullscreen, media queries, stepper (wheel/swipe/keys)
@@ -75,4 +75,4 @@ src/
 
 ## Verification status
 
-The production build passes. The pages were screenshotted in desktop Chrome (Playwright) at 390×844, 844×390, 768×1024, 1024×768, 1440×900, 1920×1080, 2560×1080 and 3840×2160. The runs also exercised the full-screen gate (enter, exit, resume), keyboard menu navigation and focus return, reduced motion, the finder, the enquiry form, floor-plan room focus and full-screen viewer, tower floor picking by hover and click, and the amenities ring holding still between items, with no console errors. The tower flicker reported on one machine could not be reproduced here; its likely causes were removed (a masked scroll layer over the canvas, a pulsing bloomed floor, shimmering window lines), so please recheck on that machine. Not verified: physical phones and tablets, iOS Safari, foldable hinge segments, GPU performance on low-end devices, and Firefox/Safari rendering.
+The production build passes. The pages were screenshotted in desktop Chrome (Playwright) at 390×844, 844×390, 768×1024, 1024×768, 1440×900, 1920×1080, 2560×1080 and 3840×2160. The runs also exercised the full-screen gate (enter, exit, resume), keyboard menu navigation and focus return, reduced motion, the finder, the enquiry form, floor-plan room focus and full-screen viewer, tower level selection by hover, click, slider and keys, the amenities frame holding still between items, and the Location tabs, pins, route drawing, keyboard tabs, brochure toggle and offline fallback, with no console errors. The tower flicker reported on one machine could not be reproduced here; its likely causes were removed (a masked scroll layer over the canvas, a pulsing bloomed floor, shimmering window lines), so please recheck on that machine. Not verified: physical phones and tablets, iOS Safari, foldable hinge segments, GPU performance on low-end devices, and Firefox/Safari rendering.

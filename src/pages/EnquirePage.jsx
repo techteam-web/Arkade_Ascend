@@ -50,7 +50,7 @@ export default function EnquirePage() {
       gsap.timeline({ defaults: { ease: 'silk' } })
         .from('[data-check-ring]', { strokeDashoffset: 190, duration: 1.2, ease: 'expo.out' })
         .from('[data-check-mark]', { strokeDashoffset: 40, duration: 0.7 }, 0.5)
-        .from('[data-done]', { autoAlpha: 0, y: 18, filter: 'blur(6px)', stagger: 0.08, duration: 1 }, 0.3)
+        .from('[data-done]', { autoAlpha: 0, y: 10, stagger: 0.07, duration: 0.8 }, 0.3)
     }, done)
     return () => context.revert()
   }, [status.state])
@@ -101,7 +101,7 @@ export default function EnquirePage() {
     <aside className="flex flex-col items-start justify-center-safe gap-6 split:items-end split:text-right stack:hidden">
       <div data-reveal="scale"><BrandLockup size="lg" /></div>
       <span data-reveal="line" className="hairline block w-48" />
-      <p data-reveal className="max-w-xs font-serif text-2xl italic leading-snug text-ivory/85">Malad&rsquo;s Neu Gen life has arrived.</p>
+      <p data-reveal className="max-w-xs font-display text-2xl uppercase leading-snug tracking-[0.04em] text-ivory/90">Malad&rsquo;s Neu Gen life has arrived.</p>
       <p data-reveal className="text-[0.62rem] uppercase leading-[2.2] tracking-[0.34em] text-gold-300/80">Arkade Developers<br />Malad West · Mumbai</p>
       <TemplateNote>Sales gallery address and MahaRERA number to be added</TemplateNote>
       <p id="enquire-note" className="visually-hidden">Fields marked as optional can be left blank.</p>

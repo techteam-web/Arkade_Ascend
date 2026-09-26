@@ -56,18 +56,29 @@ export const planRect = ([x1, y1, x2, y2]) => ({
   height: `${((y2 - y1) / PLAN_CROP.height) * 100}%`,
 })
 
-// Brochure page 5. Points are positions on the location map image (0–1).
-export const origin = { x: 352 / 720, y: 338 / 840 }
+// Brochure page 5. `distance` is the brochure's figure (as per Google Maps).
+// `point` is the position on the brochure map image (0–1); `lngLat` places
+// the same place on the live map. The live-map positions come from
+// OpenStreetMap and are indicative: the project pin sits on Liberty Garden
+// Cross Road No. 4, Malad West, and should be confirmed against the site plan.
+export const origin = { x: 352 / 720, y: 338 / 840, lngLat: [72.8401, 19.1854] }
+export const locationGroups = [
+  { id: 'roads', label: 'Roads' },
+  { id: 'transit', label: 'Rail & metro' },
+  { id: 'air', label: 'Airports' },
+  { id: 'upcoming', label: 'Upcoming' },
+]
 export const connectivity = [
-  { id: 'link-road', name: 'Link Road', distance: '650 m', kind: 'Road', point: [222 / 720, 352 / 840] },
-  { id: 'sv-road', name: 'S.V. Road', distance: '950 m', kind: 'Road', point: [393 / 720, 360 / 840] },
-  { id: 'weh', name: 'Western Express Highway', distance: '3 km', kind: 'Highway', point: [611 / 720, 420 / 840] },
-  { id: 'malad-station', name: 'Malad Railway Station', distance: '1.4 km', kind: 'Rail', point: [436 / 720, 212 / 840] },
-  { id: 'metro-2a', name: 'Malad West Metro Station (Line 2A)', distance: '1.8 km', kind: 'Metro', point: [204 / 720, 245 / 840] },
-  { id: 'intl-airport', name: 'International Airport', distance: '12.3 km', kind: 'Air', point: [404 / 720, 812 / 840], offMap: true },
-  { id: 'dom-airport', name: 'Domestic Airport', distance: '12.8 km', kind: 'Air', point: [404 / 720, 812 / 840], offMap: true },
+  { id: 'link-road', name: 'Link Road', distance: '650 m', group: 'roads', point: [222 / 720, 352 / 840], lngLat: [72.8360, 19.1857] },
+  { id: 'sv-road', name: 'S.V. Road', distance: '950 m', group: 'roads', point: [393 / 720, 360 / 840], lngLat: [72.8467, 19.1858] },
+  { id: 'weh', name: 'Western Express Highway', distance: '3 km', group: 'roads', point: [611 / 720, 420 / 840], lngLat: [72.8585, 19.1877] },
+  { id: 'malad-station', name: 'Malad Railway Station', distance: '1.4 km', group: 'transit', point: [436 / 720, 212 / 840], lngLat: [72.8486, 19.1867] },
+  { id: 'metro-2a', name: 'Malad West Metro Station (Line 2A)', distance: '1.8 km', group: 'transit', point: [204 / 720, 245 / 840], lngLat: [72.8354, 19.1851] },
+  { id: 'intl-airport', name: 'International Airport', distance: '12.3 km', group: 'air', point: [404 / 720, 812 / 840], offMap: true, lngLat: [72.8739, 19.0970] },
+  { id: 'dom-airport', name: 'Domestic Airport', distance: '12.8 km', group: 'air', point: [404 / 720, 812 / 840], offMap: true, lngLat: [72.8546, 19.0928] },
 ]
 export const upcoming = [
-  { id: 'gmlr', name: 'Goregaon–Mulund Link Road (GMLR)', point: [505 / 720, 458 / 840] },
-  { id: 'coastal', name: 'Versova–Dahisar Coastal Road', point: [40 / 720, 470 / 840], offMap: true },
+  { id: 'gmlr', name: 'Goregaon–Mulund Link Road (GMLR)', group: 'upcoming', point: [505 / 720, 458 / 840], lngLat: [72.8522, 19.1728] },
+  { id: 'coastal', name: 'Versova–Dahisar Coastal Road', group: 'upcoming', point: [40 / 720, 470 / 840], offMap: true, lngLat: [72.8241, 19.1962] },
 ]
+export const places = [...connectivity, ...upcoming]

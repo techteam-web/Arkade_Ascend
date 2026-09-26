@@ -1,30 +1,46 @@
-/* Brochure typefaces. All three are commercial fonts and are not bundled:
-     Billie Eilish (Zane Studio, commercial licence via Creative Fabrica) — display
-     Gotham (Hoefler&Co.)                                                 — text
-     Avenir LT Std Black (Linotype)                                       — logo lettering
-   The local() sources pick them up on machines where they are installed
-   (Avenir ships with macOS and iOS). To serve them to every visitor, put the
-   licensed web-font files in public/fonts/ with the names below and uncomment
-   the url() sources. Until then the stacks in index.css fall back to Bodoni
-   Moda and Montserrat. */
+/* Brochure typefaces, served from public/fonts (WOFF2, converted from the
+   supplied files). As used in the brochure:
+     Billie Eilish (display)            headlines
+     Gotham Book / Medium               text; labels and figures
+     Avenir LT Std Black                the ARKADE ASCEND lockup
+     Swiss 721 Condensed / Bold Cond.   map labels (page 5)
+     Myriad Pro                         the north arrow (page 6)
+   These are commercial fonts: serving them on the web requires web-embedding
+   rights under their licences. Weight ranges map every requested weight onto
+   the nearest real cut, so the browser never synthesises bold. */
 
 @font-face {
   font-family: "Billie Eilish";
-  src: local("Billie Eilish"), local("BillieEilish-Regular") /*, url("/fonts/BillieEilish-Regular.woff2") format("woff2") */;
-  font-weight: 400; font-display: swap;
+  src: url("/fonts/billie-eilish.woff2") format("woff2");
+  font-weight: 100 900; font-display: swap;
 }
 @font-face {
   font-family: "Gotham";
-  src: local("Gotham Book"), local("Gotham-Book") /*, url("/fonts/Gotham-Book.woff2") format("woff2") */;
-  font-weight: 300 400; font-display: swap;
+  src: url("/fonts/gotham-book.woff2") format("woff2");
+  font-weight: 100 449; font-display: swap;
 }
 @font-face {
   font-family: "Gotham";
-  src: local("Gotham Medium"), local("Gotham-Medium") /*, url("/fonts/Gotham-Medium.woff2") format("woff2") */;
-  font-weight: 500 700; font-display: swap;
+  src: url("/fonts/gotham-medium.woff2") format("woff2");
+  font-weight: 450 900; font-display: swap;
 }
 @font-face {
   font-family: "Avenir LT Std";
-  src: local("Avenir LT Std 95 Black"), local("AvenirLTStd-Black"), local("Avenir Black"), local("Avenir-Black") /*, url("/fonts/AvenirLTStd-Black.woff2") format("woff2") */;
-  font-weight: 700 900; font-display: swap;
+  src: url("/fonts/avenir-lt-std-black.woff2") format("woff2");
+  font-weight: 100 900; font-display: swap;
+}
+@font-face {
+  font-family: "Swiss 721 Condensed";
+  src: url("/fonts/swiss721-condensed.woff2") format("woff2");
+  font-weight: 100 549; font-display: swap;
+}
+@font-face {
+  font-family: "Swiss 721 Condensed";
+  src: url("/fonts/swiss721-bold-condensed.woff2") format("woff2");
+  font-weight: 550 900; font-display: swap;
+}
+@font-face {
+  font-family: "Myriad Pro";
+  src: url("/fonts/myriad-pro.woff2") format("woff2");
+  font-weight: 100 900; font-display: swap;
 }

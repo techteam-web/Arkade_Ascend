@@ -21,9 +21,9 @@ export default function FullscreenGate({ open, resumed, keyboardLocked, supporte
         gsap.set(root.current, { autoAlpha: 1 })
         if (!reduced) {
           gsap.timeline({ defaults: { ease: 'expo.out' } })
-            .from('[data-petal]', { autoAlpha: 0, y: 6, scale: 0.6, transformOrigin: '50% 100%', stagger: 0.07, duration: 1.2 }, 0.1)
-            .from('.gate-rise', { autoAlpha: 0, y: 18, filter: 'blur(6px)', stagger: 0.1, duration: 1.3 }, 0.35)
-            .from('.gate-rule', { scaleX: 0, duration: 1.4, ease: 'expo.inOut' }, 0.3)
+            .from('[data-petal]', { autoAlpha: 0, stagger: 0.05, duration: 0.9 }, 0.1)
+            .from('.gate-rise', { autoAlpha: 0, y: 10, stagger: 0.08, duration: 1 }, 0.25)
+            .from('.gate-rule', { scaleX: 0, duration: 1.1, ease: 'expo.inOut' }, 0.3)
         }
         button.current?.focus({ preventScroll: true })
       } else {
@@ -39,13 +39,12 @@ export default function FullscreenGate({ open, resumed, keyboardLocked, supporte
       style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 48%, rgba(27,17,19,.25), rgba(18,11,13,.82) 62%, rgba(12,7,8,.97))' }}
       aria-label={resumed ? 'Resume the presentation in full screen' : 'Enter the Arkade Ascend presentation in full screen'}>
       <span className="gate-rise eyebrow mb-8 short:mb-4">{resumed ? 'Presentation paused' : 'Arkade Developers presents'}</span>
-      <ArkadeMark className="h-16 w-auto text-gold-200 drop-shadow-[0_0_24px_rgba(236,211,168,.35)] sm:h-20 short:h-12" />
+      <ArkadeMark className="h-16 w-auto text-gold-200 sm:h-20 short:h-12" />
       <span className="gate-rise mt-7 font-sans text-[clamp(1.6rem,4vw,3rem)] font-bold uppercase leading-none tracking-[0.04em] short:mt-4">Arkade Ascend</span>
       <span className="gate-rise mt-3 text-[0.7rem] font-semibold uppercase tracking-[0.5em] text-gold-300">Malad West</span>
       <span className="gate-rule hairline mt-10 w-[min(22rem,70vw)] short:mt-5" />
       <span className="gate-rise mt-10 flex items-center gap-5 short:mt-5">
         <span className="relative grid size-14 place-items-center rounded-full border border-gold-500/70 transition-colors duration-500 group-hover:bg-gold-500 group-hover:text-espresso group-focus-visible:bg-gold-500 group-focus-visible:text-espresso">
-          <span className="absolute inset-0 animate-ping rounded-full border border-gold-300/40 motion-reduce:hidden" />
           <svg viewBox="0 0 20 20" className="size-5 fill-none stroke-current" strokeWidth="1.3" aria-hidden="true"><path d="M7 2H2v5M13 2h5v5M7 18H2v-5M13 18h5v-5" /></svg>
         </span>
         <span className="text-left">

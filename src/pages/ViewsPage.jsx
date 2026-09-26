@@ -45,7 +45,7 @@ export default function ViewsPage() {
     const resize = () => place(pan.current.x / (pan.current.min || 1) * -(frame.current.getBoundingClientRect().width * (WIDTH - 1)), 0)
     window.addEventListener('resize', resize)
     const context = gsap.context(() => {
-      if (!prefersReducedMotion()) gsap.from(frame.current, { autoAlpha: 0, filter: 'blur(12px)', duration: 2.2, ease: 'power2.out' })
+      if (!prefersReducedMotion()) gsap.from(frame.current, { autoAlpha: 0, duration: 1.2, ease: 'power2.out' })
     })
     return () => { window.removeEventListener('resize', resize); context.revert() }
   }, [])
@@ -53,7 +53,7 @@ export default function ViewsPage() {
   // Higher floors sit further above the skyline: less zoom, more horizon.
   useLayoutEffect(() => {
     const t = level / (viewLevels.length - 1)
-    gsap.to(lift.current, { scale: 1.22 - t * 0.22, yPercent: 7 - t * 12, duration: prefersReducedMotion() ? 0 : 1.8, ease: 'expo.inOut', overwrite: true })
+    gsap.to(lift.current, { scale: 1.22 - t * 0.22, yPercent: 7 - t * 12, duration: prefersReducedMotion() ? 0 : 1.3, ease: 'power2.inOut', overwrite: true })
   }, [level])
 
   useEffect(() => {
@@ -98,7 +98,7 @@ export default function ViewsPage() {
           <img src="/mumbai-dusk.png" alt="Illustrative view across a Mumbai suburban skyline towards distant hills" draggable="false"
             className="size-full select-none object-cover transition-[filter] duration-1600" style={{ filter: grade.filter }} />
           <div className="absolute inset-0 transition-opacity duration-1600" style={{ opacity: time === 'night' ? 1 : 0 }} aria-hidden="true">
-            {lights.map((light, i) => <span key={i} className="absolute animate-pulse rounded-full bg-[#ffd9a0] shadow-[0_0_6px_2px_rgba(255,200,120,.55)] motion-reduce:animate-none"
+            {lights.map((light, i) => <span key={i} className="absolute rounded-full bg-[#ffd9a0]/80"
               style={{ left: light.left, top: light.top, width: light.size, height: light.size, animationDelay: light.delay }} />)}
           </div>
         </div>
@@ -123,7 +123,7 @@ export default function ViewsPage() {
       <div className="pointer-events-auto flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div data-reveal className="max-w-sm">
           <p className="eyebrow">Level {viewLevels[level].floor} · {viewLevels[level].label}</p>
-          <p className="mt-2 font-serif text-[clamp(1.1rem,1.6vw,1.6rem)] italic text-ivory/90" aria-live="polite">{viewLevels[level].caption}</p>
+          <p className="mt-2 text-[clamp(0.95rem,1.2vw,1.2rem)] tracking-[0.02em] text-ivory/90" aria-live="polite">{viewLevels[level].caption}</p>
         </div>
         <div data-reveal className="glass-panel flex flex-wrap items-center gap-3 rounded-full p-2">
           <div role="group" aria-label="Time of day" className="flex gap-1">

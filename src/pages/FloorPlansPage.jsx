@@ -16,7 +16,7 @@ export default function FloorPlansPage() {
   const [focus, setFocus] = useState(null)       // { id, n }: a zoom request
   const [fullscreen, setFullscreen] = useState(false)
   const active = hovered || selected
-  const tilt = useRef(null)
+  const sheet = useRef(null)
   const opener = useRef(null)
 
   const chooseRoom = room => {
@@ -25,11 +25,11 @@ export default function FloorPlansPage() {
     setFocus({ id: next, n: Date.now() })
   }
 
-  // The plan rises from a tilted sheet to lie flat on arrival.
+  // The plan settles into place on arrival.
   useLayoutEffect(() => {
     if (prefersReducedMotion()) return
     const context = gsap.context(() => {
-      gsap.from(tilt.current, { rotateX: 58, rotateZ: -16, scale: 0.8, autoAlpha: 0, duration: 2.2, delay: 0.35, ease: 'expo.out' })
+      gsap.from(sheet.current, { autoAlpha: 0, y: 16, duration: 1.1, delay: 0.3, ease: 'silk' })
     })
     return () => context.revert()
   }, [])
@@ -64,8 +64,8 @@ export default function FloorPlansPage() {
     </div>
 
     <div className="relative flex min-h-[52vh] flex-col split:min-h-0">
-      <div className="relative min-h-0 flex-1 perspective-[1800px]">
-        <div ref={tilt} className="absolute inset-0 grid place-items-center @container-size">
+      <div className="relative min-h-0 flex-1">
+        <div ref={sheet} className="absolute inset-0 grid place-items-center @container-size">
           <PlanStage unit={unit} active={active} focus={focus} onHover={setHovered} onPick={chooseRoom}
             actions={<button ref={opener} type="button" className="btn-icon bg-cream-50/80!" onClick={() => setFullscreen(true)} aria-label="View plan full screen">
               <Icon d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />

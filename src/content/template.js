@@ -35,10 +35,23 @@ export const gallery = [
   { src: '/mumbai-dusk.png', category: 'Lifestyle', alt: 'Illustrative Mumbai skyline and distant hills at sunset' },
 ]
 
+// The Tower page's concept render and its residential floor rows, measured
+// on the image (fractions of its width and height). Levels are counted on the
+// render and are indicative, not the approved storey count.
+export const towerRender = {
+  src: '/residences/tower-cutout.png',
+  ratio: 1024 / 1536,
+  levels: 23,
+  top: 262 / 1536,       // roof line of the highest residential floor
+  bottom: 1240 / 1536,   // floor line of the lowest, above the podium
+  left: 275 / 1024,
+  right: 800 / 1024,
+}
+
 // Illustrative levels for the Views page. The image is a generated skyline,
 // not a photograph from the site.
 export const viewLevels = [
-  { floor: 8, label: 'Garden level', caption: 'Tree-top calm over the neighbourhood.' },
-  { floor: 18, label: 'City level', caption: 'The suburb opens out towards the hills.' },
-  { floor: 28, label: 'Sky level', caption: 'Unbroken horizons over Malad West.' },
+  { floor: 6, label: 'Garden level', caption: 'Tree-top calm over the neighbourhood.' },
+  { floor: 14, label: 'City level', caption: 'The suburb opens out towards the hills.' },
+  { floor: 22, label: 'Sky level', caption: 'Unbroken horizons over Malad West.' },
 ]

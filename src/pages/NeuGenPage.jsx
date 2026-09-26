@@ -65,7 +65,7 @@ export default function NeuGenPage() {
     const timeline = gsap.timeline({ defaults: { ease: 'silk' } })
     running.current = timeline
     if (outgoing) {
-      timeline.to(outgoing.querySelectorAll('[data-ch]'), { autoAlpha: 0, y: -22, filter: 'blur(6px)', duration: reduced ? 0 : 0.55, stagger: 0.03, ease: 'power2.in' })
+      timeline.to(outgoing.querySelectorAll('[data-ch]'), { autoAlpha: 0, y: -8, duration: reduced ? 0 : 0.45, ease: 'power2.in' })
         .set(outgoing, { autoAlpha: 0 })
     }
     timeline.set(incoming, { autoAlpha: 1 })
@@ -74,13 +74,13 @@ export default function NeuGenPage() {
     items.forEach(item => { const split = splits.current.get(item); if (split) gsap.set(split.lines, { clearProps: 'transform' }) })
     if (reduced) return
     items.forEach((item, index) => {
-      const at = (outgoing ? 0.6 : 0.1) + Math.min(index * 0.09, 0.9)
+      const at = (outgoing ? 0.5 : 0.1) + Math.min(index * 0.07, 0.7)
       const split = splits.current.get(item)
-      if (split) timeline.from(split.lines, { yPercent: 115, duration: 1.3, stagger: 0.11 }, at)
-      else if (item.dataset.ch === 'image') timeline.from(item, { scale: 1.16, autoAlpha: 0, duration: 2.4, ease: 'expo.out' }, at - 0.3)
-      else if (item.dataset.ch === 'rule') timeline.from(item, { scaleX: 0, duration: 1.3, ease: 'curtain' }, at)
-      else if (item.dataset.ch === 'glyph') timeline.from(item, { autoAlpha: 0, yPercent: 12, duration: 2.2, ease: 'expo.out' }, at - 0.2)
-      else timeline.from(item, { autoAlpha: 0, y: 26, filter: 'blur(6px)', duration: 1.2 }, at)
+      if (split) timeline.from(split.lines, { yPercent: 100, duration: 1, stagger: 0.08 }, at)
+      else if (item.dataset.ch === 'image') timeline.from(item, { scale: 1.04, autoAlpha: 0, duration: 1.6, ease: 'power2.out' }, at - 0.3)
+      else if (item.dataset.ch === 'rule') timeline.from(item, { scaleX: 0, duration: 1.1 }, at)
+      else if (item.dataset.ch === 'glyph') timeline.from(item, { autoAlpha: 0, duration: 1.6, ease: 'power2.out' }, at - 0.2)
+      else timeline.from(item, { autoAlpha: 0, y: 14, duration: 1 }, at)
     })
   }
 

@@ -13,7 +13,7 @@ export function PageHeading({ id, title, subtitle, className = '', titleClass = 
       <span className="num tracking-[0.12em]">{pad(index + 1)}</span><span>{routes[index].label}</span>
     </p>
     <h1 tabIndex={-1} data-reveal="lines" className={`display mt-4 whitespace-nowrap text-fg outline-none ${titleClass}`} style={{ fontSize: fit }}>{title}</h1>
-    {subtitle && <p data-reveal className="mt-4 font-serif text-[clamp(1.05rem,1.4vw,1.5rem)] italic text-muted">{subtitle}</p>}
+    {subtitle && <p data-reveal className="mt-4 text-[clamp(0.9rem,1.1vw,1.15rem)] tracking-[0.02em] text-muted">{subtitle}</p>}
   </div>
 }
 
@@ -23,7 +23,6 @@ export function ImageSlot({ src, alt = '', label = 'Render to follow', className
   if (src) return <img src={src} alt={alt} draggable="false" className={`size-full object-cover ${imgClass} ${className}`} />
   return <div role="img" aria-label={`${label} — image placeholder`} className={`relative grid size-full place-items-center overflow-hidden bg-[radial-gradient(ellipse_at_30%_20%,#4e373c,#21161a_70%)] ${className}`}>
     <div className="absolute inset-3 border border-gold-500/25" />
-    <div className="absolute inset-0 animate-[sheen_7s_ease-in-out_infinite] bg-[linear-gradient(110deg,transparent_35%,rgba(236,211,168,.09)_50%,transparent_65%)] bg-size-[250%_100%]" />
     <div className="relative flex flex-col items-center gap-3 text-gold-300/70">
       <ArkadeMark className="h-10 w-auto" />
       <span className="text-[0.58rem] uppercase tracking-[0.34em]">{label}</span>

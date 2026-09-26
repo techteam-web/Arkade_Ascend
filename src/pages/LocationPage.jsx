@@ -1,123 +1,158 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from '../app/reveal.js'
 import { PageHeading } from '../components/PageKit.jsx'
-import { connectivity, origin, project, upcoming } from '../content/project.js'
+import { locationGroups, origin, places, project } from '../content/project.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
+import BrochureMap from './location/BrochureMap.jsx'
 
-const MAP_RATIO = 2640 / 3080
-const VIEW = { w: 720, h: 840 }   // SVG space matches the brochure map
-const toView = ([x, y]) => [x * VIEW.w, y * VIEW.h]
-const o = toView([origin.x, origin.y])
-
-// A gentle arc from the project to a destination.
-const arc = point => {
-  const [x, y] = toView(point)
-  const mx = (o[0] + x) / 2, my = (o[1] + y) / 2
-  const dx = x - o[0], dy = y - o[1]
-  return `M${o[0]} ${o[1]} Q${mx - dy * 0.22} ${my + dx * 0.22} ${x} ${y}`
-}
+// MapLibre is large, so the live map loads with this page only.
+const LiveMap = lazy(() => import('./location/LiveMap.jsx'))
 
 export default function LocationPage() {
-  const [active, setActive] = useState(connectivity[0].id)
-  const card = useRef(null)
-  const route = useRef(null)
-  const items = [...connectivity, ...upcoming]
-  const current = items.find(item => item.id === active)
+  const [group, setGroup] = useState(locationGroups[0].id)
+  const [active, setActive] = useState(places.find(place => place.group === locationGroups[0].id).id)
+  const [hovered, setHovered] = useState(null)
+  const [view, setView] = useState('tilt')   // tilt (3D) | plan (2D) | brochure
+  const [liveFailed, setLiveFailed] = useState(false)
+  const list = useRef(null)
+  const shown = places.filter(place => place.group === group)
+  const current = places.find(place => place.id === active)
 
-  // Each selection draws its route from the project outward.
-  useLayoutEffect(() => {
-    const path = route.current
-    if (!path) return
-    const length = path.getTotalLength()
-    gsap.fromTo(path, { strokeDasharray: length, strokeDashoffset: length }, { strokeDashoffset: 0, duration: prefersReducedMotion() ? 0 : 1.4, ease: 'expo.inOut' })
-    gsap.fromTo(card.current.querySelectorAll('[data-destination]'), { scale: 0, transformOrigin: '50% 50%' }, { scale: 1, duration: prefersReducedMotion() ? 0 : 0.8, delay: prefersReducedMotion() ? 0 : 0.9, ease: 'back.out(2)' })
-  }, [active])
-
-  // The map lifts from a tilted sheet, then leans slightly toward the pointer.
-  const arrived = useRef(false)
-  useLayoutEffect(() => {
-    if (prefersReducedMotion()) { arrived.current = true; return }
-    const context = gsap.context(() => {
-      gsap.from(card.current, { rotateX: 42, rotateZ: 8, y: 60, scale: 0.86, autoAlpha: 0, duration: 2.2, delay: 0.3, ease: 'expo.out', onComplete: () => { arrived.current = true } })
-    })
-    return () => { arrived.current = false; context.revert() }
-  }, [])
-  // The pointer lean only starts once the entrance has finished.
-  const lean = event => {
-    if (!arrived.current || event.pointerType !== 'mouse' || prefersReducedMotion()) return
-    const box = event.currentTarget.getBoundingClientRect()
-    gsap.to(card.current, { rotateY: ((event.clientX - box.left) / box.width - 0.5) * 6, rotateX: -((event.clientY - box.top) / box.height - 0.5) * 6, duration: 1.2, ease: 'power3.out', overwrite: 'auto' })
+  const chooseGroup = id => {
+    if (id === group) return
+    setGroup(id)
+    setActive(places.find(place => place.group === id).id)
+    setHovered(null)
   }
-  const settle = () => { if (arrived.current) gsap.to(card.current, { rotateX: 0, rotateY: 0, duration: 1.4, ease: 'power3.out', overwrite: 'auto' }) }
 
-  const [cx, cy] = toView(current.point)
+  // A new group's places rise into the list in turn (the page's own arrival
+  // reveals the first group with the rest of the page).
+  const firstGroup = useRef(true)
+  useLayoutEffect(() => {
+    if (firstGroup.current) { firstGroup.current = false; return }
+    if (prefersReducedMotion()) return
+    const context = gsap.context(() => {
+      gsap.from(list.current.children, { autoAlpha: 0, y: 8, duration: 0.55, stagger: 0.05, ease: 'silk' })
+    }, list)
+    return () => context.revert()
+  }, [group])
+
+  const live = view !== 'brochure' && !liveFailed
 
   return <section data-tone="light" className="page page-scroll flex flex-col gap-6 split:grid split:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] split:gap-x-[4vw] 3xl:grid-cols-[minmax(0,1fr)_minmax(0,32rem)]">
     <div className="flex min-h-0 shrink-0 flex-col gap-4 split:shrink">
       <PageHeading id="location" title="Location" subtitle="Malad West, Mumbai" className="split:hidden" />
-      <div className="relative min-h-[60vh] flex-1 perspective-[1600px] split:min-h-0" onPointerMove={lean} onPointerLeave={settle}>
-        <div className="absolute inset-0 grid place-items-center @container-size">
-          <figure ref={card} className="relative overflow-hidden rounded-sm border border-line bg-cream-100 shadow-[0_50px_90px_-40px_rgba(61,42,47,.55)]"
-            style={{ aspectRatio: MAP_RATIO, width: `min(100cqw, calc(100cqh * ${MAP_RATIO}))` }}>
-            <img src="/brochure/location-map.webp" alt="Indicative location map of Malad West showing Arkade Ascend, Link Road, S.V. Road, the Western Express Highway, rail and metro stations" draggable="false" className="size-full select-none object-cover" />
-            <svg viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} className="absolute inset-0 size-full" aria-hidden="true">
-              <defs>
-                <radialGradient id="glow"><stop offset="0" stopColor="#c49a6c" stopOpacity=".55" /><stop offset="1" stopColor="#c49a6c" stopOpacity="0" /></radialGradient>
-              </defs>
-              <circle cx={o[0]} cy={o[1]} r="46" fill="url(#glow)" className="origin-center animate-pulse transform-fill" />
-              <circle cx={o[0]} cy={o[1]} r="9" fill="none" stroke="#4e373c" strokeWidth="1.5">
-                <animate attributeName="r" values="9;30" dur="2.4s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values=".8;0" dur="2.4s" repeatCount="indefinite" />
-              </circle>
-              <path key={active} ref={route} d={arc(current.point)} fill="none" stroke="#4e373c" strokeWidth="2.4" strokeLinecap="round" />
-              <g data-destination key={`${active}-dot`}>
-                <circle cx={cx} cy={cy} r="15" fill="#4e373c" fillOpacity=".14" />
-                <circle cx={cx} cy={cy} r="6.5" fill="#4e373c" stroke="#f4edcc" strokeWidth="2.5" />
-              </g>
-              {current.offMap && <text x={cx} y={cy - 22} textAnchor="middle" className="fill-plum-800 text-[15px] font-semibold uppercase tracking-[0.12em]">
-                {current.distance ? `${current.distance} ↓` : 'Beyond map'}
-              </text>}
-            </svg>
-            <figcaption className="absolute bottom-2 right-3 max-w-56 text-right text-[0.5rem] uppercase leading-relaxed tracking-[0.12em] text-plum-700/70">
-              Indicative map, not to scale · distances as per Google Maps
-            </figcaption>
-          </figure>
+      <figure data-reveal="fade" className="relative m-0 min-h-[56vh] flex-1 overflow-hidden rounded-sm border border-line bg-cream-100 split:min-h-0"
+        data-own-gesture data-own-keys aria-label={`Map of Malad West showing Arkade Ascend and ${current.name}`}>
+        {live
+          ? <Suspense fallback={<MapLoading />}>
+              <LiveMap origin={origin.lngLat} places={places} group={group} active={active} hovered={hovered} tilted={view !== 'plan'}
+                onSelect={id => setActive(id)} onFail={() => setLiveFailed(true)} />
+            </Suspense>
+          : <BrochureMap origin={origin} place={current} />}
+
+        <div role="group" aria-label="Map view" className="absolute left-3 top-3 z-10 flex rounded-full border border-line bg-cream-50/90 p-0.5 backdrop-blur-sm">
+          {[['tilt', '3D'], ['plan', '2D'], ['brochure', 'Brochure map']].map(([id, label]) => {
+            const pressed = id === 'brochure' ? !live : live && view === id
+            return <button key={id} type="button" aria-pressed={pressed} disabled={id !== 'brochure' && liveFailed} onClick={() => setView(id)}
+              className={`min-h-11 min-w-11 rounded-full px-4 text-[0.58rem] font-medium uppercase tracking-[0.2em] transition-colors duration-500 disabled:opacity-40 ${pressed ? 'bg-plum-700 text-ivory' : 'text-plum-700 hover:text-plum-900'}`}>{label}</button>
+          })}
         </div>
-      </div>
+        {liveFailed && view !== 'brochure' && <figcaption className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-cream-50/90 px-3 py-1.5 text-[0.55rem] uppercase tracking-[0.14em] text-plum-700">
+          Live map unavailable offline · showing the brochure map
+        </figcaption>}
+      </figure>
     </div>
 
-    <aside data-tone="dark" className="relative flex min-h-0 shrink-0 flex-col split:shrink overflow-hidden rounded-sm bg-plum-700 px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1.5rem,4.5vh,3.25rem)] text-ivory shadow-[0_40px_80px_-40px_rgba(33,22,26,.8)]">
-      <div className="page-scroll -mx-3 min-h-0 flex-1 px-3">
+    <aside data-tone="dark" className="relative flex min-h-0 shrink-0 flex-col split:shrink overflow-hidden rounded-sm bg-plum-700 px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1.5rem,4.5vh,3.25rem)] text-ivory">
+      <div className="page-scroll -mx-3 min-h-0 flex-1 px-3 py-1">
         <p data-reveal className="eyebrow hidden items-center gap-4 split:flex"><span className="num">09</span><span>Location</span></p>
         <h1 tabIndex={-1} data-reveal="lines" className="mt-4 hidden font-display text-[clamp(1.2rem,min(1.9vw,3.6vh),2rem)] uppercase leading-[1.3] text-gold-400 outline-none split:block">
           {project.cityHeadline.map(line => <span key={line} className="block">{line}</span>)}
         </h1>
-        <p className="split:hidden font-display text-xl uppercase leading-snug text-gold-400">{project.cityHeadline.join(' ')}</p>
-        <p data-reveal className="eyebrow mt-[clamp(1rem,3.5vh,2rem)] text-gold-300!">Connectivity choices</p>
-        <ul className="mt-2">
-          {connectivity.map(item => <li key={item.id}>
-            <ConnectivityButton item={item} active={active === item.id} onSelect={setActive} />
+        <p className="font-display text-xl uppercase leading-snug text-gold-400 split:hidden">{project.cityHeadline.join(' ')}</p>
+
+        <GroupTabs group={group} onChoose={chooseGroup} />
+
+        <ul ref={list} data-reveal id="location-places" role="tabpanel" aria-labelledby={`location-tab-${group}`} className="mt-3">
+          {shown.map(place => <li key={place.id}>
+            <PlaceButton place={place} active={active === place.id} onSelect={setActive} onHover={setHovered} />
           </li>)}
         </ul>
-        <p data-reveal className="eyebrow mt-[clamp(1rem,3vh,1.75rem)] text-gold-300!">Upcoming infrastructure</p>
-        <ul className="mt-2">
-          {upcoming.map(item => <li key={item.id}>
-            <ConnectivityButton item={item} active={active === item.id} onSelect={setActive} />
-          </li>)}
-        </ul>
+        <p data-reveal="fade" className="mt-4 text-[0.55rem] uppercase leading-relaxed tracking-[0.16em] text-ivory/50">
+          Indicative locations. Routes by road from OpenStreetMap; distances as per Google Maps.
+        </p>
       </div>
     </aside>
   </section>
 }
 
-function ConnectivityButton({ item, active, onSelect }) {
-  return <button type="button" data-reveal aria-pressed={active} onClick={() => onSelect(item.id)}
-    onPointerEnter={event => { if (event.pointerType === 'mouse') onSelect(item.id) }} onFocus={() => onSelect(item.id)}
-    className={`group flex min-h-11 w-full items-center justify-between gap-4 rounded-sm border-b border-gold-500/20 pl-1 text-left outline-offset-[-2px] transition-colors duration-500 ${active ? 'text-gold-200' : 'text-ivory/80 hover:text-ivory'}`}>
-    <span className="flex items-center gap-3 text-[0.78rem] leading-snug">
-      <span className={`size-1.5 shrink-0 rounded-full transition-all duration-500 ${active ? 'scale-150 bg-gold-300 shadow-[0_0_10px_#ecd3a8]' : 'bg-gold-500/40'}`} />
-      {item.name}
+function MapLoading() {
+  return <div className="absolute inset-0 grid place-items-center bg-cream-100">
+    <span className="text-[0.6rem] uppercase tracking-[0.3em] text-plum-700/60">Loading map</span>
+  </div>
+}
+
+// Category tabs; a gold pill glides to the chosen one.
+function GroupTabs({ group, onChoose }) {
+  const bar = useRef(null)
+  const pill = useRef(null)
+  const tabs = useRef({})
+
+  useLayoutEffect(() => {
+    const place = instant => {
+      const tab = tabs.current[group]
+      if (!tab) return
+      const to = { x: tab.offsetLeft, y: tab.offsetTop, width: tab.offsetWidth, height: tab.offsetHeight }
+      if (instant || prefersReducedMotion()) gsap.set(pill.current, { ...to, overwrite: true })
+      else gsap.to(pill.current, { ...to, duration: 0.6, ease: 'silk', overwrite: true })
+    }
+    place(!pill.current.dataset.placed)
+    pill.current.dataset.placed = 'true'
+    // Follow the tabs themselves too: web fonts can change their widths late.
+    const resize = new ResizeObserver(() => place(true))
+    resize.observe(bar.current)
+    Object.values(tabs.current).forEach(tab => tab && resize.observe(tab))
+    return () => resize.disconnect()
+  }, [group])
+
+  const onKeyDown = event => {
+    const ids = locationGroups.map(item => item.id)
+    const at = ids.indexOf(group)
+    const next = { ArrowRight: at + 1, ArrowDown: at + 1, ArrowLeft: at - 1, ArrowUp: at - 1, Home: 0, End: ids.length - 1 }[event.key]
+    if (next === undefined) return
+    event.preventDefault()
+    const id = ids[(next + ids.length) % ids.length]
+    onChoose(id)
+    tabs.current[id]?.focus()
+  }
+
+  return <div data-reveal className="mt-[clamp(1.25rem,3.5vh,2rem)]">
+    <p className="eyebrow text-gold-300!">Connectivity</p>
+    <div ref={bar} role="tablist" aria-label="Connectivity" onKeyDown={onKeyDown} className="relative mt-3 flex flex-wrap gap-2">
+      <span ref={pill} aria-hidden="true" className="pointer-events-none absolute left-0 top-0 rounded-full bg-gold-400" />
+      {locationGroups.map(item => {
+        const selected = item.id === group
+        return <button key={item.id} ref={element => { tabs.current[item.id] = element }} id={`location-tab-${item.id}`} type="button" role="tab"
+          aria-selected={selected} aria-controls="location-places" tabIndex={selected ? 0 : -1} onClick={() => onChoose(item.id)}
+          className={`relative min-h-11 rounded-full border px-4 text-[0.6rem] font-medium uppercase tracking-[0.18em] transition-colors duration-500 ${selected ? 'border-transparent text-espresso' : 'border-gold-500/35 text-ivory/80 hover:border-gold-400 hover:text-ivory'}`}>
+          {item.label}
+        </button>
+      })}
+    </div>
+  </div>
+}
+
+function PlaceButton({ place, active, onSelect, onHover }) {
+  return <button type="button" aria-pressed={active} onClick={() => onSelect(place.id)} onFocus={() => onSelect(place.id)}
+    onPointerEnter={event => { if (event.pointerType === 'mouse') onHover(place.id) }} onPointerLeave={() => onHover(null)}
+    className={`group flex min-h-12 w-full items-center justify-between gap-4 rounded-sm border-b border-gold-500/20 pl-1 text-left outline-offset-[-2px] transition-colors duration-500 ${active ? 'text-gold-200' : 'text-ivory/80 hover:text-ivory'}`}>
+    <span className="flex items-center gap-3 text-[0.8rem] leading-snug">
+      <span className={`size-1.5 shrink-0 rounded-full transition-[background-color,scale] duration-500 ${active ? 'scale-150 bg-gold-300' : 'bg-gold-500/40'}`} />
+      {place.name}
     </span>
-    {item.distance && <span className="num shrink-0 text-[0.95rem] text-gold-300">{item.distance}</span>}
+    {place.distance
+      ? <span className="num shrink-0 text-[0.95rem] text-gold-300">{place.distance}</span>
+      : <span className="shrink-0 text-[0.55rem] uppercase tracking-[0.2em] text-gold-300/80">Upcoming</span>}
   </button>
 }

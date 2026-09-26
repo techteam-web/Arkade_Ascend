@@ -16,13 +16,12 @@ import GalleryPage from '../pages/GalleryPage.jsx'
 import EnquirePage from '../pages/EnquirePage.jsx'
 
 // Holds the outgoing page on screen while its elements release, then swaps
-// to the new route and choreographs its arrival. The WebGL scene blends to
-// the new preset underneath at the same time.
+// to the new route and choreographs its arrival: a simple cross-fade. The
+// WebGL scene blends to the new preset underneath at the same time.
 export default function TransitionStage({ active }) {
   const location = useLocation()
   const [shown, setShown] = useState(location)
   const stage = useRef(null)
-  const sweep = useRef(null)
   const leaving = useRef(null)
   const arriving = useRef(null)   // the current page's entrance timeline
 
@@ -34,8 +33,7 @@ export default function TransitionStage({ active }) {
         leaving.current.kill()
         leaving.current = null
         sceneStore.leaving = false
-        gsap.set(sweep.current, { autoAlpha: 0 })
-        gsap.to([stage.current, ...stage.current.querySelectorAll('[data-reveal]')], { autoAlpha: 1, y: 0, filter: 'blur(0px)', duration: 0.6, stagger: 0.015, ease: 'silk', overwrite: true })
+        gsap.to([stage.current, ...stage.current.querySelectorAll('[data-reveal]')], { autoAlpha: 1, y: 0, duration: 0.5, ease: 'silk', overwrite: true })
       }
       if (location.key !== shown.key) setShown(location)
       return
@@ -44,7 +42,6 @@ export default function TransitionStage({ active }) {
     // Arriving from the menu (old page hidden) or with reduced motion: swap
     // before paint, so the previous page never reappears mid-exit.
     if (location.state?.instant || prefersReducedMotion()) {
-      gsap.set(sweep.current, { autoAlpha: 0 })
       setShown(location)
       return
     }
@@ -53,7 +50,6 @@ export default function TransitionStage({ active }) {
     sceneStore.leaving = true
     leaving.current = gsap.timeline({ onComplete: () => setShown(location) })
       .add(revealOut(stage.current), 0)
-      .fromTo(sweep.current, { xPercent: -100, autoAlpha: 1 }, { xPercent: 100, duration: 1.1, ease: 'curtain' }, 0)
       .to({}, { duration: 0.05 })
   }, [location])
 
@@ -107,8 +103,5 @@ export default function TransitionStage({ active }) {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>
-    {/* A single champagne light passing across the frame between pages. */}
-    <div ref={sweep} aria-hidden="true" className="pointer-events-none invisible absolute inset-y-0 left-0 z-40 w-full"
-      style={{ background: 'linear-gradient(100deg, transparent 38%, rgba(236,211,168,.07) 47%, rgba(246,231,204,.22) 50%, rgba(236,211,168,.07) 53%, transparent 62%)' }} />
   </>
 }

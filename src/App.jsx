@@ -32,13 +32,12 @@ export default function App() {
   const gated = !bypassGate && (fullscreen.supported ? !fullscreen.active : !started)
   useEffect(() => { if (!gated) setEverStarted(true) }, [gated])
   useEffect(() => { if (gated) setMenuOpen(false) }, [gated])
-  // The menu has its own mood (mist, threads, the gold emblem). Closing it
+  // The menu has its own quiet mood. Closing it
   // without navigating restores the page's own mood; after a navigation the
   // new page's mood (set by the route effect) stands.
   const beforeMenu = useRef(null)
   useLayoutEffect(() => {
     sceneStore.menuOpen = menuOpen
-    sceneStore.emblem.visible = menuOpen
     if (menuOpen) {
       beforeMenu.current = { preset: sceneStore.preset, path: location.pathname }
       setScenePreset('menu')

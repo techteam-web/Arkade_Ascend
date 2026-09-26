@@ -33,12 +33,12 @@ export default function ResidencesPage() {
       if (finder) {
         gsap.killTweensOf([art.current, panel.current])
         gsap.timeline()
-          .to(art.current, { autoAlpha: 0.18, scale: 0.96, filter: 'blur(3px)', duration: reduced ? 0 : 0.8, ease: 'silk' }, 0)
+          .to(art.current, { autoAlpha: 0.15, duration: reduced ? 0 : 0.6, ease: 'silk' }, 0)
           .fromTo(panel.current, { autoAlpha: 0, x: 40, clipPath: 'inset(0% 0% 0% 100%)' }, { autoAlpha: 1, x: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: reduced ? 0 : 1.1, ease: 'curtain' }, 0.1)
           .from(panel.current.querySelectorAll('[data-finder]'), { autoAlpha: 0, y: 16, stagger: 0.06, duration: reduced ? 0 : 0.8, ease: 'silk' }, 0.5)
         panel.current.querySelector('h2')?.focus({ preventScroll: true })
       } else {
-        gsap.to(art.current, { autoAlpha: 1, scale: 1, filter: 'blur(0px)', duration: reduced ? 0 : 0.9, ease: 'silk', overwrite: true })
+        gsap.to(art.current, { autoAlpha: 1, duration: reduced ? 0 : 0.7, ease: 'silk', overwrite: true })
         gsap.to(panel.current, { autoAlpha: 0, x: 30, duration: reduced ? 0 : 0.45, ease: 'power2.in', overwrite: true })
       }
     })
@@ -73,7 +73,7 @@ export default function ResidencesPage() {
       <div ref={art} className="absolute inset-0 flex items-end justify-center" onPointerLeave={() => setLit(null)}>
         {['A', 'B'].map((tower, index) => <div key={tower} data-reveal="up" data-delay={index * 0.15} className={`relative h-full min-w-0 flex-1 ${index ? '-ml-[8%] mb-[4%] scale-[0.9]' : 'z-10'}`}><button type="button"
           onPointerEnter={event => { if (event.pointerType === 'mouse') setLit(tower) }} onFocus={() => setLit(tower)} onBlur={() => setLit(null)}
-          onClick={() => go('/tower')} aria-label={`Tower ${tower}: view the tower in 3D`}
+          onClick={() => go('/tower')} aria-label={`Tower ${tower}: explore the tower by level`}
           className={`group relative size-full outline-offset-[-8px] transition-[filter,translate] duration-1000 ease-silk ${lit && lit !== tower ? 'brightness-[0.55] saturate-[0.7]' : lit === tower ? 'brightness-110 -translate-y-1' : ''}`}>
           <img src="/residences/tower-cutout.png" alt="" draggable="false" className={`absolute inset-0 size-full object-contain object-bottom ${index ? '-scale-x-100' : ''}`} />
           <span className={`absolute top-[14%] flex items-center gap-3 text-[0.6rem] uppercase tracking-[0.3em] text-gold-200 transition-opacity duration-700 ${index ? 'right-[4%] flex-row-reverse' : 'left-[4%]'} ${lit === tower ? 'opacity-100' : 'opacity-60'}`}>
@@ -114,7 +114,7 @@ export default function ResidencesPage() {
             </div>
             <button type="button" className="btn-lux justify-self-start" onClick={() => go('/floor-plans')}>Plan<ArrowIcon /></button>
           </li>)}
-          {!results.length && <li className="py-8 text-center font-serif text-lg italic text-muted">No residences match these filters.</li>}
+          {!results.length && <li className="py-8 text-center text-sm tracking-[0.04em] text-muted">No residences match these filters.</li>}
         </ul>
         <TemplateNote className="mt-4">Inventory connects here · availability and pricing on request</TemplateNote>
       </div>

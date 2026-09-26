@@ -8,13 +8,14 @@ import useStepper from '../hooks/useStepper.js'
 
 const categories = ['All', ...new Set(gallery.map(image => image.category))]
 
-// Card poses around the centre image; CSS transitions retarget smoothly when
-// the visitor browses quickly, so no timers queue up.
+// A flat filmstrip: the current image centred, its neighbours dimmed at the
+// edges. CSS transitions retarget smoothly when the visitor browses quickly,
+// so no timers queue up.
 const POSES = {
-  center: 'translate3d(-50%, -50%, 0) rotateY(0deg) scale(1)',
-  left: 'translate3d(-118%, -50%, -260px) rotateY(24deg) scale(.86)',
-  right: 'translate3d(18%, -50%, -260px) rotateY(-24deg) scale(.86)',
-  back: 'translate3d(-50%, -50%, -620px) rotateY(0deg) scale(.7)',
+  center: 'translate3d(-50%, -50%, 0) scale(1)',
+  left: 'translate3d(-156%, -50%, 0) scale(.9)',
+  right: 'translate3d(56%, -50%, 0) scale(.9)',
+  back: 'translate3d(-50%, -50%, 0) scale(.94)',
 }
 
 export default function GalleryPage() {
@@ -49,13 +50,13 @@ export default function GalleryPage() {
       </div>
     </div>
 
-    <div data-reveal="scale" className="relative min-h-0 perspective-[1800px] @container-size" role="region" aria-roledescription="carousel" aria-label="Gallery images">
+    <div data-reveal="fade" className="relative min-h-0 overflow-hidden @container-size" role="region" aria-roledescription="carousel" aria-label="Gallery images">
       {filtered.map((image, i) => {
         const offset = (i - index + filtered.length) % filtered.length
         const pose = offset === 0 ? 'center' : offset === 1 ? 'right' : offset === filtered.length - 1 ? 'left' : 'back'
         return <figure key={image.src} aria-hidden={offset !== 0}
-          className={`absolute left-1/2 top-1/2 m-0 aspect-16/10 w-[min(64cqw,calc(100cqh*1.45))] overflow-hidden rounded-sm border border-gold-500/30 shadow-[0_40px_90px_-30px_rgba(0,0,0,.8)] transition-[transform,opacity,filter] duration-1100 ease-silk max-md:w-[min(94cqw,calc(100cqh*1.45))] ${pose === 'center' ? 'z-10' : 'z-0'} ${pose === 'left' || pose === 'right' ? 'max-md:opacity-0!' : ''}`}
-          style={{ transform: POSES[pose], opacity: pose === 'back' ? 0 : pose === 'center' ? 1 : 0.5, filter: pose === 'center' ? 'none' : 'saturate(.6) brightness(.7)' }}>
+          className={`absolute left-1/2 top-1/2 m-0 aspect-16/10 w-[min(64cqw,calc(100cqh*1.45))] overflow-hidden rounded-sm border border-gold-500/30 shadow-[0_30px_70px_-35px_rgba(0,0,0,.7)] transition-[transform,opacity,filter] duration-900 ease-silk max-md:w-[min(94cqw,calc(100cqh*1.45))] ${pose === 'center' ? 'z-10' : 'z-0'} ${pose === 'left' || pose === 'right' ? 'max-md:opacity-0!' : ''}`}
+          style={{ transform: POSES[pose], opacity: pose === 'back' ? 0 : pose === 'center' ? 1 : 0.35, filter: pose === 'center' ? 'none' : 'saturate(.7) brightness(.75)' }}>
           <img src={image.src} alt={image.alt} draggable="false" className="size-full select-none object-cover" />
           {pose === 'center'
             ? <button type="button" className="absolute inset-0 cursor-zoom-in" onClick={() => setLightbox(true)} aria-label={`View ${image.category} image full screen`} />

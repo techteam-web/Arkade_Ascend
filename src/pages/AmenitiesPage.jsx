@@ -8,123 +8,63 @@ import useStepper from '../hooks/useStepper.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
 const COUNT = amenities.length
-const STEP = 360 / COUNT
 
+// One framed image at a time with a numbered index beside it. Images
+// cross-fade; the caption rises softly on each change.
 export default function AmenitiesPage() {
   const [index, setIndex] = useState(0)
   const root = useRef(null)
-  const ring = useRef(null)
-  const details = useRef(null)
-  const rotation = useRef({ angle: 0 })
-  const drag = useRef(null)
-  const wheelLock = useRef(0)
+  const caption = useRef(null)
   const active = amenities[index]
-
-  // Cumulative angle, so the ring always takes the short way round.
-  const turnTo = (next, duration = 1.3) => {
-    const wrapped = ((next % COUNT) + COUNT) % COUNT
-    const current = Math.round(-rotation.current.angle / STEP)
-    let delta = wrapped - (((current % COUNT) + COUNT) % COUNT)
-    if (delta > COUNT / 2) delta -= COUNT
-    if (delta < -COUNT / 2) delta += COUNT
-    gsap.to(rotation.current, {
-      angle: -(current + delta) * STEP, duration: prefersReducedMotion() ? 0 : duration, ease: 'expo.out', overwrite: true,
-      onUpdate: () => gsap.set(ring.current, { rotateY: rotation.current.angle }),
-    })
-    setIndex(wrapped)
-  }
-  useStepper(root, { onNext: () => turnTo(index + 1), onPrev: () => turnTo(index - 1), lock: 700 })
+  const select = next => setIndex(((next % COUNT) + COUNT) % COUNT)
+  useStepper(root, { onNext: () => select(index + 1), onPrev: () => select(index - 1), lock: 600 })
 
   useLayoutEffect(() => {
     if (prefersReducedMotion()) return
     const context = gsap.context(() => {
-      gsap.from('[data-amenity-copy]', { autoAlpha: 0, y: 18, filter: 'blur(5px)', duration: 0.9, stagger: 0.06, ease: 'silk' })
-    }, details)
+      gsap.from('[data-amenity-copy]', { autoAlpha: 0, y: 10, duration: 0.7, stagger: 0.05, ease: 'silk' })
+    }, caption)
     return () => context.revert()
   }, [index])
 
-  useLayoutEffect(() => {
-    if (prefersReducedMotion()) return
-    rotation.current.angle = 140
-    gsap.set(ring.current, { rotateY: 140 })
-    const tween = gsap.to(rotation.current, {
-      angle: 0, duration: 2.6, delay: 0.3, ease: 'expo.out',
-      onUpdate: () => gsap.set(ring.current, { rotateY: rotation.current.angle }),
-    })
-    return () => { tween.kill(); rotation.current.angle = 0; gsap.set(ring.current, { rotateY: 0 }) }
-  }, [])
-
-  const onPointerDown = event => {
-    event.currentTarget.setPointerCapture(event.pointerId)
-    gsap.killTweensOf(rotation.current)
-    drag.current = { x: event.clientX, angle: rotation.current.angle, moved: false }
-  }
-  const onPointerMove = event => {
-    if (!drag.current) return
-    const dx = event.clientX - drag.current.x
-    if (Math.abs(dx) > 4) drag.current.moved = true
-    rotation.current.angle = drag.current.angle + dx * 0.22
-    gsap.set(ring.current, { rotateY: rotation.current.angle })
-  }
-  const onPointerUp = () => {
-    if (!drag.current) return
-    const moved = drag.current.moved
-    drag.current = null
-    if (moved) turnTo(Math.round(-rotation.current.angle / STEP), 0.9)
-  }
-
-  return <section ref={root} className="page page-scroll grid grid-rows-[auto_minmax(16rem,1fr)_auto] gap-4">
+  return <section ref={root} className="page page-scroll grid grid-cols-[minmax(0,1fr)] content-start gap-[clamp(1rem,3vh,2rem)] split:grid-rows-[auto_minmax(0,1fr)_auto] split:content-stretch">
     <div className="flex items-start justify-between gap-6">
       <PageHeading id="amenities" title="Amenities" subtitle="Life beyond home" className="flex-1" />
       <TemplateNote className="mt-3 hidden max-w-[16rem] text-right md:block">Indicative amenities · renders to follow</TemplateNote>
     </div>
 
-    <div data-own-gesture className="relative min-h-0 touch-pan-y select-none"
-      onWheel={event => {
-        const now = performance.now()
-        if (now < wheelLock.current || Math.abs(event.deltaX) + Math.abs(event.deltaY) < 12) return
-        wheelLock.current = now + 650
-        turnTo(index + (event.deltaY + event.deltaX > 0 ? 1 : -1))
-      }}
-      onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp}>
-      <div data-reveal="fade" className="absolute inset-0 grid place-items-center perspective-[1600px]">
-        <div className="relative transform-3d" style={{ width: 'var(--card)', height: 'calc(var(--card) * 1.3)', '--card': 'clamp(9rem, min(17vw, 30cqh), 19rem)', transform: 'translateZ(calc(var(--card) * -1.62))' }}>
-        <div ref={ring} className="absolute inset-0 transform-3d">
-          {amenities.map((amenity, i) => {
-            const distance = Math.min(Math.abs(i - index), COUNT - Math.abs(i - index))
-            return <button key={amenity.id} type="button" tabIndex={-1} aria-hidden="true" onClick={() => { if (!drag.current) turnTo(i) }}
-              className="absolute inset-0 overflow-hidden rounded-sm border border-gold-500/30 transition-[opacity,filter] duration-1000 backface-hidden"
-              style={{
-                transform: `rotateY(${i * STEP}deg) translateZ(calc(var(--card) * 1.62))`,
-                opacity: distance === 0 ? 1 : distance === 1 ? 0.7 : distance === 2 ? 0.4 : 0.18,
-                filter: distance === 0 ? 'none' : `saturate(.6) brightness(${1 - distance * 0.15})`,
-              }}>
-              <ImageSlot src={amenity.image} alt="" label={amenity.name} />
-              <span className="absolute inset-x-0 bottom-0 bg-linear-to-t from-espresso/90 to-transparent px-4 pb-3 pt-10 text-left">
-                <span className="num block text-[0.62rem] text-gold-300">{pad(i + 1)}</span>
-                <span className="mt-1 block font-display text-sm uppercase leading-tight text-ivory">{amenity.name}</span>
-              </span>
-            </button>
-          })}
-        </div>
-        </div>
-      </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-[6%] mx-auto h-8 w-[min(34rem,70%)] rounded-[50%] bg-gold-400/15 blur-2xl" aria-hidden="true" />
+    <div className="grid gap-[clamp(1.25rem,3vw,3rem)] split:min-h-0 split:grid-rows-[minmax(0,1fr)] split:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] 3xl:grid-cols-[minmax(0,1.7fr)_minmax(0,1fr)]">
+      <figure data-reveal="fade" className="relative m-0 aspect-4/3 overflow-hidden rounded-sm border border-line split:aspect-auto split:h-full split:min-h-0" aria-live="polite">
+        {amenities.map((amenity, i) => <div key={amenity.id} aria-hidden={i !== index}
+          className={`absolute inset-0 transition-opacity duration-700 ease-silk ${i === index ? 'opacity-100' : 'opacity-0'}`}>
+          <ImageSlot src={amenity.image} alt={i === index ? amenity.name : ''} label={amenity.name} />
+        </div>)}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink/85 via-ink/35 to-transparent" />
+        <figcaption ref={caption} className="absolute inset-x-0 bottom-0 px-[clamp(1.25rem,3vw,2.5rem)] pb-[clamp(1.1rem,3vh,2.25rem)] text-ivory">
+          <p data-amenity-copy className="eyebrow text-gold-300!">{active.level} · <span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
+          <h2 data-amenity-copy className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5vh),2.8rem)] leading-[1.04]">{active.name}</h2>
+          <p data-amenity-copy className="mt-2 max-w-[46ch] short:hidden text-[clamp(0.8rem,0.74rem+0.22vw,0.98rem)] leading-relaxed text-ivory/80">{active.copy}</p>
+        </figcaption>
+      </figure>
+
+      <ol data-reveal className="-mx-2 px-2 py-1 split:max-h-full split:min-h-0 split:self-center split:overflow-y-auto split:overscroll-contain" aria-label="Amenities">
+        {amenities.map((amenity, i) => <li key={amenity.id}>
+          <button type="button" onClick={() => select(i)} aria-current={i === index ? 'true' : undefined}
+            className="group flex min-h-11 w-full items-baseline gap-4 border-b border-line py-[clamp(0.35rem,1.1vh,0.8rem)] text-left outline-offset-[-2px]">
+            <span className={`num w-6 shrink-0 text-[0.66rem] transition-colors duration-500 ${i === index ? 'text-accent' : 'text-muted'}`}>{pad(i + 1)}</span>
+            <span className={`min-w-0 font-display text-[clamp(1rem,min(1.6vw,3vh),1.6rem)] uppercase leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 ${i === index ? 'text-fg' : 'text-muted'}`}>{amenity.name}</span>
+            <span className={`ml-auto h-px shrink-0 self-center bg-accent transition-[width] duration-500 ease-silk ${i === index ? 'w-8' : 'w-0'}`} aria-hidden="true" />
+          </button>
+        </li>)}
+      </ol>
     </div>
 
-    <div className="flex flex-wrap items-end justify-between gap-6">
-      {/* Fixed height, so a name wrapping to two lines never moves the ring. */}
-      <div ref={details} data-reveal className="flex h-[clamp(8rem,18vh,10rem)] max-w-lg flex-col justify-end overflow-hidden" aria-live="polite">
-        <p data-amenity-copy className="eyebrow">{active.level} · <span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
-        <h2 data-amenity-copy className="display mt-3 line-clamp-2 text-[clamp(1.6rem,min(3vw,5vh),3rem)] leading-[1.02] text-fg">{active.name}</h2>
-        <p data-amenity-copy className="body-copy mt-2 line-clamp-2">{active.copy}</p>
-      </div>
-      <div data-reveal className="flex items-center gap-3">
-        <button type="button" className="btn-icon size-12!" onClick={() => turnTo(index - 1)} aria-label="Previous amenity"><ChevronIcon direction="left" /></button>
-        <div className="flex gap-1.5" aria-hidden="true">
-          {amenities.map((amenity, i) => <span key={amenity.id} className={`h-px transition-all duration-700 ${i === index ? 'w-8 bg-gold-300' : 'w-3 bg-gold-500/35'}`} />)}
-        </div>
-        <button type="button" className="btn-icon size-12!" onClick={() => turnTo(index + 1)} aria-label="Next amenity"><ChevronIcon /></button>
+    <div data-reveal className="flex items-center justify-between gap-4">
+      <TemplateNote className="md:hidden">Indicative amenities</TemplateNote>
+      <div className="ml-auto flex items-center gap-3">
+        <button type="button" className="btn-icon" onClick={() => select(index - 1)} aria-label="Previous amenity"><ChevronIcon direction="left" /></button>
+        <p className="num w-16 text-center text-base text-fg">{pad(index + 1)}<span className="text-muted"> / {pad(COUNT)}</span></p>
+        <button type="button" className="btn-icon" onClick={() => select(index + 1)} aria-label="Next amenity"><ChevronIcon /></button>
       </div>
     </div>
   </section>
