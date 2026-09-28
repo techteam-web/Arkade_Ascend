@@ -56,14 +56,15 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
   }
 
   return <div ref={root} role="dialog" aria-modal="true" aria-label="Explore Arkade Ascend" aria-hidden={!open} inert={open ? undefined : ''}
-    onKeyDown={onKeyDown} className="invisible absolute inset-0 z-50" data-tone="dark">
+    onKeyDown={onKeyDown} className="invisible absolute inset-0 z-50 [--menu-picture:54%] xl:[--menu-picture:58%] 3xl:[--menu-picture:60%]" data-tone="dark">
     {/* The brochure's plum, lit from the upper left. */}
     <div className="menu-curtain absolute inset-0 overflow-hidden bg-[radial-gradient(ellipse_90%_80%_at_18%_22%,#5a4046_0%,#3d2a2f_45%,#21161a_100%)]">
       <ArkadeMark className="pointer-events-none absolute -right-[8vmin] -bottom-[14vmin] h-[70vmin] w-auto text-gold-500/[0.06] lg:hidden" />
     </div>
 
-    {/* The section under consideration, as a full-height picture. */}
-    <aside className="menu-fade pointer-events-none absolute inset-y-0 right-0 hidden w-[42%] overflow-hidden lg:block" aria-hidden="true">
+    {/* The section under consideration, as a full-height picture. It takes
+        the larger share of wide screens; the list keeps the rest. */}
+    <aside className="menu-fade pointer-events-none absolute inset-y-0 right-0 hidden w-(--menu-picture) overflow-hidden lg:block" aria-hidden="true">
       {routes.map((route, index) => <img key={route.id} src={route.preview} alt="" loading="lazy"
         className={`absolute inset-0 size-full object-cover transition-opacity duration-700 ease-silk ${index === shown ? 'opacity-100' : 'opacity-0'}`} />)}
       <div className="absolute inset-0 bg-linear-to-r from-[#35252a] via-[#35252a]/25 to-transparent" />
@@ -86,7 +87,7 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
         </button>
       </div>
 
-      <nav aria-label="Sections" className="page-scroll -mx-2 flex min-h-0 flex-col justify-center-safe px-2 py-2 lg:w-[calc(58%-var(--gutter)-4vw)]" onPointerLeave={() => setPreviewed(null)}>
+      <nav aria-label="Sections" className="page-scroll -mx-2 flex min-h-0 flex-col justify-center-safe px-2 py-2 lg:w-[calc(100%-var(--menu-picture)-var(--gutter)-3vw)]" onPointerLeave={() => setPreviewed(null)}>
         <ol className="grid grid-cols-1 short:grid-cols-2 short:gap-x-8 sm:compact-h:grid-cols-2 sm:compact-h:gap-x-10">
           {routes.map((route, index) => {
             const current = index === currentIndex

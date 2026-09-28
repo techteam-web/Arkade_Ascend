@@ -54,3 +54,29 @@ Taken from `brochure design.pdf` (Adobe Illustrator, September 2026). The embedd
 - `location-map.webp`: page 5 map, left two-thirds. The brochure marks it "Indicative map, not to scale".
 - `floor-plan-unit-1.webp`, `key-plan.webp`: page 6 plan and key plan. The brochure marks the plan "Dummy render".
 - `favicon.svg` and the `ArkadeMark` component use the Arkade logo paths from page 2's vector artwork.
+
+## Views panoramas (`public/views/`)
+
+Three 360° drone panoramas (day, evening, night), exported as tiled cube maps
+by the Marzipano Tool. The drone's heading and tilt differed between flights,
+so the day and night tiles were re-projected onto the evening shot's frame:
+about 12,000 (day) and 1,900 (night) SIFT matches against evening gave the
+rotation, the full-resolution faces were resampled (Lanczos) and re-tiled at
+JPEG quality 85, progressive, the same as the export. Residual misalignment is
+about 0.03°. Nearby rooftops still differ slightly between times, because the
+drone hovered in a slightly different spot each time (parallax, which no
+rotation can remove).
+
+- Day: rotated 1.73° (its front direction lands at yaw −1.63°, pitch +0.40°).
+- Night: rotated 1.09° (yaw +0.22°, pitch +0.98°).
+- Evening: untouched.
+
+`still.webp` in each folder (the no-WebGL fallback, and the menu preview for
+evening) is rendered from the page's opening view (`INITIAL_VIEW` in
+`src/pages/ViewsPage.jsx`: yaw 0.105, pitch 0.03, fov 1.47 rad), so the tower
+sits in the same place in all three.
+
+The unaligned day and night exports, and the original evening still, are kept
+in `source-assets/views-unaligned/` (outside `public/`, so not deployed). Any
+replacement panorama needs the same alignment before it goes into
+`public/views/`.

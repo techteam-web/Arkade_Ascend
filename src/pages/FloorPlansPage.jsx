@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useSearchParams } from 'react-router'
 import { gsap } from '../app/reveal.js'
 import { Figure, PageHeading, TemplateNote } from '../components/PageKit.jsx'
 import { planRect, units } from '../content/project.js'
@@ -11,6 +12,10 @@ const Icon = ({ d }) => <svg viewBox="0 0 24 24"><path d={d} /></svg>
 
 export default function FloorPlansPage() {
   const unit = units[0]
+  // Arriving from the building model's visual selection carries the floor.
+  const [params] = useSearchParams()
+  const floor = Number(params.get('floor')) || null
+  const tower = params.get('tower')
   const [hovered, setHovered] = useState(null)
   const [selected, setSelected] = useState(null)
   const [focus, setFocus] = useState(null)       // { id, n }: a zoom request
@@ -38,7 +43,7 @@ export default function FloorPlansPage() {
 
   return <section data-tone="light" className="page page-scroll flex flex-col gap-6 split:grid split:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] split:gap-x-[4vw] 3xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
     <div className="flex min-h-0 shrink-0 flex-col gap-[clamp(1rem,3vh,1.75rem)] split:shrink">
-      <PageHeading id="floor-plans" title="Floor Plan" subtitle={`Unit ${unit.unit} · ${unit.configuration}`} />
+      <PageHeading id="floor-plans" title="Floor Plan" subtitle={`${tower ? `Tower ${tower} · ` : ''}${floor ? `Floor ${floor} · ` : ''}Unit ${unit.unit} · ${unit.configuration}`} />
       <div className="grid grid-cols-3 gap-3 border-y border-line py-4">
         <Figure value={unit.reraArea} suffix="sq.ft" label="RERA area" />
         <Figure value={unit.balcony} suffix="sq.ft" label="Balcony" />

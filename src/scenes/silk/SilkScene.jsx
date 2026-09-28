@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
+import { Component, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import * as THREE from 'three'
 import { presets, sceneStore } from '../sceneStore.js'
@@ -28,6 +28,7 @@ const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').match
 export default function SilkScene({ quality = 'high' }) {
   return (
     <div className="absolute inset-0" aria-hidden="true">
+      <WithoutWebGL>
       <Canvas
         frameloop="demand"
         dpr={quality === 'high' ? [1, 2] : [1, 1.5]}
@@ -38,8 +39,20 @@ export default function SilkScene({ quality = 'high' }) {
         <Pacer />
         <World quality={quality} />
       </Canvas>
+      </WithoutWebGL>
     </div>
   )
+}
+
+// Without WebGL the presentation keeps working over a still plum ground.
+class WithoutWebGL extends Component {
+  state = { failed: false }
+  static getDerivedStateFromError() { return { failed: true } }
+  render() {
+    return this.state.failed
+      ? <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_80%_at_30%_20%,#4e373c,#21161a_75%)]" />
+      : this.props.children
+  }
 }
 
 function Pacer() {

@@ -21,17 +21,17 @@ To deliver enquiries, set `VITE_ENQUIRY_ENDPOINT` to a JSON webhook (CRM or form
 |---|---|---|---|
 | 01 | `/` | Home: ASCEND over the flowing silk; Enter opens the menu | brochure pp. 1–2 |
 | 02 | `/neu-gen` | Neu Gen Life: four chapters (cover satin, gilded silk, *want it all*, Neu Gen Heart) | brochure pp. 1–4 |
-| 03 | `/tower` | The concept render with a gold level band: hover, click or tap the facade, or use the slider or arrow keys | concept render (levels indicative) |
-| 04 | `/residences` | Tower concept art, paths to Floor Plans and a Unit Finder over the unit data | brochure p. 6 |
+| 03 | `/tower` | Full-page drone orbit over the site: 360 frames of the DJI footage (`public/orbit/`, AVIF, 1280 and 854 px wide) dragged through with easing and a glide on release, always one whole frame (no blending, which ghosts); wheel, track and arrow keys too; a drag hint until the first move. Key figures over it | drone footage |
+| 04 | `/residences` | Key figures and two paths beside the building model. Visual selection hides the text and centres the model: Tower A and Tower B are chosen separately. Pointing at a tower previews that tower's floor only (gold on its facade), click or tap or the Tower A/B switch and arrow keys select, then its floor plans open (`/floor-plans?tower=A&floor=n`). The Unit Finder filters the unit data. The model carries a note that it is a temporary representation | brochure p. 6, architectural model |
 | 05 | `/floor-plans` | Unit 1 (4 BHK) plan: zoom/pan, room schedule that locates each room, full-screen plan viewer, key plan | brochure p. 6 |
 | 06 | `/specifications` | Category tabs with image slots | template |
 | 07 | `/amenities` | Framed feature image with a numbered index | template |
-| 08 | `/views` | Draggable skyline panorama: three elevations, morning/sunset/night | template |
+| 08 | `/views` | 360° drone panoramas at 120 m (Marzipano, tiled cube maps in `public/views/`): opens on the skyline's tall tower and turns slowly until stopped (Stop/Start rotation button; dragging or the arrows pause it for a few seconds). Day, Evening and Night are aligned to one frame and crossfade in place, even while turning or dragging; aligned still images stand in without WebGL | project panoramas |
 | 09 | `/location` | Tilted 3D MapLibre map in the brochure palette with extruded buildings: category tabs (roads, rail & metro, airports, upcoming), pins, road routes drawn to each place, a 3D / 2D switch, and the brochure map as a toggle and offline fallback | brochure p. 5 + OpenStreetMap |
 | 10 | `/gallery` | Flat filmstrip carousel, filters, full-screen lightbox | existing concept images + brochure p. 4 |
 | 11 | `/enquire` | Validated enquiry form | — |
 
-Navigation: the Explore menu (arrow keys, Enter, Esc), the Arkade logo (home), and on stepped pages the wheel, swipe or arrow keys.
+Navigation: the Menu button (arrow keys, Enter, Esc), the Arkade logo (home), and on stepped pages the wheel, swipe or arrow keys.
 
 ## Design system
 
@@ -65,7 +65,7 @@ src/
   App.jsx                 gate, canvas, header, menu, stage
   app/                    routes, transitions, reveal choreography, header, menu, gate
   pages/                  one component per route (location/ holds the live and brochure maps)
-  scenes/                 sceneStore, silk/ (veil and still backdrop), tower/
+  scenes/                 sceneStore, silk/ (veil and still backdrop), building/ (tower model and floor helpers)
   components/             brand mark, page kit (heading, image slot, figures)
   content/                brochure facts, template content, enquiry delivery
   hooks/                  fullscreen, media queries, stepper (wheel/swipe/keys)
@@ -75,4 +75,4 @@ src/
 
 ## Verification status
 
-The production build passes. The pages were screenshotted in desktop Chrome (Playwright) at 390×844, 844×390, 768×1024, 1024×768, 1440×900, 1920×1080, 2560×1080 and 3840×2160. The runs also exercised the full-screen gate (enter, exit, resume), keyboard menu navigation and focus return, reduced motion, the finder, the enquiry form, floor-plan room focus and full-screen viewer, tower level selection by hover, click, slider and keys, the amenities frame holding still between items, and the Location tabs, pins, route drawing, keyboard tabs, brochure toggle and offline fallback, with no console errors. The tower flicker reported on one machine could not be reproduced here; its likely causes were removed (a masked scroll layer over the canvas, a pulsing bloomed floor, shimmering window lines), so please recheck on that machine. Not verified: physical phones and tablets, iOS Safari, foldable hinge segments, GPU performance on low-end devices, and Firefox/Safari rendering.
+The production build passes. The pages were screenshotted in desktop Chrome (Playwright) at 390×844, 844×390, 768×1024, 1024×768, 1440×900, 1920×1080, 2560×1080 and 3840×2160. The runs also exercised the full-screen gate (enter, exit, resume), keyboard menu navigation and focus return, reduced motion, the finder, the enquiry form, floor-plan room focus and full-screen viewer, the amenities frame holding still between items, and the Location tabs, pins, route drawing, keyboard tabs, brochure toggle and offline fallback, with no console errors. The tower flicker reported on one machine could not be reproduced here; its likely causes were removed (a masked scroll layer over the canvas, a pulsing bloomed floor, shimmering window lines), so please recheck on that machine. Not verified: physical phones and tablets, iOS Safari, foldable hinge segments, GPU performance on low-end devices, and Firefox/Safari rendering.

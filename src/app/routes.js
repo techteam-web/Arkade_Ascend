@@ -8,7 +8,7 @@ export const routes = [
   { id: 'floor-plans', path: '/floor-plans', label: 'Floor Plans', hint: 'Every room, measured', scene: 'cream', tone: 'light', preview: '/brochure/floor-plan-unit-1.webp' },
   { id: 'specifications', path: '/specifications', label: 'Specifications', hint: 'Crafted in detail', scene: 'plum', preview: '/gallery/interior.png' },
   { id: 'amenities', path: '/amenities', label: 'Amenities', hint: 'Life beyond home', scene: 'amenities', preview: '/gallery/amenities.png' },
-  { id: 'views', path: '/views', label: 'Views', hint: 'The city from above', scene: 'views', preview: '/mumbai-dusk.png' },
+  { id: 'views', path: '/views', label: 'Views', hint: 'The city from above', scene: 'views', preview: '/views/evening/still.webp' },
   { id: 'location', path: '/location', label: 'Location', hint: 'The city at your command', scene: 'cream', tone: 'light', preview: '/brochure/location-map.webp' },
   { id: 'gallery', path: '/gallery', label: 'Gallery', hint: 'Curated visions of Ascend', scene: 'gallery', preview: '/gallery/interior.png' },
   { id: 'enquire', path: '/enquire', label: 'Enquire', hint: 'Make Ascend your address', scene: 'enquire', preview: '/brochure/lifestyle-arrival.webp' },

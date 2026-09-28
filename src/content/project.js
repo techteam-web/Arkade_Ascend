@@ -82,3 +82,7 @@ export const upcoming = [
   { id: 'coastal', name: 'Versova–Dahisar Coastal Road', group: 'upcoming', point: [40 / 720, 470 / 840], offMap: true, lngLat: [72.8241, 19.1962] },
 ]
 export const places = [...connectivity, ...upcoming]
+
+// Drone footage over the site (DJI, 24 Sep 2026), cut into 360 evenly spaced
+// frames for the Tower page's draggable orbit: public/orbit/<width>/NNN.avif.
+export const orbit = { frames: 360, path: '/orbit', widths: [854, 1280], poster: '/orbit/poster.jpg', ratio: 16 / 9 }

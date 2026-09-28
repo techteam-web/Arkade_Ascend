@@ -9,7 +9,7 @@ export default function SiteHeader({ route, index, hidden, menuOpen, onMenu, men
   const root = useRef(null)
   useLayoutEffect(() => {
     const duration = prefersReducedMotion() ? 0 : 0.8
-    // Visible (and focusable) at once when shown, so focus can return to Explore.
+    // Visible (and focusable) at once when shown, so focus can return to the menu button.
     if (hidden) {
       gsap.to(root.current, { autoAlpha: 0, y: -12, duration, ease: 'silk', overwrite: true })
     } else {
@@ -29,7 +29,7 @@ export default function SiteHeader({ route, index, hidden, menuOpen, onMenu, men
       </p>
       <button ref={menuButton} type="button" onClick={onMenu} aria-expanded={menuOpen} aria-haspopup="dialog"
         className="group flex min-h-11 items-center gap-4 rounded-full py-2 pl-4 pr-1 text-fg">
-        <span className="text-[0.68rem] font-medium uppercase tracking-[0.3em] transition-colors group-hover:text-accent max-[23rem]:sr-only">Explore</span>
+        <span className="text-[0.68rem] font-medium uppercase tracking-[0.3em] transition-colors group-hover:text-accent max-[23rem]:sr-only">Menu</span>
         <span className="grid size-11 place-items-center rounded-full border border-line transition-colors duration-500 group-hover:border-accent group-focus-visible:border-accent">
           <span className="flex w-4.5 flex-col items-end gap-[5px]">
             <i className="block h-px w-full bg-current" />

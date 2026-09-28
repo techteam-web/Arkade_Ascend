@@ -30,6 +30,14 @@ export function ImageSlot({ src, alt = '', label = 'Render to follow', className
   </div>
 }
 
+// Shown wherever the building model appears.
+export function ModelNote({ className = '' }) {
+  return <p className={`text-[0.58rem] uppercase leading-relaxed tracking-[0.22em] text-muted/90 ${className}`}>
+    <span className="short:hidden">Temporary representation of the building · it will be replaced by the final, fully coloured model as the development progresses</span>
+    <span className="hidden short:inline">Temporary model · the final, fully coloured model will replace it</span>
+  </p>
+}
+
 export function TemplateNote({ children = 'Indicative content — to be confirmed', className = '' }) {
   if (!isTemplate) return null
   return <p className={`text-[0.58rem] uppercase tracking-[0.26em] text-muted/80 ${className}`}>{children}</p>

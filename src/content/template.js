@@ -35,23 +35,19 @@ export const gallery = [
   { src: '/mumbai-dusk.png', category: 'Lifestyle', alt: 'Illustrative Mumbai skyline and distant hills at sunset' },
 ]
 
-// The Tower page's concept render and its residential floor rows, measured
-// on the image (fractions of its width and height). Levels are counted on the
-// render and are indicative, not the approved storey count.
-export const towerRender = {
-  src: '/residences/tower-cutout.png',
-  ratio: 1024 / 1536,
-  levels: 23,
-  top: 262 / 1536,       // roof line of the highest residential floor
-  bottom: 1240 / 1536,   // floor line of the lowest, above the podium
-  left: 275 / 1024,
-  right: 800 / 1024,
+// The architectural model of the tower (public/models, optimised from the
+// supplied GLB). Floor levels are read from the model's floor names and
+// heights, in model metres with the ground at 0; confirm against the approved
+// plans. Wing outlines are convex [x, z] footprints measured on the model.
+export const buildingModel = {
+  src: '/models/ascend-block.glb',
+  firstFloor: 6,        // floors 1 to 5 are the podium
+  lastFloor: 37,
+  firstY: 21,           // floor line of the 6th floor
+  floorHeight: 3.15,
+  top: 131.25,
+  wings: [
+    { id: 'A', refuge: [8, 22, 29, 36], outline: [[-49.8, 15.5], [-49.4, 14.1], [-32.7, 9.7], [-23, 9.1], [-10, 9.2], [-6.4, 9.6], [6.9, 11.9], [9.8, 14.1], [9.8, 21], [8.6, 23.4], [-1.8, 33.2], [-29.4, 33.2], [-49.4, 23.9], [-49.8, 21.8]] },
+    { id: 'B', refuge: [8], outline: [[7, 11.5], [9.5, -2.5], [22, -18.3], [36.9, -23.6], [42.9, -19.4], [47.3, -16], [49.1, -14], [39.3, 1.6], [32.8, 10.5], [29.2, 15.1], [19.3, 21.1], [16.6, 19]] },
+  ],
 }
-
-// Illustrative levels for the Views page. The image is a generated skyline,
-// not a photograph from the site.
-export const viewLevels = [
-  { floor: 6, label: 'Garden level', caption: 'Tree-top calm over the neighbourhood.' },
-  { floor: 14, label: 'City level', caption: 'The suburb opens out towards the hills.' },
-  { floor: 22, label: 'Sky level', caption: 'Unbroken horizons over Malad West.' },
-]
