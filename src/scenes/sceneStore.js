@@ -38,7 +38,6 @@ export const presets = {
   views: still('#1a1012', '#0b0607', '#3a2427', [0.5, 0.5], 0.4, 0.6),
   gallery: still('#26181c', '#0f090a', '#4a3134', [0.5, 0.45], 0.6, 0.55),
   menu: still('#26181c', '#0c0708', '#50363a', [0.74, 0.5], 0.7, 0.6),
-  enquire: still('#2c1b1f', '#110a0c', '#5a3d3d', [0.75, 0.5], 0.6, 0.5),
 }
 
 // A plain mutable object shared by the DOM and the render loop. The scene

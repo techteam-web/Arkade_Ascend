@@ -1,6 +1,5 @@
 import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
-import { ArkadeMark } from '../components/Brand.jsx'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
 // The presentation only runs in full screen. The whole gate is one button, so
@@ -39,8 +38,8 @@ export default function FullscreenGate({ open, resumed, keyboardLocked, supporte
       style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 48%, rgba(27,17,19,.25), rgba(18,11,13,.82) 62%, rgba(12,7,8,.97))' }}
       aria-label={resumed ? 'Resume the presentation in full screen' : 'Enter the Arkade Ascend presentation in full screen'}>
       <span className="gate-rise eyebrow mb-8 short:mb-4">{resumed ? 'Presentation paused' : 'Arkade Developers presents'}</span>
-      <ArkadeMark className="h-16 w-auto text-gold-200 sm:h-20 short:h-12" />
-      <span className="gate-rise mt-7 font-sans text-[clamp(1.6rem,4vw,3rem)] font-bold uppercase leading-none tracking-[0.04em] short:mt-4">Arkade Ascend</span>
+      <img src="/logo/arkade-white.png" alt="Arkade" className="h-12 w-auto sm:h-16 short:h-10" />
+      <span className="gate-rise mt-7 font-sans text-[clamp(1.6rem,4vw,3rem)] font-bold uppercase leading-none tracking-[0.04em] short:mt-4">Ascend</span>
       <span className="gate-rise mt-3 text-[0.7rem] font-semibold uppercase tracking-[0.5em] text-gold-300">Malad West</span>
       <span className="gate-rule hairline mt-10 w-[min(22rem,70vw)] short:mt-5" />
       <span className="gate-rise mt-10 flex items-center gap-5 short:mt-5">

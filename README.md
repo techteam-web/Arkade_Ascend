@@ -13,7 +13,6 @@ npm run preview
 
 The presentation opens behind a full-screen gate: tap or click anywhere to enter. Leaving full screen pauses it behind the gate again, keeping the current page. In Chromium, Esc is captured with the Keyboard Lock API, so it closes menus and lightboxes; press and hold Esc to leave full screen. For development screenshots, add `?fullscreen=off` to the URL. This works in `npm run dev` only.
 
-To deliver enquiries, set `VITE_ENQUIRY_ENDPOINT` to a JSON webhook (CRM or form service). Without it, enquiries are queued in the device's `localStorage` under `arkade-ascend-enquiries`. That queue holds visitors' contact details, so export and clear it regularly.
 
 ## Pages
 
@@ -29,7 +28,6 @@ To deliver enquiries, set `VITE_ENQUIRY_ENDPOINT` to a JSON webhook (CRM or form
 | 08 | `/views` | 360° drone panoramas at 120 m (Marzipano, tiled cube maps in `public/views/`): opens on the skyline's tall tower and turns slowly until stopped (Stop/Start rotation button; dragging or the arrows pause it for a few seconds). Day, Evening and Night are aligned to one frame and crossfade in place, even while turning or dragging; aligned still images stand in without WebGL | project panoramas |
 | 09 | `/location` | Tilted 3D MapLibre map in the brochure palette with extruded buildings: category tabs (roads, rail & metro, airports, upcoming), pins, road routes drawn to each place, a 3D / 2D switch, and the brochure map as a toggle and offline fallback | brochure p. 5 + OpenStreetMap |
 | 10 | `/gallery` | Flat filmstrip carousel, filters, full-screen lightbox | existing concept images + brochure p. 4 |
-| 11 | `/enquire` | Validated enquiry form | — |
 
 Navigation: the Menu button (arrow keys, Enter, Esc), the Arkade logo (home), and on stepped pages the wheel, swipe or arrow keys.
 
@@ -67,7 +65,7 @@ src/
   pages/                  one component per route (location/ holds the live and brochure maps)
   scenes/                 sceneStore, silk/ (veil and still backdrop), building/ (tower model and floor helpers)
   components/             brand mark, page kit (heading, image slot, figures)
-  content/                brochure facts, template content, enquiry delivery
+  content/                brochure facts, template content
   hooks/                  fullscreen, media queries, stepper (wheel/swipe/keys)
   styles/index.css        Tailwind theme, tokens, component classes
   styles/brand-fonts.css  brochure typefaces (local or licensed files)

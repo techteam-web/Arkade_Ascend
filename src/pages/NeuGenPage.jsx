@@ -3,7 +3,7 @@ import { gsap } from '../app/reveal.js'
 import { SplitText } from 'gsap/SplitText'
 import { useShell } from '../app/ShellContext.js'
 import { setScenePreset } from '../scenes/sceneStore.js'
-import { ArkadeMark, ArrowIcon, BrandLockup } from '../components/Brand.jsx'
+import { ArrowIcon, BrandLockup } from '../components/Brand.jsx'
 import { pad } from '../app/routes.js'
 import { project } from '../content/project.js'
 import useStepper from '../hooks/useStepper.js'
@@ -138,7 +138,7 @@ function Cover({ active }) {
       </p>
       <p data-ch className="mt-7 font-display text-[clamp(0.85rem,1.4vw,1.2rem)] uppercase tracking-[0.5em] text-gold-400/90 short:mt-3">Has arrived</p>
       <div data-ch className="mt-[clamp(2rem,9vh,6rem)] flex flex-col items-center gap-3 text-ivory short:mt-4">
-        <span className="flex items-center gap-4"><ArkadeMark className="h-9 w-auto" /><span className="h-9 w-px bg-ivory/70" /><span className="text-2xl font-bold tracking-[0.04em]">ARKADE</span></span>
+        <img src="/logo/arkade-white.png" alt="Arkade" className="h-12 w-auto" />
         <span className="text-[0.62rem] uppercase tracking-[0.72em] pl-[0.72em]">Developers</span>
       </div>
     </div>

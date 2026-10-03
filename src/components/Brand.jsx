@@ -17,17 +17,12 @@ export function ArkadeMark({ className = '', title }) {
   </svg>
 }
 
-// Mark, rule and name, laid out as on the brochure's "Presenting" lockup.
+// The Arkade logo: white on dark grounds, full colour on light ones (tone-light).
 export function BrandLockup({ className = '', size = 'md' }) {
-  const mark = size === 'lg' ? 'h-14 w-auto 3xl:h-16' : 'h-7 w-auto sm:h-9'
-  const name = size === 'lg' ? 'text-2xl 3xl:text-[1.75rem]' : 'text-[0.74rem] sm:text-[0.95rem]'
-  return <span className={`inline-flex items-center gap-3 text-fg ${className}`}>
-    <ArkadeMark className={`${mark} text-current`} />
-    <span className="my-0.5 w-px self-stretch bg-current opacity-70 sm:my-1" />
-    <span className="flex flex-col items-start leading-none">
-      <span className={`${name} whitespace-nowrap font-logo font-black tracking-[0.01em] uppercase`}>Arkade Ascend</span>
-      <span className={`mt-[0.45em] font-logo font-bold uppercase tracking-[0.08em] ${size === 'lg' ? 'text-sm' : 'text-[0.58rem]'}`}>Malad West</span>
-    </span>
+  const height = size === 'lg' ? 'h-14 3xl:h-16' : 'h-8 sm:h-10'
+  return <span className={`inline-flex items-center ${className}`}>
+    <img src="/logo/arkade-white.png" alt="Arkade" className={`${height} w-auto tone-light:hidden`} />
+    <img src="/logo/arkade-color.png" alt="" aria-hidden="true" className={`hidden ${height} w-auto tone-light:block`} />
   </span>
 }
 

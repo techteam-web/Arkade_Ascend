@@ -1,6 +1,5 @@
 import { useShell } from '../app/ShellContext.js'
-import { ArkadeMark, ArrowIcon } from '../components/Brand.jsx'
-import { project } from '../content/project.js'
+import { ArrowIcon } from '../components/Brand.jsx'
 
 // The title over the moving silk, and a single way in.
 export default function HomePage() {
@@ -11,10 +10,7 @@ export default function HomePage() {
 
     <div className="flex flex-col items-center">
       <p data-reveal className="eyebrow text-gold-300">Presenting</p>
-      <div data-reveal="scale" className="mt-6 short:mt-3">
-        <ArkadeMark className="h-[clamp(2.6rem,7vh,4.5rem)] w-auto text-gold-300" />
-      </div>
-      <p data-reveal className="mt-6 text-[clamp(0.8rem,1.1vw,1.05rem)] font-semibold uppercase tracking-[0.9em] pl-[0.9em] text-ivory/90 short:mt-3">Arkade</p>
+      <img data-reveal="scale" src="/logo/arkade-white.png" alt="Arkade" className="mt-6 h-[clamp(2.6rem,7vh,4.5rem)] w-auto short:mt-3" />
     </div>
 
     <h1 tabIndex={-1} className="outline-none">
@@ -24,7 +20,7 @@ export default function HomePage() {
 
     <div className="flex flex-col items-center">
       <p data-reveal className="pl-[0.62em] text-[clamp(0.7rem,0.9vw,0.9rem)] font-medium uppercase tracking-[0.62em] text-gold-200">Malad West</p>
-      <p data-reveal className="mt-5 max-w-[46ch] text-[clamp(0.68rem,0.9vw,0.9rem)] font-medium uppercase leading-[2] tracking-[0.26em] text-ivory/85 short:mt-2">{project.masterpiece}</p>
+      <p data-reveal className="mt-5 max-w-[46ch] text-[clamp(0.68rem,0.9vw,0.9rem)] font-medium uppercase leading-[2] tracking-[0.26em] text-ivory/85 short:mt-2">Malad&rsquo;s Neu Gen Life has arrived</p>
     </div>
 
     <div data-reveal className="relative mt-[clamp(1.5rem,5vh,3.5rem)] p-4 short:mt-3">
@@ -35,12 +31,7 @@ export default function HomePage() {
       <p className="mt-4 text-[0.56rem] uppercase tracking-[0.4em] text-gold-300/60">Explore the residences</p>
     </div>
 
-    <p data-reveal="fade" className="absolute bottom-[clamp(1rem,5vh,3rem)] left-(--gutter) hidden text-left text-[0.62rem] uppercase leading-[2.1] tracking-[0.42em] text-gold-300/75 md:block short:hidden">
-      Malad&rsquo;s<br />Neu Gen life<br />has arrived
-    </p>
-    <div data-reveal="fade" className="absolute bottom-[clamp(1rem,5vh,3rem)] right-(--gutter) hidden flex-col items-end gap-2 text-right md:flex short:hidden">
-      <span className="flex items-center gap-3 text-ivory/85"><ArkadeMark className="h-6 w-auto" /><span className="text-[0.8rem] font-bold tracking-[0.12em]">ARKADE</span></span>
-      <span className="text-[0.55rem] uppercase tracking-[0.6em] text-gold-300/70">Developers</span>
-    </div>
+    <img data-reveal="fade" src="/logo/arkade-white.png" alt="Arkade" className="absolute left-(--gutter) top-[clamp(1rem,4vh,2.5rem)] h-8 w-auto sm:h-10" />
+    <img data-reveal="fade" src="/logo/arkade-white.png" alt="" aria-hidden="true" className="absolute bottom-[clamp(1rem,5vh,3rem)] right-(--gutter) hidden h-8 w-auto md:block short:hidden" />
   </section>
 }

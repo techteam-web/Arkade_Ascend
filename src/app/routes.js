@@ -11,7 +11,6 @@ export const routes = [
   { id: 'views', path: '/views', label: 'Views', hint: 'The city from above', scene: 'views', preview: '/views/evening/still.webp' },
   { id: 'location', path: '/location', label: 'Location', hint: 'The city at your command', scene: 'cream', tone: 'light', preview: '/brochure/location-map.webp' },
   { id: 'gallery', path: '/gallery', label: 'Gallery', hint: 'Curated visions of Ascend', scene: 'gallery', preview: '/gallery/interior.png' },
-  { id: 'enquire', path: '/enquire', label: 'Enquire', hint: 'Make Ascend your address', scene: 'enquire', preview: '/brochure/lifestyle-arrival.webp' },
 ]
 
 export const pad = value => String(value).padStart(2, '0')
