@@ -28,7 +28,6 @@ export default function GalleryPage() {
   const step = direction => setIndex(value => (value + direction + filtered.length) % filtered.length)
   useStepper(root, { onNext: () => step(1), onPrev: () => step(-1), lock: 650, keys: !lightbox })
 
-  useEffect(() => { gallery.forEach(({ src }) => { const image = new Image(); image.src = src; image.decode?.().catch(() => {}) }) }, [])
   useEffect(() => {
     if (!lightbox) return
     const onKey = event => {
@@ -54,10 +53,14 @@ export default function GalleryPage() {
       {filtered.map((image, i) => {
         const offset = (i - index + filtered.length) % filtered.length
         const pose = offset === 0 ? 'center' : offset === 1 ? 'right' : offset === filtered.length - 1 ? 'left' : 'back'
+        // The image on show and two either side load; the rest wait their turn.
+        const near = Math.min(offset, filtered.length - offset) <= 2
         return <figure key={image.src} aria-hidden={offset !== 0}
-          className={`absolute left-1/2 top-1/2 m-0 aspect-16/10 w-[min(64cqw,calc(100cqh*1.45))] overflow-hidden rounded-sm border border-gold-500/30 shadow-[0_30px_70px_-35px_rgba(0,0,0,.7)] transition-[transform,opacity,filter] duration-900 ease-silk max-md:w-[min(94cqw,calc(100cqh*1.45))] ${pose === 'center' ? 'z-10' : 'z-0'} ${pose === 'left' || pose === 'right' ? 'max-md:opacity-0!' : ''}`}
+          className={`absolute left-1/2 top-1/2 m-0 aspect-16/10 w-[min(64cqw,calc(100cqh*1.45))] overflow-hidden rounded-sm border border-gold-500/30 bg-plum-950 shadow-[0_30px_70px_-35px_rgba(0,0,0,.7)] transition-[transform,opacity,filter] duration-900 ease-silk max-md:w-[min(94cqw,calc(100cqh*1.45))] ${pose === 'center' ? 'z-10' : 'z-0'} ${pose === 'left' || pose === 'right' ? 'max-md:opacity-0!' : ''}`}
           style={{ transform: POSES[pose], opacity: pose === 'back' ? 0 : pose === 'center' ? 1 : 0.35, filter: pose === 'center' ? 'none' : 'saturate(.7) brightness(.75)' }}>
-          <img src={image.src} alt={image.alt} draggable="false" className="size-full select-none object-cover" />
+          {/* Tall views are shown whole; the rest fill the frame around their focus. */}
+          <img src={near ? image.src : undefined} srcSet={near ? image.srcSet : undefined} sizes="(max-width: 767px) 94vw, 64vw" alt={image.alt} draggable="false"
+            className={`size-full select-none ${image.fit === 'contain' ? 'object-contain' : 'object-cover'}`} style={{ objectPosition: image.focus }} />
           {pose === 'center'
             ? <button type="button" className="absolute inset-0 cursor-zoom-in" onClick={() => setLightbox(true)} aria-label={`View ${image.category} image full screen`} />
             : pose !== 'back' && <button type="button" tabIndex={-1} className="absolute inset-0" onClick={() => step(pose === 'left' ? -1 : 1)} aria-label={pose === 'left' ? 'Previous image' : 'Next image'} />}
@@ -71,7 +74,7 @@ export default function GalleryPage() {
     </div>
 
     <div data-reveal className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-      <p className="min-w-0 text-[0.6rem] uppercase tracking-[0.3em] text-muted">Concept imagery · representational</p>
+      <p className="min-w-0 text-[0.6rem] uppercase tracking-[0.3em] text-muted">{selected.note ?? 'Concept imagery · representational'}</p>
       <div className="flex items-center gap-3">
         <button type="button" className="btn-icon" onClick={() => step(-1)} disabled={filtered.length < 2} aria-label="Previous image"><ChevronIcon direction="left" /></button>
         <p className="num w-16 text-center text-base text-fg">{pad(index + 1)}<span className="text-muted"> / {pad(filtered.length)}</span></p>
@@ -81,8 +84,11 @@ export default function GalleryPage() {
 
     {/* Portalled into the frame: above the page, still beneath the full-screen gate. */}
     {lightbox && createPortal(<div role="dialog" aria-modal="true" aria-label={`${selected.category} image, full screen`} onClick={() => setLightbox(false)}
-      className="absolute inset-0 z-70 grid place-items-center bg-ink/95 p-[clamp(1rem,4vw,4rem)] backdrop-blur-md">
-      <img src={selected.src} alt={selected.alt} onClick={event => event.stopPropagation()} className="max-h-full max-w-full rounded-sm object-contain shadow-2xl" />
+      className="absolute inset-0 z-70 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)] place-items-center bg-ink/95 p-[clamp(1rem,4vw,4rem)] backdrop-blur-md">
+      {/* The one grid cell has a definite size, so a tall image fits its
+          height too; the size it is drawn at picks the file. */}
+      <img src={selected.src} srcSet={selected.srcSet} sizes={selected.aspect ? `min(100vw, ${Math.round(selected.aspect * 100)}vh)` : '100vw'} alt={selected.alt}
+        onClick={event => event.stopPropagation()} className="max-h-full max-w-full rounded-sm object-contain shadow-2xl" />
       <button type="button" autoFocus className="btn-icon absolute right-(--gutter) top-5" onClick={() => setLightbox(false)} aria-label="Close full screen">
         <svg viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19" /></svg>
       </button>

@@ -1,0 +1,17 @@
+{
+  "name": "arkade-ascend-map-model",
+  "private": true,
+  "type": "module",
+  "description": "Builds public/models/ascend-map.glb, the Location map's lighter copy of the tower model. See build.mjs.",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
+    "meshoptimizer": "^0.22.0",
+    "puppeteer-core": "^23.11.1",
+    "sharp": "^0.35.5"
+  }
+}

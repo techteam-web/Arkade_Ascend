@@ -1,7 +1,6 @@
 import { lazy, Suspense, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from '../app/reveal.js'
-import { PageHeading } from '../components/PageKit.jsx'
-import { locationGroups, origin, places, project } from '../content/project.js'
+import { locationGroups, nearby, origin, places, project } from '../content/project.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import BrochureMap from './location/BrochureMap.jsx'
 
@@ -14,14 +13,23 @@ export default function LocationPage() {
   const [hovered, setHovered] = useState(null)
   const [view, setView] = useState('tilt')   // tilt (3D) | plan (2D) | brochure
   const [liveFailed, setLiveFailed] = useState(false)
+  // What covers the map (header and view switch above, the panel at the
+  // side or below), so routes are framed in the part left open.
+  const [inset, setInset] = useState({ top: 0, right: 0, bottom: 0, left: 0 })
   const list = useRef(null)
+  const section = useRef(null)
+  const band = useRef(null)
+  const switcher = useRef(null)
+  const panel = useRef(null)
   const shown = places.filter(place => place.group === group)
   const current = places.find(place => place.id === active)
 
+  // Nearby (brochure page 9) has no positions: it lists places, and the map
+  // returns to the project.
   const chooseGroup = id => {
     if (id === group) return
     setGroup(id)
-    setActive(places.find(place => place.group === id).id)
+    setActive(places.find(place => place.group === id)?.id ?? null)
     setHovered(null)
   }
 
@@ -37,50 +45,91 @@ export default function LocationPage() {
     return () => context.revert()
   }, [group])
 
+  // Offsets ignore the entrance's small rises, so this is the settled layout.
+  useLayoutEffect(() => {
+    const measure = () => {
+      const width = section.current.clientWidth, height = section.current.clientHeight
+      const p = panel.current, sw = switcher.current
+      const top = Math.max(band.current.offsetHeight, sw.offsetTop + sw.offsetHeight) + 8
+      const beside = p.offsetLeft > width * 0.4
+      const next = {
+        top,
+        right: beside ? width - p.offsetLeft + 12 : 0,
+        bottom: beside ? 0 : height - p.offsetTop + 12,
+        left: 0,
+      }
+      setInset(value => Object.keys(next).every(key => Math.abs(value[key] - next[key]) < 2) ? value : next)
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    ;[section.current, panel.current, switcher.current].forEach(element => observer.observe(element))
+    return () => observer.disconnect()
+  }, [])
+
   const live = view !== 'brochure' && !liveFailed
 
-  return <section data-tone="light" className="page page-scroll flex flex-col gap-6 split:grid split:grid-cols-[minmax(0,1fr)_minmax(0,26rem)] split:gap-x-[4vw] 3xl:grid-cols-[minmax(0,1fr)_minmax(0,32rem)]">
-    <div className="flex min-h-0 shrink-0 flex-col gap-4 split:shrink">
-      <PageHeading id="location" title="Location" subtitle="Malad West, Mumbai" className="split:hidden" />
-      <figure data-reveal="fade" className="relative m-0 min-h-[56vh] flex-1 overflow-hidden rounded-sm border border-line bg-cream-100 split:min-h-0"
-        data-own-gesture data-own-keys aria-label={`Map of Malad West showing Arkade Ascend and ${current.name}`}>
-        {live
-          ? <Suspense fallback={<MapLoading />}>
-              <LiveMap origin={origin.lngLat} places={places} group={group} active={active} hovered={hovered} tilted={view !== 'plan'}
-                onSelect={id => setActive(id)} onFail={() => setLiveFailed(true)} />
-            </Suspense>
-          : <BrochureMap origin={origin} place={current} />}
-
-        <div role="group" aria-label="Map view" className="absolute left-3 top-3 z-10 flex rounded-full border border-line bg-cream-50/90 p-0.5 backdrop-blur-sm">
-          {[['tilt', '3D'], ['plan', '2D'], ['brochure', 'Brochure map']].map(([id, label]) => {
-            const pressed = id === 'brochure' ? !live : live && view === id
-            return <button key={id} type="button" aria-pressed={pressed} disabled={id !== 'brochure' && liveFailed} onClick={() => setView(id)}
-              className={`min-h-11 min-w-11 rounded-full px-4 text-[0.58rem] font-medium uppercase tracking-[0.2em] transition-colors duration-500 disabled:opacity-40 ${pressed ? 'bg-plum-700 text-ivory' : 'text-plum-700 hover:text-plum-900'}`}>{label}</button>
-          })}
-        </div>
-        {liveFailed && view !== 'brochure' && <figcaption className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-cream-50/90 px-3 py-1.5 text-[0.55rem] uppercase tracking-[0.14em] text-plum-700">
-          Live map unavailable offline · showing the brochure map
-        </figcaption>}
-      </figure>
+  return <section ref={section} data-tone="light" aria-label="Location" className="absolute inset-0 overflow-hidden">
+    {/* The map fills the screen; everything else floats over it. */}
+    <figure data-reveal="fade" className="location-map absolute inset-0 m-0 bg-cream-100" style={{ '--map-inset-bottom': `${inset.bottom}px` }}
+      data-own-gesture data-own-keys aria-label={`Map of Malad West showing Arkade Ascend${current ? ` and ${current.name}` : ''}`}>
+      {live
+        ? <Suspense fallback={<MapLoading />}>
+            <LiveMap origin={origin.lngLat} places={places} group={group} active={active} hovered={hovered} tilted={view !== 'plan'} inset={inset}
+              onSelect={id => setActive(id)} onFail={() => setLiveFailed(true)} />
+          </Suspense>
+        : <BrochureMap origin={origin} place={current} inset={inset} />}
+    </figure>
+    {/* A soft cream ground under the header keeps the logo and menu legible. */}
+    <div ref={band} aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-(--header-h)">
+      <div className="absolute inset-x-0 top-0 h-[calc(100%+2.5rem)] bg-linear-to-b from-cream-50/90 via-cream-50/55 to-transparent" />
     </div>
 
-    <aside data-tone="dark" className="relative flex min-h-0 shrink-0 flex-col split:shrink overflow-hidden rounded-sm bg-plum-700 px-[clamp(1.5rem,3vw,3rem)] py-[clamp(1.5rem,4.5vh,3.25rem)] text-ivory">
-      <div className="page-scroll -mx-3 min-h-0 flex-1 px-3 py-1">
-        <p data-reveal className="eyebrow hidden items-center gap-4 split:flex"><span className="num">09</span><span>Location</span></p>
-        <h1 tabIndex={-1} data-reveal="lines" className="mt-4 hidden font-display text-[clamp(1.2rem,min(1.9vw,3.6vh),2rem)] uppercase leading-[1.3] text-gold-400 outline-none split:block">
+    {/* Beside the logo in the header row from tablets up; just below the
+        header on phones, where the row has no room. */}
+    <div ref={switcher} data-reveal role="group" aria-label="Map view"
+      className="absolute left-(--gutter) top-[calc(var(--header-h)+0.25rem)] z-10 flex rounded-full border border-line bg-cream-50/90 p-0.5 shadow-[0_8px_24px_-14px_rgba(61,42,47,.45)] backdrop-blur-sm md:left-[calc(var(--gutter)+13rem)] md:top-[calc((var(--header-h)-3.1rem)/2)]">
+      {[['tilt', '3D'], ['plan', '2D'], ['brochure', 'Brochure map']].map(([id, label]) => {
+        const pressed = id === 'brochure' ? !live : live && view === id
+        return <button key={id} type="button" aria-pressed={pressed} disabled={id !== 'brochure' && liveFailed} onClick={() => setView(id)}
+          className={`min-h-11 min-w-11 rounded-full px-4 text-[0.58rem] font-medium uppercase tracking-[0.2em] transition-colors duration-500 disabled:opacity-40 ${pressed ? 'bg-plum-700 text-ivory' : 'text-plum-700 hover:text-plum-900'}`}>{label}</button>
+      })}
+    </div>
+    {liveFailed && view !== 'brochure' && <p className="pointer-events-none absolute left-(--gutter) z-10 rounded-full bg-cream-50/90 px-3 py-1.5 text-[0.55rem] uppercase tracking-[0.14em] text-plum-700" style={{ top: inset.top }}>
+      Live map unavailable offline · showing the brochure map
+    </p>}
+
+    {/* The location panel floats over the map: on the right on laptops and
+        landscape phones, as a sheet along the bottom on portrait screens. */}
+    <aside ref={panel} data-tone="dark"
+      className="absolute z-10 flex flex-col overflow-hidden rounded-md border border-gold-500/20 bg-plum-800/95 text-ivory shadow-[0_32px_80px_-36px_rgba(33,22,26,.8)] lg:bg-plum-800/90 lg:backdrop-blur-md
+        split:right-(--gutter) split:top-[calc(var(--header-h)+0.5rem)] split:max-h-[calc(100%-var(--header-h)-0.5rem-clamp(1rem,4vh,2.5rem))] split:w-[clamp(19rem,26vw,27rem)] short:w-[min(19rem,44vw)]
+        stack:inset-x-(--gutter) stack:bottom-[clamp(0.75rem,2.5vh,1.5rem)] stack:max-h-[min(50%,calc(100%-var(--header-h)-18rem))]">
+      <div className="page-scroll min-h-0 flex-1 px-[clamp(1.25rem,2.2vw,2.25rem)] py-[clamp(1.1rem,3.5vh,2.5rem)] short:py-4">
+        <p data-reveal className="eyebrow flex items-center gap-4"><span className="num">09</span><span>Location</span></p>
+        {/* The brochure's line; on phones and short screens the map takes priority. */}
+        <h1 tabIndex={-1} data-reveal="lines" className="mt-3 font-display text-[clamp(1.1rem,min(1.55vw,3.2vh),1.85rem)] uppercase leading-[1.3] text-gold-400 outline-none max-sm:sr-only short:sr-only">
           {project.cityHeadline.map(line => <span key={line} className="block">{line}</span>)}
         </h1>
-        <p className="font-display text-xl uppercase leading-snug text-gold-400 split:hidden">{project.cityHeadline.join(' ')}</p>
 
         <GroupTabs group={group} onChoose={chooseGroup} />
 
-        <ul ref={list} data-reveal id="location-places" role="tabpanel" aria-labelledby={`location-tab-${group}`} className="mt-3">
-          {shown.map(place => <li key={place.id}>
-            <PlaceButton place={place} active={active === place.id} onSelect={setActive} onHover={setHovered} />
-          </li>)}
-        </ul>
-        <p data-reveal="fade" className="mt-4 text-[0.55rem] uppercase leading-relaxed tracking-[0.16em] text-ivory/50">
-          Indicative locations. Routes by road from OpenStreetMap; distances as per Google Maps.
+        {group === 'nearby'
+          ? <div ref={list} id="location-places" role="tabpanel" aria-labelledby={`location-tab-${group}`} className="mt-3">
+            <p className="font-display text-[clamp(0.95rem,1.2vw,1.2rem)] uppercase leading-snug text-gold-300">{nearby.headline}</p>
+            {nearby.groups.map(item => <div key={item.id} className="mt-3 border-b border-gold-500/20 pb-3">
+              <p className="text-[0.55rem] font-medium uppercase tracking-[0.22em] text-gold-300">{item.label}</p>
+              <ul className="mt-1.5 text-[0.76rem] leading-[1.75] text-ivory/85">
+                {item.places.map(name => <li key={name}>{name}</li>)}
+              </ul>
+            </div>)}
+          </div>
+          : <ul ref={list} data-reveal id="location-places" role="tabpanel" aria-labelledby={`location-tab-${group}`} className="mt-2">
+            {shown.map(place => <li key={place.id}>
+              <PlaceButton place={place} active={active === place.id} onSelect={setActive} onHover={setHovered} />
+            </li>)}
+          </ul>}
+        <p data-reveal="fade" className="mt-3 text-[0.52rem] uppercase leading-relaxed tracking-[0.16em] text-ivory/50">
+          {group === 'nearby' ? 'As listed in the brochure.' : 'Indicative locations. Routes by road from OpenStreetMap; distances as per Google Maps.'}
         </p>
       </div>
     </aside>
@@ -109,6 +158,9 @@ function GroupTabs({ group, onChoose }) {
     }
     place(!pill.current.dataset.placed)
     pill.current.dataset.placed = 'true'
+    // On phones the row scrolls: bring the chosen tab to its middle.
+    const row = bar.current, tab = tabs.current[group]
+    if (tab && row.scrollWidth > row.clientWidth) row.scrollTo({ left: tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2, behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
     // Follow the tabs themselves too: web fonts can change their widths late.
     const resize = new ResizeObserver(() => place(true))
     resize.observe(bar.current)
@@ -127,15 +179,17 @@ function GroupTabs({ group, onChoose }) {
     tabs.current[id]?.focus()
   }
 
-  return <div data-reveal className="mt-[clamp(1.25rem,3.5vh,2rem)]">
+  return <div data-reveal className="mt-[clamp(1rem,3vh,1.75rem)] max-sm:mt-3 short:mt-3">
     <p className="eyebrow text-gold-300!">Connectivity</p>
-    <div ref={bar} role="tablist" aria-label="Connectivity" onKeyDown={onKeyDown} className="relative mt-3 flex flex-wrap gap-2">
+    {/* Phones keep the tabs on one row that scrolls sideways. */}
+    <div ref={bar} role="tablist" aria-label="Connectivity" onKeyDown={onKeyDown}
+      className="relative mt-3 flex flex-wrap gap-2 max-sm:-mx-1 max-sm:flex-nowrap max-sm:overflow-x-auto max-sm:px-1 max-sm:[scrollbar-width:none]">
       <span ref={pill} aria-hidden="true" className="pointer-events-none absolute left-0 top-0 rounded-full bg-gold-400" />
       {locationGroups.map(item => {
         const selected = item.id === group
         return <button key={item.id} ref={element => { tabs.current[item.id] = element }} id={`location-tab-${item.id}`} type="button" role="tab"
           aria-selected={selected} aria-controls="location-places" tabIndex={selected ? 0 : -1} onClick={() => onChoose(item.id)}
-          className={`relative min-h-11 rounded-full border px-4 text-[0.6rem] font-medium uppercase tracking-[0.18em] transition-colors duration-500 ${selected ? 'border-transparent text-espresso' : 'border-gold-500/35 text-ivory/80 hover:border-gold-400 hover:text-ivory'}`}>
+          className={`relative min-h-11 shrink-0 rounded-full border px-4 text-[0.6rem] font-medium uppercase tracking-[0.18em] transition-colors duration-500 ${selected ? 'border-transparent text-espresso' : 'border-gold-500/35 text-ivory/80 hover:border-gold-400 hover:text-ivory'}`}>
           {item.label}
         </button>
       })}

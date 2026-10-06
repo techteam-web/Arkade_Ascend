@@ -56,14 +56,14 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
   }
 
   return <div ref={root} role="dialog" aria-modal="true" aria-label="Explore Arkade Ascend" aria-hidden={!open} inert={open ? undefined : ''}
-    onKeyDown={onKeyDown} className="invisible absolute inset-0 z-50 [--menu-picture:54%] xl:[--menu-picture:58%] 3xl:[--menu-picture:60%]" data-tone="dark">
+    onKeyDown={onKeyDown} className="invisible absolute inset-0 z-50 [--menu-picture:62%] xl:[--menu-picture:64%] 3xl:[--menu-picture:66%]" data-tone="dark">
     {/* The brochure's plum, lit from the upper left. */}
     <div className="menu-curtain absolute inset-0 overflow-hidden bg-[radial-gradient(ellipse_90%_80%_at_18%_22%,#5a4046_0%,#3d2a2f_45%,#21161a_100%)]">
       <ArkadeMark className="pointer-events-none absolute -right-[8vmin] -bottom-[14vmin] h-[70vmin] w-auto text-gold-500/[0.06] lg:hidden" />
     </div>
 
     {/* The section under consideration, as a full-height picture. It takes
-        the larger share of wide screens; the list keeps the rest. */}
+        about two thirds of wide screens; the compact list keeps the rest. */}
     <aside className="menu-fade pointer-events-none absolute inset-y-0 right-0 hidden w-(--menu-picture) overflow-hidden lg:block" aria-hidden="true">
       {routes.map((route, index) => <img key={route.id} src={route.preview} alt="" loading="lazy"
         className={`absolute inset-0 size-full object-cover transition-opacity duration-700 ease-silk ${index === shown ? 'opacity-100' : 'opacity-0'}`} />)}
@@ -88,7 +88,9 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
       </div>
 
       <nav aria-label="Sections" className="page-scroll -mx-2 flex min-h-0 flex-col justify-center-safe px-2 py-2 lg:w-[calc(100%-var(--menu-picture)-var(--gutter)-3vw)]" onPointerLeave={() => setPreviewed(null)}>
-        <ol className="grid grid-cols-1 short:grid-cols-2 short:gap-x-8 sm:compact-h:grid-cols-2 sm:compact-h:gap-x-10">
+        {/* Two columns only on landscape phones and short tablets; on laptops
+            the compact rows fit one column even in short windows. */}
+        <ol className="grid grid-cols-1 max-lg:short:grid-cols-2 max-lg:short:gap-x-8 max-lg:sm:compact-h:grid-cols-2 max-lg:sm:compact-h:gap-x-10">
           {routes.map((route, index) => {
             const current = index === currentIndex
             return <li key={route.id} className="relative">
@@ -96,11 +98,11 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
                 onClick={() => onNavigate(route.path)}
                 onPointerEnter={event => { if (event.pointerType !== 'touch') setPreviewed(index) }}
                 onFocus={() => setPreviewed(index)}
-                className="group relative flex min-h-11 w-full items-baseline gap-5 py-[clamp(0.2rem,0.9vh,0.75rem)] text-left outline-offset-2">
-                <span className={`menu-row-number num w-6 shrink-0 text-[0.76rem] transition-colors duration-500 ${current ? 'text-gold-300' : 'text-gold-200/75 group-hover:text-gold-200 group-focus-visible:text-gold-200'}`}>{pad(index + 1)}</span>
+                className="group relative flex min-h-11 w-full items-baseline gap-4 py-[clamp(0.15rem,0.7vh,0.55rem)] text-left outline-offset-2">
+                <span className={`menu-row-number num w-6 shrink-0 text-[0.68rem] transition-colors duration-500 ${current ? 'text-gold-300' : 'text-gold-200/75 group-hover:text-gold-200 group-focus-visible:text-gold-200'}`}>{pad(index + 1)}</span>
                 <span className="-my-[0.14em] shrink-0 overflow-hidden py-[0.14em]">
                   {/* The row being considered turns gold and leans in slightly. */}
-                  <span className={`menu-row-label block whitespace-nowrap font-display text-[clamp(1.35rem,min(3.3vw,4.6vh),3.1rem)] uppercase leading-[1.08] tracking-[0.02em] transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1.5 group-focus-visible:translate-x-1.5 ${index === shown && previewed !== null ? 'text-gold-200' : current ? 'text-gold-300' : 'text-ivory'}`}>{route.label}</span>
+                  <span className={`menu-row-label block whitespace-nowrap font-display text-[clamp(1.15rem,min(3.4vw,3.4vh),1.75rem)] uppercase lg:text-[clamp(1.05rem,min(1.75vw,3.1vh),2rem)] leading-[1.08] tracking-[0.02em] transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1.5 group-focus-visible:translate-x-1.5 ${index === shown && previewed !== null ? 'text-gold-200' : current ? 'text-gold-300' : 'text-ivory'}`}>{route.label}</span>
                 </span>
                 <span className="ml-auto hidden min-w-0 self-center text-right text-[0.62rem] leading-snug uppercase tracking-[0.22em] text-gold-200/70 transition-colors duration-500 group-hover:text-gold-200 group-focus-visible:text-gold-200 md:block lg:hidden short:hidden">{route.hint}</span>
                 {current && <span className="absolute -left-4 top-1/2 size-1.5 -translate-y-1/2 rounded-full bg-gold-400" aria-hidden="true" />}
@@ -114,8 +116,7 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
       </nav>
 
 
-      <div className="menu-fade flex items-center justify-between gap-6 py-[clamp(0.75rem,3vh,2rem)] text-[0.62rem] uppercase tracking-[0.3em] text-gold-200/80">
-        <span>Malad&rsquo;s Neu Gen life has arrived</span>
+      <div className="menu-fade flex items-center justify-end gap-6 py-[clamp(0.75rem,3vh,2rem)] text-[0.62rem] uppercase tracking-[0.3em] text-gold-200/80">
         <span className="hidden sm:inline">Malad West · Mumbai</span>
       </div>
     </div>

@@ -2,20 +2,38 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router'
 import { gsap } from '../app/reveal.js'
+import { useShell } from '../app/ShellContext.js'
 import { Figure, PageHeading, TemplateNote } from '../components/PageKit.jsx'
-import { planRect, units } from '../content/project.js'
+import { area, featureLabel, homeById, homesOnFloor, planById, planTypes, viewLabel } from '../content/inventory.js'
+import { planRect } from '../content/project.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
 const PLAN_RATIO = 2680 / 1660
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
 const Icon = ({ d }) => <svg viewBox="0 0 24 24"><path d={d} /></svg>
 
+// What the page shows: a home (?home=A-1203, from the unit finder), the
+// homes on a floor (?tower=A&floor=12, from the visual selection, opening on
+// the brochure's Type A home where the floor has one), or a plan type
+// (?plan=C). With nothing chosen it shows the brochure's Unit 1, Type A.
+const resolve = params => {
+  const floorHomes = homesOnFloor(params.get('tower'), Number(params.get('floor')))
+  const home = homeById(params.get('home')) ?? floorHomes.find(item => item.type.id === 'A') ?? floorHomes[0]
+  return { home, type: home?.type ?? planById(params.get('plan')) ?? planTypes[0] }
+}
+
 export default function FloorPlansPage() {
-  const unit = units[0]
-  // Arriving from the building model's visual selection carries the floor.
-  const [params] = useSearchParams()
-  const floor = Number(params.get('floor')) || null
-  const tower = params.get('tower')
+  const { go } = useShell()
+  const [params, setParams] = useSearchParams()
+  const { home, type } = resolve(params)
+  const fromFinder = params.get('from') === 'finder'
+  // Only the brochure plan has measured rooms; the sample types show its
+  // drawing as a placeholder, without room hotspots.
+  const rooms = type.unit?.rooms ?? []
+  const plan = { src: type.plan, rooms, placeholder: type.placeholder, alt: `${type.placeholder ? 'Placeholder floor plan (the Unit 1 drawing) for' : 'Indicative floor plan of'} ${type.name}, ${type.configuration}` }
+  // Each part stays on one line; the subtitle breaks only between parts.
+  const keep = text => text.replaceAll(' ', '\u00a0')
+  const title = [home ? `Home ${home.id}` : null, type.name, type.configuration].filter(Boolean).join(' · ')
   const [hovered, setHovered] = useState(null)
   const [selected, setSelected] = useState(null)
   const [focus, setFocus] = useState(null)       // { id, n }: a zoom request
@@ -23,6 +41,9 @@ export default function FloorPlansPage() {
   const active = hovered || selected
   const sheet = useRef(null)
   const opener = useRef(null)
+  // A different plan type has different rooms (or none): start it unzoomed.
+  useEffect(() => { setHovered(null); setSelected(null); setFocus({ id: null, n: Date.now() }) }, [type.id])
+  const showHome = id => setParams(value => { const next = new URLSearchParams(value); next.set('home', id); next.delete('tower'); next.delete('floor'); return next }, { replace: true })
 
   const chooseRoom = room => {
     const next = selected === room.id ? null : room.id
@@ -43,16 +64,22 @@ export default function FloorPlansPage() {
 
   return <section data-tone="light" className="page page-scroll flex flex-col gap-6 split:grid split:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] split:gap-x-[4vw] 3xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
     <div className="flex min-h-0 shrink-0 flex-col gap-[clamp(1rem,3vh,1.75rem)] split:shrink">
-      <PageHeading id="floor-plans" title="Floor Plan" subtitle={`${tower ? `Tower ${tower} · ` : ''}${floor ? `Floor ${floor} · ` : ''}Unit ${unit.unit} · ${unit.configuration}`} />
+      <PageHeading id="floor-plans" title="Floor Plan" subtitle={[home && `Tower ${home.tower}`, home && `Floor ${home.floor}`, home && `Home ${home.id}`, type.name, type.configuration].filter(Boolean).map(keep).join(' · ')} />
+      {fromFinder && <button type="button" data-reveal className="-mt-2 flex min-h-11 items-center gap-3 self-start text-[0.62rem] font-medium uppercase tracking-[0.24em] text-accent" onClick={() => go('/residences?finder')}>
+        <svg viewBox="0 0 32 12" aria-hidden="true" className="h-3 w-7 fill-none stroke-current stroke-[1.1]"><path d="M31 6H3m5-5-5 5 5 5" /></svg>Back to the unit finder
+      </button>}
       <div className="grid grid-cols-3 gap-3 border-y border-line py-4">
-        <Figure value={unit.reraArea} suffix="sq.ft" label="RERA area" />
-        <Figure value={unit.balcony} suffix="sq.ft" label="Balcony" />
-        <Figure value={unit.totalArea} suffix="sq.ft" label="Total area" />
+        <Figure key={`rera-${type.id}`} value={type.reraArea} suffix="sq.ft" label="RERA area" />
+        <Figure key={`balcony-${type.id}`} value={type.balcony} suffix="sq.ft" label="Balcony" />
+        <Figure key={`total-${type.id}`} value={type.totalArea} suffix="sq.ft" label="Total area" />
       </div>
-      <div data-reveal className="flex min-h-0 flex-1 flex-col">
+      {home && <FloorHomes home={home} onShow={showHome} />}
+      {type.placeholder
+        ? <PlanDetails type={type} home={home} />
+        : <div data-reveal className="flex min-h-0 flex-1 flex-col">
         <p className="eyebrow mb-2">Room schedule</p>
         <ul className="page-scroll -mx-2 min-h-0 flex-1 px-2 py-1 [mask-image:linear-gradient(transparent,#000_0.9rem,#000_calc(100%-0.9rem),transparent)] stack:max-h-[32vh] stack:flex-none" onPointerLeave={() => setHovered(null)}>
-          {unit.rooms.map(room => <li key={room.id}>
+          {rooms.map(room => <li key={room.id}>
             <button type="button" aria-pressed={selected === room.id}
               onPointerEnter={event => { if (event.pointerType === 'mouse') setHovered(room.id) }}
               onFocus={() => setHovered(room.id)} onBlur={() => setHovered(null)} onClick={() => chooseRoom(room)}
@@ -65,26 +92,60 @@ export default function FloorPlansPage() {
             </button>
           </li>)}
         </ul>
-      </div>
+      </div>}
     </div>
 
     <div className="relative flex min-h-[52vh] flex-col split:min-h-0">
       <div className="relative min-h-0 flex-1">
         <div ref={sheet} className="absolute inset-0 grid place-items-center @container-size">
-          <PlanStage unit={unit} active={active} focus={focus} onHover={setHovered} onPick={chooseRoom}
+          <PlanStage plan={plan} active={active} focus={focus} onHover={setHovered} onPick={chooseRoom}
             actions={<button ref={opener} type="button" className="btn-icon bg-cream-50/80!" onClick={() => setFullscreen(true)} aria-label="View plan full screen">
               <Icon d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
             </button>} />
         </div>
       </div>
       <div data-reveal className="mt-4 flex flex-wrap items-center justify-end gap-4">
-        <TemplateNote className="max-sm:hidden">Indicative plan · not to scale</TemplateNote>
-        <KeyPlan unit={unit} />
+        <TemplateNote className="max-sm:hidden">{type.placeholder ? `Placeholder · the ${type.name} plan will replace the Unit 1 drawing` : 'Indicative plan · not to scale'}</TemplateNote>
+        {type.unit && <KeyPlan unit={type.unit} />}
       </div>
     </div>
 
-    {fullscreen && <PlanFullscreen unit={unit} active={active} selected={selected} onHover={setHovered} onPick={chooseRoom} onClose={closeFullscreen} />}
+    {fullscreen && <PlanFullscreen plan={plan} title={title} totalArea={type.totalArea} active={active} selected={selected} onHover={setHovered} onPick={chooseRoom} onClose={closeFullscreen} />}
   </section>
+}
+
+// The other homes on the same floor, one tap away.
+function FloorHomes({ home, onShow }) {
+  return <div data-reveal role="group" aria-label={`Homes on floor ${home.floor}, Tower ${home.tower}`}>
+    <p className="eyebrow mb-2">On this floor</p>
+    <div className="flex flex-wrap gap-1.5">
+      {homesOnFloor(home.tower, home.floor).map(item => <button key={item.id} type="button" className="chip" aria-pressed={item.id === home.id}
+        aria-label={`Home ${item.id}, ${item.type.name}, ${item.type.configuration}`} onClick={() => onShow(item.id)}>
+        <span className="num">{item.id.split('-')[1]}</span><span className="ml-2 opacity-70">{item.type.configuration}</span>
+      </button>)}
+    </div>
+  </div>
+}
+
+// Sample plan types have no measured rooms yet: their key facts instead.
+function PlanDetails({ type, home }) {
+  const rows = [
+    ['Bedrooms', type.bedrooms],
+    ['Bathrooms', type.bathrooms],
+    home && ['Facing', home.facing],
+    home && ['View', viewLabel(home.view)],
+    ['Features', home?.features.length || type.features.length ? (home?.features ?? type.features).map(featureLabel).join(', ') : '—'],
+  ].filter(Boolean)
+  return <div data-reveal className="flex min-h-0 flex-col">
+    <p className="eyebrow mb-2">Details</p>
+    <dl className="border-t border-line">
+      {rows.map(([label, value]) => <div key={label} className="flex min-h-11 items-baseline justify-between gap-4 border-b border-line py-2.5">
+        <dt className="text-[0.66rem] font-medium uppercase tracking-[0.14em] text-fg">{label}</dt>
+        <dd className="num text-right text-[0.8rem] text-muted">{value}</dd>
+      </div>)}
+    </dl>
+    <p className="mt-3 text-[0.62rem] uppercase leading-relaxed tracking-[0.18em] text-muted">Room schedule follows with the approved {type.name} plan · <span className="num">{area(type.reraArea)}</span> sq.ft RERA area is sample data</p>
+  </div>
 }
 
 function KeyPlan({ unit }) {
@@ -98,13 +159,13 @@ function KeyPlan({ unit }) {
 
 // The plan with zoom (buttons, wheel), drag to pan when zoomed, and room
 // hotspots. `focus` asks it to centre and zoom on a room, or to reset.
-function PlanStage({ unit, active, focus, onHover, onPick, actions }) {
+function PlanStage({ plan, active, focus, onHover, onPick, actions }) {
   const view = useRef({ scale: 1, x: 0, y: 0 })
   const viewport = useRef(null)
   const stage = useRef(null)
   const drag = useRef(null)
   const [zoomed, setZoomed] = useState(false)
-  const activeRoom = unit.rooms.find(room => room.id === active)
+  const activeRoom = plan.rooms.find(room => room.id === active)
 
   const apply = (next, duration = 0.9) => {
     const box = viewport.current.getBoundingClientRect()
@@ -121,7 +182,7 @@ function PlanStage({ unit, active, focus, onHover, onPick, actions }) {
 
   useEffect(() => {
     if (!focus) return
-    const room = unit.rooms.find(item => item.id === focus.id)
+    const room = plan.rooms.find(item => item.id === focus.id)
     if (!room) { reset(); return }
     const rect = planRect(room.box)
     const width = stage.current.offsetWidth, height = stage.current.offsetHeight
@@ -148,8 +209,8 @@ function PlanStage({ unit, active, focus, onHover, onPick, actions }) {
       onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag}
       className={`absolute inset-0 overflow-hidden rounded-sm border border-line bg-cream-50 shadow-[0_40px_80px_-30px_rgba(61,42,47,.45)] ${zoomed ? 'touch-none cursor-grab active:cursor-grabbing' : ''}`}>
       <div ref={stage} className="absolute inset-0 origin-center will-change-transform">
-        <img src={unit.plan} alt={`Indicative floor plan of Unit ${unit.unit}, ${unit.configuration}`} draggable="false" className="size-full select-none object-contain" />
-        {unit.rooms.map(room => <button key={room.id} type="button" tabIndex={-1} aria-hidden="true"
+        <img src={plan.src} alt={plan.alt} draggable="false" className="size-full select-none object-contain" />
+        {plan.rooms.map(room => <button key={room.id} type="button" tabIndex={-1} aria-hidden="true"
           onPointerEnter={event => { if (event.pointerType === 'mouse') onHover(room.id) }} onPointerLeave={() => onHover(null)}
           onClick={() => onPick(room)} className="absolute" style={planRect(room.box)}>
           <span className={`absolute inset-0 border transition-all duration-500 ${active === room.id ? 'border-gold-600 bg-gold-400/25 shadow-[0_0_0_1px_rgba(166,124,80,.4)]' : 'border-transparent'}`} />
@@ -158,6 +219,7 @@ function PlanStage({ unit, active, focus, onHover, onPick, actions }) {
     </div>
     {/* The chosen room's caption sits on the frame, not the zoomed plan, so
         it never scales up or runs outside the frame. */}
+    {plan.placeholder && <p className="pointer-events-none absolute right-3 top-3 rounded-full bg-plum-800/90 px-3 py-1.5 text-[0.56rem] uppercase tracking-[0.18em] text-cream-50">Placeholder plan</p>}
     {activeRoom && <p className="pointer-events-none absolute left-3 top-3 max-w-[calc(100%-1.5rem)] truncate rounded-full bg-plum-800/95 px-3 py-1.5 text-[0.62rem] uppercase tracking-[0.14em] text-cream-50 shadow-lg">
       {activeRoom.name} · <span className="num">{activeRoom.size}</span>
     </p>}
@@ -172,16 +234,17 @@ function PlanStage({ unit, active, focus, onHover, onPick, actions }) {
 
 // The plan filling the presentation. It is portalled into the page frame so
 // the full-screen gate still covers it if the visitor leaves full screen.
-function PlanFullscreen({ unit, active, selected, onHover, onPick, onClose }) {
+function PlanFullscreen({ plan, title, totalArea, active, selected, onHover, onPick, onClose }) {
   const root = useRef(null)
   const [focus, setFocus] = useState(selected ? { id: selected, n: 0 } : null)
   useLayoutEffect(() => {
     root.current.querySelector('[data-close]')?.focus({ preventScroll: true })
     if (prefersReducedMotion()) return
     const context = gsap.context(() => {
+      // Opacity only: a hidden ancestor would take focus away from Close.
       gsap.timeline({ defaults: { ease: 'silk' } })
-        .from(root.current, { autoAlpha: 0, duration: 0.6 })
-        .from('[data-plan-sheet]', { scale: 0.92, y: 24, autoAlpha: 0, duration: 1.1 }, 0.1)
+        .from(root.current, { opacity: 0, duration: 0.6 })
+        .from('[data-plan-sheet]', { scale: 0.92, y: 24, opacity: 0, duration: 1.1 }, 0.1)
     }, root)
     return () => context.revert()
   }, [])
@@ -192,15 +255,15 @@ function PlanFullscreen({ unit, active, selected, onHover, onPick, onClose }) {
   }, [onClose])
   const pick = room => { onPick(room); setFocus({ id: selected === room.id ? null : room.id, n: Date.now() }) }
 
-  return createPortal(<div ref={root} role="dialog" aria-modal="true" aria-label={`Unit ${unit.unit} floor plan, full screen`} data-tone="light"
+  return createPortal(<div ref={root} role="dialog" aria-modal="true" aria-label={`${title} floor plan, full screen`} data-tone="light"
     className="absolute inset-0 z-70 flex flex-col bg-cream-100 px-(--gutter) pb-[clamp(0.75rem,3vh,2rem)] text-fg">
     <div className="flex h-(--header-h) shrink-0 items-center justify-between gap-4">
-      <p className="eyebrow">Unit {unit.unit} · {unit.configuration} · <span className="num">{unit.totalArea.toLocaleString('en-IN')}</span> sq.ft total</p>
+      <p className="eyebrow">{title} · <span className="num">{area(totalArea)}</span> sq.ft total</p>
       <button type="button" data-close className="btn-icon" onClick={onClose} aria-label="Close full-screen plan"><Icon d="m5 5 14 14M19 5 5 19" /></button>
     </div>
     <div data-plan-sheet className="relative grid min-h-0 flex-1 place-items-center @container-size">
-      <PlanStage unit={unit} active={active} focus={focus} onHover={onHover} onPick={pick} />
+      <PlanStage plan={plan} active={active} focus={focus} onHover={onHover} onPick={pick} />
     </div>
-    <p className="mt-3 text-center text-[0.58rem] uppercase tracking-[0.26em] text-muted">Tap a room to focus it · drag to move when zoomed</p>
+    <p className="mt-3 text-center text-[0.58rem] uppercase tracking-[0.26em] text-muted">{plan.rooms.length ? 'Tap a room to focus it · drag to move when zoomed' : 'Placeholder drawing · drag to move when zoomed'}</p>
   </div>, document.querySelector('.page-frame') || document.body)
 }

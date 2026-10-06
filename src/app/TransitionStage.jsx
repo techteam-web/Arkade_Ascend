@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router'
-import { gsap, revealIn, revealOut, primeReveal } from './reveal.js'
+import { gsap, revealIn, revealOut, primeReveal, settleReveal } from './reveal.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import { sceneStore } from '../scenes/sceneStore.js'
 import HomePage from '../pages/HomePage.jsx'
@@ -32,6 +32,7 @@ export default function TransitionStage({ active }) {
         leaving.current.kill()
         leaving.current = null
         sceneStore.leaving = false
+        settleReveal(stage.current)
         gsap.to([stage.current, ...stage.current.querySelectorAll('[data-reveal]')], { autoAlpha: 1, y: 0, duration: 0.5, ease: 'silk', overwrite: true })
       }
       if (location.key !== shown.key) setShown(location)

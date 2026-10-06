@@ -17,13 +17,14 @@ const arc = (o, point) => {
 // The brochure's own map (page 5), with the chosen destination drawn on it.
 // Shown on request, and whenever the live map cannot load (for example
 // without a connection).
-export default function BrochureMap({ origin, place }) {
+export default function BrochureMap({ origin, place, inset }) {
   const route = useRef(null)
   const dot = useRef(null)
   const o = toView([origin.x, origin.y])
-  const [cx, cy] = toView(place.point)
+  const [cx, cy] = place ? toView(place.point) : o
 
   useLayoutEffect(() => {
+    if (!place) return
     const path = route.current
     const reduced = prefersReducedMotion()
     const length = path.getTotalLength()
@@ -32,13 +33,16 @@ export default function BrochureMap({ origin, place }) {
       gsap.from(dot.current, { autoAlpha: 0, duration: reduced ? 0 : 0.6, delay: reduced ? 0 : 0.9 })
     })
     return () => context.revert()
-  }, [place.id])
+  }, [place?.id])
 
-  return <div className="absolute inset-0 grid place-items-center bg-cream-100 @container-size">
+  // Fitted into the part of the screen the header and panel leave open.
+  const area = inset ? { inset: `${inset.top}px ${inset.right}px ${inset.bottom}px ${inset.left}px` } : undefined
+  return <div className="absolute inset-0 grid place-items-center bg-cream-100 @container-size" style={area}>
     <figure className="relative m-0 overflow-hidden" style={{ aspectRatio: MAP_RATIO, width: `min(100cqw, calc(100cqh * ${MAP_RATIO}))` }}>
       <img src="/brochure/location-map.webp" alt="Brochure location map of Malad West showing Arkade Ascend, Link Road, S.V. Road, the Western Express Highway, rail and metro stations" draggable="false" className="size-full select-none object-cover" />
       <svg viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} className="absolute inset-0 size-full" aria-hidden="true">
         <circle cx={o[0]} cy={o[1]} r="9" fill="#4e373c" stroke="#f4edcc" strokeWidth="3" />
+        {place && <>
         <path key={place.id} ref={route} d={arc(o, place.point)} fill="none" stroke="#4e373c" strokeWidth="2.4" strokeLinecap="round" />
         <g ref={dot} key={`${place.id}-dot`}>
           <circle cx={cx} cy={cy} r="6.5" fill="#4e373c" stroke="#f4edcc" strokeWidth="2.5" />
@@ -46,6 +50,7 @@ export default function BrochureMap({ origin, place }) {
             {place.distance ? `${place.distance} ↓` : 'Beyond map'}
           </text>}
         </g>
+        </>}
       </svg>
     </figure>
   </div>

@@ -1,16 +1,17 @@
 import { gsap } from 'gsap'
 import { SplitText } from 'gsap/SplitText'
 import { CustomEase } from 'gsap/CustomEase'
+import { DrawSVGPlugin } from 'gsap/DrawSVGPlugin'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
-gsap.registerPlugin(SplitText, CustomEase)
+gsap.registerPlugin(SplitText, CustomEase, DrawSVGPlugin)
 CustomEase.create('silk', '0.22, 1, 0.36, 1')
 CustomEase.create('curtain', '0.76, 0, 0.24, 1')
 
 // Pages mark elements with data-reveal; the stage choreographs them in DOM
 // order when a route arrives, and releases them when it leaves. Motion is
 // deliberately quiet: short rises and fades, no blur, no overshoot.
-//   up (default) | fade | lines | chars | title | line | line-v | mask | scale
+//   up (default) | fade | lines | chars | title | line | line-v | mask | scale | draw
 // data-delay adds seconds to an element's slot.
 const STEP = 0.06
 
@@ -40,6 +41,8 @@ export function revealIn(root) {
         .from(item.querySelector('img, [data-mask-inner]') || item, { scale: 1.04, duration: 1.6 }, at)
     } else if (kind === 'scale') {
       timeline.from(item, { autoAlpha: 0, scale: 0.98, duration: 1 }, at)
+    } else if (kind === 'draw') {
+      drawIn(item, timeline, at)
     } else if (kind === 'fade') {
       timeline.from(item, { autoAlpha: 0, duration: 1, ease: 'power2.out' }, at)
     } else {
@@ -79,6 +82,24 @@ export function revealOut(root) {
   if (prefersReducedMotion()) return timeline
   if (items.length) timeline.to(items, { autoAlpha: 0, y: -6, duration: 0.35, ease: 'power2.in' }, 0)
   return timeline.to(root, { autoAlpha: 0, duration: 0.35, ease: 'power2.in' }, 0.05)
+}
+
+// Line art (AscendLockup, NeuGenMark): each outline draws in, then its fill
+// rises and the outline lets go, ending exactly on the artwork. Lines (the
+// rules) keep their own stroke opacity once drawn.
+export function drawIn(item, timeline, at = 0) {
+  const shapes = item.querySelectorAll('[data-draw]')
+  const filled = item.querySelectorAll('[data-draw="fill"]')
+  return timeline.fromTo(shapes, { drawSVG: '0%' }, { drawSVG: '100%', duration: 1.2, stagger: 0.03, ease: 'power2.inOut' }, at)
+    .fromTo(filled, { fillOpacity: 0, strokeOpacity: 1 }, { fillOpacity: 1, duration: 0.7, stagger: 0.03, ease: 'power1.out' }, at + 0.8)
+    .to(filled, { strokeOpacity: 0, duration: 0.5, stagger: 0.03, ease: 'power1.out' }, at + 1.3)
+}
+
+// Line art shown finished, not half drawn (a page restored mid-exit, a
+// chapter shown with reduced motion).
+export function settleReveal(root) {
+  gsap.set(root.querySelectorAll('[data-draw]'), { drawSVG: '100%' })
+  gsap.set(root.querySelectorAll('[data-draw="fill"]'), { fillOpacity: 1, strokeOpacity: 0 })
 }
 
 // Hide marked elements before first paint so nothing flashes pre-animation.

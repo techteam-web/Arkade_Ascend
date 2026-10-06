@@ -30,11 +30,12 @@ export function ImageSlot({ src, alt = '', label = 'Render to follow', className
   </div>
 }
 
-// Shown wherever the building model appears.
-export function ModelNote({ className = '' }) {
+// Shown wherever the building model appears. Short screens, and small
+// spaces (`compact`), get the shorter wording.
+export function ModelNote({ className = '', compact = false }) {
   return <p className={`text-[0.58rem] uppercase leading-relaxed tracking-[0.22em] text-muted/90 ${className}`}>
-    <span className="short:hidden">Temporary representation of the building · it will be replaced by the final, fully coloured model as the development progresses</span>
-    <span className="hidden short:inline">Temporary model · the final, fully coloured model will replace it</span>
+    <span className={compact ? 'hidden' : 'short:hidden'}>Temporary representation of the building · it will be replaced by the final, fully coloured model as the development progresses</span>
+    <span className={compact ? '' : 'hidden short:inline'}>Temporary model · the final, fully coloured model will replace it</span>
   </p>
 }
 

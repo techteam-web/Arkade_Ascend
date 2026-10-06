@@ -2,8 +2,8 @@
 // preset each page opens with. `preview` is the menu's right-hand image.
 export const routes = [
   { id: 'home', path: '/', label: 'Home', hint: 'Return to Ascend', scene: 'home', preview: '/brochure/cover-satin.webp' },
-  { id: 'neu-gen', path: '/neu-gen', label: 'Neu Gen Life', hint: 'The vision', scene: 'cover', preview: '/brochure/lifestyle-arrival.webp' },
-  { id: 'tower', path: '/tower', label: 'The Tower', hint: 'Architecture in the round', scene: 'tower', preview: '/gallery/exterior.png' },
+  { id: 'neu-gen', path: '/neu-gen', label: 'Neu Gen Life', hint: 'The vision', scene: 'cover', preview: '/brochure/welcome-balcony-1600.webp' },
+  { id: 'tower', path: '/tower', label: 'The Tower', hint: 'Architecture in the round', scene: 'tower', preview: '/gallery/exterior/cam02-twilight-1600.webp' },
   { id: 'residences', path: '/residences', label: 'Residences', hint: 'Find your residence', scene: 'residences', preview: '/residences/tower-cutout.png' },
   { id: 'floor-plans', path: '/floor-plans', label: 'Floor Plans', hint: 'Every room, measured', scene: 'cream', tone: 'light', preview: '/brochure/floor-plan-unit-1.webp' },
   { id: 'specifications', path: '/specifications', label: 'Specifications', hint: 'Crafted in detail', scene: 'plum', preview: '/gallery/interior.png' },
