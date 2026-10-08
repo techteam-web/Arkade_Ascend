@@ -275,6 +275,16 @@ html { font-size: 100%; }
   .range-dual:focus-visible::-webkit-slider-thumb { background: radial-gradient(circle, var(--color-gold-200) 0 0.3rem, var(--color-espresso) 0.32rem 0.52rem, var(--color-gold-300) 0.54rem 0.72rem, transparent 0.74rem); }
   .range-dual:focus-visible::-moz-range-thumb { background: radial-gradient(circle, var(--color-gold-200) 0 0.3rem, var(--color-espresso) 0.32rem 0.52rem, var(--color-gold-300) 0.54rem 0.72rem, transparent 0.74rem); }
 
+  /* A floor on the Floor Plans rail: a round key, like a lift panel. */
+  .floor-key {
+    position: relative; flex: none; display: grid; place-items: center; min-width: 2.75rem; height: 2.75rem; border-radius: 9999px;
+    border: 1px solid var(--tone-line); color: var(--tone-muted); font-size: 0.85rem;
+    transition: color .4s var(--ease-silk), background-color .4s var(--ease-silk), border-color .4s var(--ease-silk);
+  }
+  .floor-key:where(:hover, :focus-visible) { color: var(--tone-fg); border-color: var(--tone-accent); }
+  .floor-key[aria-pressed="true"] { color: var(--color-espresso); background: var(--color-gold-500); border-color: var(--color-gold-500); }
+  .floor-key[aria-pressed="true"] > span { background: var(--color-espresso); }
+
   /* Native select in the chip style, with its own chevron. */
   .select-lux {
     appearance: none; -webkit-appearance: none; min-height: 2.75rem; padding: 0 2.4rem 0 1.1rem; border-radius: 999px;

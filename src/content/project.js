@@ -15,49 +15,6 @@ export const project = {
   cityHeadline: ['The city at', 'your command,', 'connectivity at', 'your convenience.'],
 }
 
-// Brochure page 6. "Dummy render" in the source, so the plan is labelled
-// indicative wherever it appears.
-export const units = [
-  {
-    id: 'unit-1',
-    unit: '1',
-    configuration: '4 BHK',
-    reraArea: 1562,
-    balcony: 51,
-    totalArea: 1613,
-    plan: '/brochure/floor-plan-unit-1.webp',
-    keyPlan: '/brochure/key-plan.webp',
-    // Room outlines in brochure page coordinates (1080 x 840 page render),
-    // converted to plan-image percentages by planRect().
-    rooms: [
-      { id: 'living', name: 'Living room', size: '21′-10″ × 15′-6″', box: [205, 268, 415, 385] },
-      { id: 'dining', name: 'Dining', size: '9′-6″ × 10′-0″', box: [300, 385, 410, 470] },
-      { id: 'kitchen', name: 'Kitchen', size: '8′-0″ × 12′-6″', box: [237, 420, 322, 540] },
-      { id: 'dry-balcony', name: 'Dry balcony', size: '8′-0″ × 4′-0″', box: [232, 540, 322, 600] },
-      { id: 'balcony', name: 'Balcony', size: '9′-6″ × 5′-5″', box: [318, 210, 412, 266] },
-      { id: 'bedroom-1', name: 'Bedroom', size: '11′-0″ × 12′-7″', box: [462, 255, 570, 377] },
-      { id: 'bedroom-2', name: 'Bedroom', size: '11′-0″ × 17′-0″', box: [570, 255, 685, 412] },
-      { id: 'bedroom-3', name: 'Bedroom', size: '11′-0″ × 14′-1″', box: [408, 420, 520, 552] },
-      { id: 'bedroom-4', name: 'Bedroom', size: '11′-0″ × 15′-4″', box: [575, 420, 685, 562] },
-      { id: 'passage', name: 'Passage', size: '16′-6″ × 3′-11″', box: [415, 378, 575, 420] },
-      { id: 'toilet-1', name: 'Toilet', size: '4′-6″ × 8′-0″', box: [416, 290, 462, 335] },
-      { id: 'wc', name: 'W.C.', size: '4′-6″ × 4′-3″', box: [416, 335, 462, 380] },
-      { id: 'toilet-2', name: 'Toilet', size: '8′-6″ × 5′-7″', box: [685, 360, 760, 415] },
-      { id: 'toilet-3', name: 'Toilet', size: '4′-6″ × 8′-0″', box: [520, 468, 575, 552] },
-      { id: 'toilet-4', name: 'Toilet', size: '5′-0″ × 8′-10″', box: [685, 462, 732, 530] },
-    ],
-  },
-]
-
-// The plan image is cropped from page 6 at x 68.2–799.1, y 169.1–621.8.
-const PLAN_CROP = { left: 68.2, top: 169.1, width: 730.9, height: 452.7 }
-export const planRect = ([x1, y1, x2, y2]) => ({
-  left: `${((x1 - PLAN_CROP.left) / PLAN_CROP.width) * 100}%`,
-  top: `${((y1 - PLAN_CROP.top) / PLAN_CROP.height) * 100}%`,
-  width: `${((x2 - x1) / PLAN_CROP.width) * 100}%`,
-  height: `${((y2 - y1) / PLAN_CROP.height) * 100}%`,
-})
-
 // Brochure page 5. `distance` is the brochure's figure (as per Google Maps).
 // `point` is the position on the brochure map image (0–1); `lngLat` places
 // the same place on the live map. The live-map positions come from

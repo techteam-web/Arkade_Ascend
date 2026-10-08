@@ -8,7 +8,7 @@ import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment
 import { gsap } from '../../app/reveal.js'
 import { buildingModel as model } from '../../content/template.js'
 import { prefersReducedMotion } from '../../hooks/useMediaQuery.js'
-import { floorBase, selectable as isResidential, towerById } from './floors.js'
+import { floorAt, floorBase, selectable as isResidential, towerById } from './floors.js'
 import { FIN, FINISHES } from './finishes.js'
 
 const UP = new THREE.Vector3(0, 1, 0)
@@ -32,15 +32,15 @@ const finish = root => root.traverse(object => {
   if (look.metalness !== undefined) material.metalness = look.metalness
 })
 
-// A wing's outline raised through its residential floors, for picking floors.
+// A wing's outline raised through its floors with homes, for picking floors.
 const prisms = new Map()
-const prism = outline => {
+const prism = ({ outline, floors: [first, last] }) => {
   if (!prisms.has(outline)) {
     const shape = new THREE.Shape(outline.map(([x, z]) => new THREE.Vector2(x, z)))
-    const height = floorBase(model.lastFloor + 1) - floorBase(model.firstFloor)
+    const height = floorBase(last + 1) - floorBase(first)
     const geometry = new THREE.ExtrudeGeometry(shape, { depth: height, bevelEnabled: false })
     geometry.rotateX(Math.PI / 2)   // shape (x, z) at depth d -> (x, -d, z)
-    geometry.translate(0, floorBase(model.lastFloor + 1), 0)
+    geometry.translate(0, floorBase(last + 1), 0)
     prisms.set(outline, geometry)
   }
   return prisms.get(outline)
@@ -59,8 +59,8 @@ const outlinePlanes = outline => {
 }
 
 // The tower's architectural model on its own canvas, rendered on demand. Drag
-// to orbit, pinch or scroll to zoom. With `selectable`, pointing at Tower A or
-// Tower B previews that tower's floor and clicking selects it; `floor` and the
+// to orbit, pinch or scroll to zoom. With `selectable`, pointing at Wing A or
+// Wing B previews that tower's floor and clicking selects it; `floor` and the
 // callbacks carry { tower, n }. `turn` is a counter the page bumps
 // (with a direction) to rotate the view from buttons or keys.
 export default function BuildingModel({ selectable = false, floor = null, onFloor, onHover, turn, label }) {
@@ -115,7 +115,7 @@ function Scene({ selectable, floor, onFloor, onHover, turn, onReady }) {
   }, [])
 
   const pickFloor = (event, tower) => {
-    const n = model.firstFloor + Math.floor((event.point.y - model.firstY) / model.floorHeight)
+    const n = floorAt(event.point.y)
     return isResidential(tower, n) ? { tower, n } : null
   }
   const same = (a, b) => a?.tower === b?.tower && a?.n === b?.n
@@ -130,7 +130,7 @@ function Scene({ selectable, floor, onFloor, onHover, turn, onReady }) {
     <group ref={group}>
       <primitive object={building} />
       {selectable && <>
-        {model.wings.map(wing => <mesh key={wing.id} geometry={prism(wing.outline)}
+        {model.wings.map(wing => <mesh key={wing.id} geometry={prism(wing)}
           onPointerMove={event => { event.stopPropagation(); setPreview(pickFloor(event, wing.id)) }}
           onPointerOut={() => setPreview(null)}
           onClick={event => { if (event.delta > 6) return; event.stopPropagation(); const next = pickFloor(event, wing.id); if (next) onFloor?.(next) }}>

@@ -1,8 +1,8 @@
 // TEMPLATE CONTENT — not from the brochure.
-// The gallery, the unit finder's sample inventory and the model's floor data
-// below are placeholders that show the layout. Replace them with approved
-// content before any client use. (Specifications and amenities now come from
-// the brochure, in project.js.)
+// The gallery and the model's floor data below are placeholders that show
+// the layout. Replace them with approved content before any client use.
+// (Specifications and amenities now come from the brochure, in project.js;
+// Wing A's floor plans from the plan sheets, in floorPlans.js.)
 // The pages label them "indicative" on screen while `isTemplate` is true.
 // Leave `image` empty to show the gold placeholder frame until renders arrive.
 
@@ -35,57 +35,24 @@ export const gallery = [
   { src: '/mumbai-dusk.png', category: 'Lifestyle', alt: 'Illustrative Mumbai skyline and distant hills at sunset' },
 ]
 
-// The unit finder's sample inventory (see src/content/inventory.js). Only
-// Type A is in the brochure: Unit 1, in project.js. Types B to F, their areas
-// and features, and the homes each floor holds are placeholders that show how
-// the finder narrows the choice. Every type shows the Unit 1 drawing until its
-// approved plan arrives; give a type its own `plan` image then. Replace this
-// whole block with the approved inventory before any client use.
-export const samplePlanTypes = [
-  { id: 'B', configuration: '4 BHK', bedrooms: 4, bathrooms: 4, reraArea: 1478, balcony: 48, features: ['study', 'dry-balcony'] },
-  { id: 'C', configuration: '3 BHK', bedrooms: 3, bathrooms: 3, reraArea: 1186, balcony: 42, features: ['powder', 'dry-balcony'] },
-  { id: 'D', configuration: '3 BHK', bedrooms: 3, bathrooms: 3, reraArea: 1094, balcony: 38, features: ['utility'] },
-  { id: 'E', configuration: '2 BHK', bedrooms: 2, bathrooms: 2, reraArea: 812, balcony: 32, features: ['utility'] },
-  { id: 'F', configuration: '2 BHK', bedrooms: 2, bathrooms: 2, reraArea: 748, balcony: 28, features: [] },
-]
-
-// Every residential floor repeats its tower's stack of homes. A home is its
-// tower, floor and position: A-1203 is Tower A, floor 12, position 3.
-// `facing` is the direction the living room looks out to.
-export const homeStacks = {
-  A: [
-    { position: 1, plan: 'A', facing: 'East', view: 'skyline', corner: true },
-    { position: 2, plan: 'C', facing: 'North', view: 'garden' },
-    { position: 3, plan: 'E', facing: 'North', view: 'garden' },
-    { position: 4, plan: 'B', facing: 'West', view: 'sunset', corner: true },
-  ],
-  B: [
-    { position: 1, plan: 'B', facing: 'East', view: 'skyline', corner: true },
-    { position: 2, plan: 'D', facing: 'South', view: 'garden' },
-    { position: 3, plan: 'F', facing: 'South', view: 'garden' },
-    { position: 4, plan: 'C', facing: 'West', view: 'sunset', corner: true },
-  ],
-}
-export const homeViews = [
-  { id: 'skyline', label: 'City skyline' },
-  { id: 'sunset', label: 'Sunset side' },
-  { id: 'garden', label: 'Podium garden' },
-]
-
 // The architectural model of the tower (public/models, optimised from the
 // supplied GLB). Floor levels are read from the model's floor names and
 // heights, in model metres with the ground at 0; confirm against the approved
-// plans. Wing outlines are convex [x, z] footprints measured on the model.
+// plans. Floors 1 to 5 are the podium: the model has no levels for them, so
+// they share its height evenly below the 6th floor (3.5 m each). Each wing
+// lists the floors that hold homes. Wing A has homes on every floor (as
+// instructed, 8 Oct 2026, pending the approved floor list); Wing B is
+// unchanged until its plans are supplied. Wing outlines are convex [x, z]
+// footprints measured on the model.
 export const buildingModel = {
   src: '/models/ascend-block.glb',
-  firstFloor: 6,        // floors 1 to 5 are the podium
-  lastFloor: 37,
-  firstY: 21,           // floor line of the 6th floor
+  towerFloor: 6,        // the first floor above the podium
+  towerY: 21,           // floor line of the 6th floor
   floorHeight: 3.15,
   top: 131.25,
   wings: [
-    { id: 'A', refuge: [8, 22, 29, 36], outline: [[-49.8, 15.5], [-49.4, 14.1], [-32.7, 9.7], [-23, 9.1], [-10, 9.2], [-6.4, 9.6], [6.9, 11.9], [9.8, 14.1], [9.8, 21], [8.6, 23.4], [-1.8, 33.2], [-29.4, 33.2], [-49.4, 23.9], [-49.8, 21.8]] },
-    { id: 'B', refuge: [8], outline: [[7, 11.5], [9.5, -2.5], [22, -18.3], [36.9, -23.6], [42.9, -19.4], [47.3, -16], [49.1, -14], [39.3, 1.6], [32.8, 10.5], [29.2, 15.1], [19.3, 21.1], [16.6, 19]] },
+    { id: 'A', floors: [1, 37], refuge: [], outline: [[-49.8, 15.5], [-49.4, 14.1], [-32.7, 9.7], [-23, 9.1], [-10, 9.2], [-6.4, 9.6], [6.9, 11.9], [9.8, 14.1], [9.8, 21], [8.6, 23.4], [-1.8, 33.2], [-29.4, 33.2], [-49.4, 23.9], [-49.8, 21.8]] },
+    { id: 'B', floors: [6, 37], refuge: [8], outline: [[7, 11.5], [9.5, -2.5], [22, -18.3], [36.9, -23.6], [42.9, -19.4], [47.3, -16], [49.1, -14], [39.3, 1.6], [32.8, 10.5], [29.2, 15.1], [19.3, 21.1], [16.6, 19]] },
   ],
   // Where the model stands on the Location map, in its lighter map copy
   // (tools/map-model). `lngLat` is the model's origin; `bearing` is the

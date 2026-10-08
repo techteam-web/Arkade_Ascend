@@ -5,10 +5,15 @@ import { useShell } from '../app/ShellContext.js'
 import { ArrowIcon, ChevronIcon } from '../components/Brand.jsx'
 import { Figure, ModelNote, PageHeading } from '../components/PageKit.jsx'
 import UnitFinder from '../components/UnitFinder.jsx'
+import { planTypes } from '../content/inventory.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import { selectable, stepFloor, towers } from '../scenes/building/floors.js'
 
 const BuildingModel = lazy(() => import('../scenes/building/BuildingModel.jsx'))
+
+// Wing A at a glance, from its plan sheets.
+const reraAreas = planTypes.map(type => type.reraArea)
+const configurations = planTypes.map(type => parseFloat(type.configuration))
 
 export default function ResidencesPage() {
   const { go } = useShell()
@@ -80,15 +85,15 @@ export default function ResidencesPage() {
     <div ref={intro} hidden={!!mode} className="flex flex-col justify-center-safe gap-[clamp(1.25rem,4vh,2.5rem)]">
       <PageHeading id="residences" title="Residences" subtitle="Discover your residence" />
       <div className="grid max-w-md grid-cols-3 gap-4">
-        <Figure value="4 BHK" label="Configuration" />
-        <Figure value={1562} suffix="sq.ft" label="RERA area, Unit 1" />
-        <Figure value={51} suffix="sq.ft" label="Balcony" />
+        <Figure value={`${Math.min(...configurations)}–${Math.max(...configurations)} BHK`} label="Wing A homes" />
+        <Figure value={Math.min(...reraAreas)} suffix="sq.ft" label="RERA carpet, from" />
+        <Figure value={Math.max(...reraAreas)} suffix="sq.ft" label="RERA carpet, up to" />
       </div>
       <div>
         <p data-reveal className="eyebrow mb-3">Two ways to explore</p>
         <div className="flex max-w-md flex-col">
-          <PathButton ref={visualOpener} number="01" title="Visual selection" copy="Choose a tower and floor on the building to see its plans." onClick={() => open('visual')} pressed={visual} />
-          <PathButton ref={finderOpener} number="02" title="Unit finder" copy="Filter every home by configuration, floor, size, facing, view and features." onClick={() => open('finder')} pressed={finder} />
+          <PathButton ref={visualOpener} number="01" title="Visual selection" copy="Choose a wing and floor on the building to see its plans." onClick={() => open('visual')} pressed={visual} />
+          <PathButton ref={finderOpener} number="02" title="Unit finder" copy="Filter every Wing A home by configuration, unit, floor, size and features." onClick={() => open('finder')} pressed={finder} />
         </div>
       </div>
     </div>
@@ -106,14 +111,14 @@ export default function ResidencesPage() {
               <svg viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19" /></svg>
             </button>
           </div>
-          {/* Point at Tower A or Tower B to preview that tower's floor, click or
+          {/* Point at Wing A or Wing B to preview that wing's floor, click or
               tap to choose it, then open its plans. The panel sits below the
               model (beside it on short screens), never over it. */}
           <div className="flex min-h-0 flex-1 flex-col gap-4 short:flex-row short:items-center">
             <div className="relative min-h-[40vh] flex-1 self-stretch split:min-h-0">
               <Suspense fallback={null}>
                 <BuildingModel selectable floor={chosen} onFloor={setChoice} onHover={setPreview} turn={turn}
-                  label="3D model of Tower A and Tower B. Point at a tower's floor to preview it, click or tap to select it; use the up and down arrow keys to change floor within the chosen tower." />
+                  label="3D model of Wing A and Wing B. Point at a wing's floor to preview it, click or tap to select it; use the up and down arrow keys to change floor within the chosen wing." />
               </Suspense>
             </div>
             <div className="glass-panel flex flex-wrap items-center gap-x-6 gap-y-3 rounded-sm px-5 py-4 split:mx-auto split:w-full split:max-w-4xl short:w-[19rem]! short:shrink-0 short:flex-col short:gap-y-2 short:py-3 short:flex-nowrap short:items-stretch">
@@ -122,14 +127,14 @@ export default function ResidencesPage() {
               <div className="flex min-w-44 flex-1 items-baseline justify-between gap-4">
                 <div className="min-w-0">
                   <p className="eyebrow">{previewing ? 'Preview' : 'Floor'}</p>
-                  <p className="mt-1 min-h-[2lh] text-[0.62rem] uppercase leading-relaxed tracking-[0.2em] text-muted">{shown ? `Tower ${shown.tower}` : <><span className="pointer-coarse:hidden">Point at a tower, click a floor</span><span className="hidden pointer-coarse:inline">Tap a floor on a tower</span></>}</p>
+                  <p className="mt-1 min-h-[2lh] text-[0.62rem] uppercase leading-relaxed tracking-[0.2em] text-muted">{shown ? `Wing ${shown.tower}` : <><span className="pointer-coarse:hidden">Point at a wing, click a floor</span><span className="hidden pointer-coarse:inline">Tap a floor on a wing</span></>}</p>
                 </div>
-                <p className="num w-[2ch] text-right text-4xl leading-none text-fg" aria-live="polite" aria-label={chosen ? `Tower ${chosen.tower}, floor ${chosen.n} selected` : 'No floor selected'}>{shown ? String(shown.n).padStart(2, '0') : '—'}</p>
+                <p className="num w-[2ch] text-right text-4xl leading-none text-fg" aria-live="polite" aria-label={chosen ? `Wing ${chosen.tower}, floor ${chosen.n} selected` : 'No floor selected'}>{shown ? String(shown.n).padStart(2, '0') : '—'}</p>
               </div>
               <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-                <div role="group" aria-label="Tower" className="flex items-center gap-2">
-                  <span className="eyebrow mr-1 short:hidden" aria-hidden="true">Tower</span>
-                  {towers.map(tower => <button key={tower.id} type="button" className="chip min-w-11" aria-pressed={choice.tower === tower.id} aria-label={`Tower ${tower.id}`} onClick={() => pickTower(tower.id)}>{tower.id}</button>)}
+                <div role="group" aria-label="Wing" className="flex items-center gap-2">
+                  <span className="eyebrow mr-1 short:hidden" aria-hidden="true">Wing</span>
+                  {towers.map(tower => <button key={tower.id} type="button" className="chip min-w-11" aria-pressed={choice.tower === tower.id} aria-label={`Wing ${tower.id}`} onClick={() => pickTower(tower.id)}>{tower.id}</button>)}
                 </div>
                 <div className="flex gap-2">
                   <button type="button" className="btn-icon" aria-label="Floor down" onClick={() => step(-1)}><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg></button>
@@ -138,7 +143,7 @@ export default function ResidencesPage() {
                   <button type="button" className="btn-icon max-sm:hidden short:hidden" aria-label="Turn the building right" onClick={() => rotate(-1)}><ChevronIcon /></button>
                 </div>
               </div>
-              <button type="button" className="btn-lux whitespace-nowrap" disabled={!chosen} onClick={() => go(`/floor-plans?tower=${choice.tower}&floor=${choice.n}`)}>Floor plans<ArrowIcon className="shrink-0" /></button>
+              <button type="button" className="btn-lux whitespace-nowrap" disabled={!chosen} onClick={() => go(`/floor-plans?wing=${choice.tower}&floor=${choice.n}`)}>Floor plans<ArrowIcon className="shrink-0" /></button>
             </div>
           </div>
         </div>

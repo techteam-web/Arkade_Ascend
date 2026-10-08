@@ -2,10 +2,9 @@ import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useStat
 import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
 import { ArrowIcon } from './Brand.jsx'
-import { TemplateNote } from './PageKit.jsx'
 import {
-  activeFilters, area, bounds, emptyFilters, facets, features, filterHomes, floorBands, groupByType,
-  optionCounts, planById, sortGroups, sortHomes, sorts, span, viewLabel,
+  activeFilters, area, bounds, emptyFilters, facets, features, featureLabel, filterHomes, floorBands, floorRuns,
+  groupByType, optionCounts, ordinal, planById, sortGroups, sortHomes, sorts, span,
 } from '../content/inventory.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
@@ -17,8 +16,8 @@ const Icon = ({ d }) => <svg viewBox="0 0 24 24"><path d={d} /></svg>
 // Remembered for the session, so coming back from a plan finds the same search.
 let remembered = { filters: emptyFilters(), view: 'plans', sort: { plans: 'type', homes: 'floor-asc' }, compare: [] }
 
-// Search by unit, after Zenith's finder: facets narrow every home in both
-// towers; results read as plan types (cards) or as single homes (a list);
+// Search by unit, after Zenith's finder: facets narrow every home in Wing A;
+// results read as plan types (cards) or as single homes (a list);
 // up to three plan types compare side by side. `onOpenPlan` receives
 // { plan } or { home } and opens the Floor Plans page.
 const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) {
@@ -74,8 +73,7 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) 
         </div>
         <div id={panelId} className={`glass-panel page-scroll min-h-0 rounded-sm px-4 py-4 split:flex-1 stack:mt-3 stack:max-h-[44vh] ${filtersOpen ? '' : 'stack:hidden'}`}>
           {chipFacet('configuration')}
-          {chipFacet('type')}
-          {chipFacet('tower')}
+          {chipFacet('unit')}
           <RangeFacet label="Floor" names={['Lowest floor', 'Highest floor']} bounds={bounds.floor} value={filters.floor}
             format={n => `Floor ${n}`} onChange={range => setRange('floor', range)}>
             <div role="group" aria-label="Floor bands" className="mt-1 flex flex-wrap gap-1.5">
@@ -87,8 +85,6 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) 
           </RangeFacet>
           <RangeFacet label="RERA area" unit="sq.ft" names={['Smallest area', 'Largest area']} bounds={bounds.area} step={10} value={filters.area}
             format={area} valueText={n => `${area(n)} square feet`} onChange={range => setRange('area', range)} />
-          {chipFacet('facing')}
-          {chipFacet('view')}
           {chipFacet('feature')}
           <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
             <button type="button" className="chip border-transparent! px-0!" onClick={reset} disabled={!active}>Reset filters</button>
@@ -135,8 +131,8 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) 
 
         {compare.length > 0 && <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
           <p className="eyebrow mr-1">Compare <span className="num">{compare.length}/{MAX_COMPARE}</span></p>
-          {compare.map(id => <button key={id} type="button" className="chip" onClick={() => toggleCompare(id)} aria-label={`Remove Type ${id} from compare`}>
-            Type {id}<span aria-hidden="true" className="ml-2">×</span>
+          {compare.map(id => <button key={id} type="button" className="chip" onClick={() => toggleCompare(id)} aria-label={`Remove ${planById(id).label} from compare`}>
+            {planById(id).label}<span aria-hidden="true" className="ml-2">×</span>
           </button>)}
           <div className="ml-auto flex gap-2">
             <button type="button" className="chip border-transparent!" onClick={() => setCompare([])}>Clear</button>
@@ -145,7 +141,7 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) 
             </button>
           </div>
         </div>}
-        <TemplateNote className="mt-3">Indicative sample inventory<span className="max-sm:hidden short:hidden"> · types B–F show the Unit 1 drawing until their plans arrive</span></TemplateNote>
+        <p className="mt-3 text-[0.58rem] uppercase tracking-[0.26em] text-muted/80">Wing A · from the plan sheets<span className="max-sm:hidden short:hidden"> · Wing B plans to follow</span></p>
       </div>
     </div>
 
@@ -201,30 +197,30 @@ function RangeFacet({ label, unit, names, bounds: [min, max], step = 1, value: [
 }
 
 function PlanCard({ group, inCompare, compareFull, onCompare, onOpen, onHomes }) {
-  const { type, homes, towers, floors } = group
+  const { type, homes, floors } = group
   return <li className="finder-in">
     <article data-tone="light" className="group flex h-full flex-col overflow-hidden rounded-sm border border-line bg-cream-50 text-fg shadow-[0_24px_48px_-30px_rgba(0,0,0,.7)]">
-      <button type="button" onClick={onOpen} aria-label={`Open the ${type.name} plan, ${type.configuration}`}
-        className="relative block aspect-[2680/1660] w-full overflow-hidden bg-cream-100 outline-offset-[-3px]">
-        <img src={type.plan} alt="" loading="lazy" decoding="async" draggable="false"
+      <button type="button" onClick={onOpen} aria-label={`Open the ${type.label} plan, ${type.configuration}`}
+        className="relative block aspect-[3/2] w-full overflow-hidden bg-cream-100 outline-offset-[-3px]">
+        <img src={type.image.src} alt="" loading="lazy" decoding="async" draggable="false"
           className="size-full select-none object-contain p-3 transition-[translate] duration-500 ease-silk group-hover:-translate-y-0.5" />
-        <span className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-[0.52rem] font-medium uppercase tracking-[0.18em] ${type.placeholder ? 'bg-plum-800/85 text-cream-50' : 'bg-gold-500 text-espresso'}`}>
-          {type.placeholder ? 'Placeholder plan' : 'Brochure plan'}
+        <span className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-[0.52rem] font-medium uppercase tracking-[0.18em] ${type.floor ? 'bg-plum-800/85 text-cream-50' : 'bg-gold-500 text-espresso'}`}>
+          {type.floor ? <><span className="num">{ordinal(type.floor)}</span> floor only</> : 'Typical floor'}
         </span>
       </button>
       <div className="flex flex-1 flex-col gap-1.5 border-t border-line px-4 py-3">
         <div className="flex items-baseline justify-between gap-3">
-          <h3 className="font-display text-[1.4rem] uppercase leading-none">{type.name}</h3>
+          <h3 className="font-display text-[1.4rem] uppercase leading-none">Unit <span className="num">{type.unit}</span></h3>
           <span className="text-[0.62rem] font-medium uppercase tracking-[0.18em] text-accent">{type.configuration}</span>
         </div>
         <p className="num text-[0.72rem] text-muted">RERA {area(type.reraArea)} sq.ft · Total {area(type.totalArea)} sq.ft</p>
         <p className="text-[0.58rem] uppercase leading-relaxed tracking-[0.14em] text-muted">
-          <span className="num">{homes.length}</span> {homes.length === 1 ? 'home' : 'homes'} · Tower {towers.join(' & ')} · Floor{floors[0] === floors[1] ? '' : 's'} <span className="num">{span(floors)}</span>
+          <span className="num">{homes.length}</span> {homes.length === 1 ? 'home' : 'homes'} · Floor{homes.length === 1 ? '' : 's'} <span className="num">{floorRuns(floors)}</span>
         </p>
         <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
           <button type="button" className="chip" aria-pressed={inCompare} disabled={!inCompare && compareFull} onClick={onCompare}
-            aria-label={`${inCompare ? 'Remove' : 'Add'} ${type.name} ${inCompare ? 'from' : 'to'} compare`}>{inCompare ? 'Comparing' : 'Compare'}</button>
-          <button type="button" className="btn-lux bg-transparent! px-4!" onClick={onHomes} aria-label={`See the ${plural(homes.length, 'home')} of ${type.name}`}>Homes<ArrowIcon /></button>
+            aria-label={`${inCompare ? 'Remove' : 'Add'} ${type.label} ${inCompare ? 'from' : 'to'} compare`}>{inCompare ? 'Comparing' : 'Compare'}</button>
+          <button type="button" className="btn-lux bg-transparent! px-4!" onClick={onHomes} aria-label={`See the ${plural(homes.length, 'home')} of ${type.label}`}>Homes<ArrowIcon /></button>
         </div>
       </div>
     </article>
@@ -234,26 +230,27 @@ function PlanCard({ group, inCompare, compareFull, onCompare, onOpen, onHomes })
 // Single homes. Wide columns read as a table; narrow ones fold each home
 // into two lines (container query on the results column).
 function HomeList({ homes, onOpen }) {
-  const columns = '@3xl:grid-cols-[6rem_4.5rem_minmax(0,1fr)_7rem_4.5rem_minmax(0,1fr)_1.75rem]'
+  const columns = '@3xl:grid-cols-[6rem_4rem_minmax(0,1fr)_7rem_5rem_minmax(0,1.3fr)_1.75rem]'
+  const extras = home => home.features.map(featureLabel).join(', ') || '—'
   return <div>
     <div aria-hidden="true" className={`sticky top-0 z-1 hidden gap-x-4 border-b border-line bg-plum-950/90 py-2 text-[0.55rem] uppercase tracking-[0.24em] text-muted @3xl:grid ${columns}`}>
-      <span>Home</span><span>Floor</span><span>Plan</span><span>RERA area</span><span>Facing</span><span>View</span><span />
+      <span>Home</span><span>Floor</span><span>Plan</span><span>RERA area</span><span>Deck</span><span>Features</span><span />
     </div>
     <ul>
       {homes.map(home => <li key={home.id}>
         <button type="button" onClick={() => onOpen(home)}
-          aria-label={`Home ${home.id}: Tower ${home.tower}, floor ${home.floor}, ${home.type.name}, ${home.type.configuration}, ${area(home.type.reraArea)} square feet, ${home.facing} facing, ${viewLabel(home.view)}. Open its plan.`}
+          aria-label={`Home ${home.id}: Wing ${home.wing}, floor ${home.floor}, Unit ${home.position}, ${home.type.configuration}, ${area(home.type.reraArea)} square feet. Open its plan.`}
           className={`group grid min-h-12 w-full grid-cols-[minmax(0,1fr)_1.75rem] items-center gap-x-4 border-b border-line py-2.5 text-left outline-offset-[-2px] transition-colors duration-300 hover:bg-gold-500/8 ${columns}`}>
           <span className="flex flex-col gap-1 @3xl:hidden">
-            <span className="text-[0.8rem] text-fg"><span className="num">{home.id}</span><span className="ml-3 text-[0.6rem] uppercase tracking-[0.16em] text-accent">{home.type.name} · {home.type.configuration}</span></span>
-            <span className="text-[0.62rem] uppercase tracking-[0.12em] text-muted">Floor <span className="num">{home.floor}</span> · <span className="num">{area(home.type.reraArea)}</span> sq.ft · {home.facing} · {viewLabel(home.view)}</span>
+            <span className="text-[0.8rem] text-fg"><span className="num">{home.id}</span><span className="ml-3 text-[0.6rem] uppercase tracking-[0.16em] text-accent">Unit <span className="num">{home.position}</span> · {home.type.configuration}</span></span>
+            <span className="text-[0.62rem] uppercase tracking-[0.12em] text-muted">Floor <span className="num">{home.floor}</span> · <span className="num">{area(home.type.reraArea)}</span> sq.ft · {extras(home)}</span>
           </span>
           <span className="num hidden text-[0.85rem] text-fg @3xl:block">{home.id}</span>
           <span className="num hidden text-[0.8rem] text-fg @3xl:block">{home.floor}</span>
-          <span className="hidden truncate text-[0.62rem] uppercase tracking-[0.16em] text-accent @3xl:block">{home.type.name} · {home.type.configuration}</span>
+          <span className="hidden truncate text-[0.62rem] uppercase tracking-[0.16em] text-accent @3xl:block">Unit <span className="num">{home.position}</span> · {home.type.configuration}</span>
           <span className="hidden text-[0.8rem] text-fg @3xl:block"><span className="num">{area(home.type.reraArea)}</span> <span className="text-[0.6rem] text-muted">sq.ft</span></span>
-          <span className="hidden text-[0.72rem] text-fg @3xl:block">{home.facing}</span>
-          <span className="hidden truncate text-[0.72rem] text-muted @3xl:block">{viewLabel(home.view)}</span>
+          <span className="hidden text-[0.8rem] text-fg @3xl:block"><span className="num">{home.type.deck}</span> <span className="text-[0.6rem] text-muted">sq.ft</span></span>
+          <span className="hidden truncate text-[0.72rem] text-muted @3xl:block">{extras(home)}</span>
           <ArrowIcon className="h-3 w-7 justify-self-end fill-none stroke-current stroke-[1.1] text-accent transition-[translate] duration-500 group-hover:translate-x-1" />
         </button>
       </li>)}
@@ -287,23 +284,20 @@ function CompareDialog({ ids, results, onClose, onOpen }) {
   }, [onClose])
   const rows = [
     ['Configuration', type => type.configuration],
-    ['RERA area', type => `${area(type.reraArea)} sq.ft`],
-    ['Balcony', type => `${area(type.balcony)} sq.ft`],
+    ['RERA carpet area', type => `${area(type.reraArea)} sq.ft`],
+    ['Deck area', type => `${area(type.deck)} sq.ft`],
     ['Total area', type => `${area(type.totalArea)} sq.ft`],
     ['Bedrooms', type => type.bedrooms],
-    ['Bathrooms', type => type.bathrooms],
-    ...features.filter(feature => feature.id !== 'corner').map(feature => [feature.label, type => type.features.includes(feature.id) ? 'Yes' : '—']),
+    ['Toilets', type => type.bathrooms],
+    ...features.map(feature => [feature.label, type => type.features.includes(feature.id) ? 'Yes' : '—']),
     ['Homes matching your filters', type => matching[type.id]?.homes.length ?? 0],
-    ['Towers', type => matching[type.id] ? matching[type.id].towers.map(id => `Tower ${id}`).join(', ') : '—'],
-    ['Floors', type => matching[type.id] ? span(matching[type.id].floors) : '—'],
-    ['Facing', type => matching[type.id]?.facings.join(', ') ?? '—'],
-    ['Plan drawing', type => type.placeholder ? 'Placeholder (Unit 1)' : 'Brochure'],
+    ['Floors', type => matching[type.id] ? floorRuns(matching[type.id].floors) : '—'],
   ]
 
   return createPortal(<div ref={root} role="dialog" aria-modal="true" aria-label="Compare plan types" data-tone="light"
     className="absolute inset-0 z-70 flex flex-col bg-cream-100 px-(--gutter) pb-[clamp(0.75rem,3vh,2rem)] text-fg">
     <div className="flex h-(--header-h) shrink-0 items-center justify-between gap-4">
-      <p className="eyebrow">Compare · {types.map(type => type.name).join(' · ')}</p>
+      <p className="eyebrow">Compare · {types.map(type => type.label).join(' · ')}</p>
       <button type="button" data-close className="btn-icon" onClick={onClose} aria-label="Close comparison"><Icon d="m5 5 14 14M19 5 5 19" /></button>
     </div>
     <div data-compare-sheet className="page-scroll min-h-0 flex-1">
@@ -314,10 +308,10 @@ function CompareDialog({ ids, results, onClose, onOpen }) {
               <th scope="col" className="w-[24%]"><span className="sr-only">Detail</span></th>
               {types.map(type => <th key={type.id} scope="col" className="px-3 pb-4 align-bottom font-normal">
                 <div className="overflow-hidden rounded-sm border border-line bg-cream-50">
-                  <img src={type.plan} alt="" className="aspect-[2680/1660] w-full object-contain p-2" draggable="false" />
+                  <img src={type.image.src} alt="" className="aspect-[3/2] w-full object-contain p-2" draggable="false" />
                 </div>
                 <div className="mt-3 flex items-baseline justify-between gap-2">
-                  <span className="font-display text-[1.5rem] uppercase leading-none">{type.name}</span>
+                  <span className="font-display text-[1.5rem] uppercase leading-none">Unit <span className="num">{type.unit}</span>{type.floor && <span className="ml-2 align-middle font-sans text-[0.55rem] tracking-[0.16em] text-muted"><span className="num">{ordinal(type.floor)}</span> floor</span>}</span>
                   <span className="text-[0.6rem] font-medium uppercase tracking-[0.18em] text-accent">{type.configuration}</span>
                 </div>
                 <button type="button" className="btn-lux mt-3 w-full bg-transparent!" onClick={() => onOpen(type.id)}>View plan<ArrowIcon /></button>
@@ -333,6 +327,5 @@ function CompareDialog({ ids, results, onClose, onOpen }) {
         </table>
       </div>
     </div>
-    <TemplateNote className="mt-3 text-center">Indicative · types B–F are sample data until approved plans arrive</TemplateNote>
   </div>, document.querySelector('.page-frame') || document.body)
 }
