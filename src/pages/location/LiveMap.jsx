@@ -6,6 +6,7 @@ import { prefersReducedMotion } from '../../hooks/useMediaQuery.js'
 import { buildingModel } from '../../content/template.js'
 import { ModelNote } from '../../components/PageKit.jsx'
 import { clearSite } from './siteTiles.js'
+import { HERO, aerial, lens, lookOut, towerShot } from './shots.js'
 
 // OpenFreeMap's Positron (free, no key, OpenStreetMap data), recoloured to the
 // brochure's cream map page, with extruded 3D buildings and a tilted camera,
@@ -19,31 +20,34 @@ const HALO = '#fbf8ec'
 const BUILDING = '#c49a6c'
 const LOAD_TIMEOUT = 12000
 const ROUTE_TIMEOUT = 6000
-const TILT = { pitch: 55, bearing: -18 }
-const TILT_COMPACT = { pitch: 45, bearing: -18 }
-const TILT_LOW = { pitch: 30, bearing: -18 }      // a small opening on a phone
 const FLAT = { pitch: 0, bearing: 0 }
-// The first view, high over the project; the map settles from it.
+// The first view, high over the project; the map settles from it. The
+// visit's first arrival comes down through the clouds, more slowly.
 const ARRIVAL = { zoom: 12.6, pitch: 0, bearing: 12 }
+let throughClouds = true
+// A journey in 3D: the view from the tower out to the place, held for a
+// beat once the place is in view, then the camera rises above the whole
+// route (seconds). Kept short: visitors move quickly between places.
+const OUT = 1.6
+const HOLD = 0.35
+const RISE = 1.6
 
 // The tower (src/pages/location/towerLayer.js): its middle on the ground,
-// between the wings, its height, and the side it is best seen from (from
-// the east-north-east, facing the road, where its crowns carry the name).
+// between the wings, and its height. The camera's shots of it (its front,
+// and from it out towards each place) are in shots.js.
 const TOWER = buildingModel.map
 const TOWER_CENTRE = (() => {
   const points = TOWER.footprints.flat()
   return [0, 1].map(axis => points.reduce((sum, point) => sum + point[axis], 0) / points.length)
 })()
 const TOWER_HEIGHT = buildingModel.top
-const TOWER_BEARING = -126
 const TOWER_RAMP = 13.5           // it stands from here, with the city's buildings
 const EARTH = 40075016.686
 const metresPerPixel = zoom => EARTH * Math.cos(TOWER_CENTRE[1] * Math.PI / 180) / (512 * 2 ** zoom)
-// A point some metres along a compass bearing from a place.
-function ahead([lng, lat], bearing, metres) {
-  const b = bearing * Math.PI / 180
-  return [lng + Math.sin(b) * metres / (111320 * Math.cos(lat * Math.PI / 180)), lat + Math.cos(b) * metres / 110540]
-}
+// Places as metres east and north of the tower's foot, and back.
+const KX = 111320 * Math.cos(TOWER_CENTRE[1] * Math.PI / 180), KY = 110540
+const local = ([lng, lat]) => [(lng - TOWER_CENTRE[0]) * KX, (lat - TOWER_CENTRE[1]) * KY]
+const lngLatOf = ([east, north]) => [TOWER_CENTRE[0] + east / KX, TOWER_CENTRE[1] + north / KY]
 // The tower's site and wings, drawn flat for the 2D view.
 const TOWER_PLAN = {
   type: 'FeatureCollection',
@@ -53,31 +57,77 @@ const TOWER_PLAN = {
   ],
 }
 
+// The ground, as the brochure's map page: cream land, sage parks, water a
+// cool grey-green that gives the creeks some depth, white streets, the
+// expressways in pale gold, and plum labels (water's in its own tone). Each
+// colour has a dusk twin, warmer and softer, blended in by the Dusk switch:
+// peach land, lilac water, rose-brown buildings.
+const PALETTE = {
+  ground: ['#f6efd6', '#efd8c4'],
+  water: ['#c3d1cc', '#b5b3c2'],
+  shore: ['#b3c4bf', '#a6a3b5'],
+  park: ['#dcdcb4', '#d5c8a9'],
+  homes: ['#f1e7c8', '#ead1bd'],
+  building: [BUILDING, '#ab8b84'],
+  airfield: ['#ece3c7', '#e6cdb9'],
+  runway: ['#e2d6b6', '#dcc2ae'],
+  expressEdge: ['#dcc08e', '#d3aa86'],
+  edge: ['#e2d3ae', '#dbbfa6'],
+  express: ['#efd6a6', '#f0c69e'],
+  street: ['#fdfaf0', '#f9e9da'],
+  rail: ['#c9b79d', '#b99d8e'],
+  place: ['#5a4448', '#4f3742'],
+  waterName: ['#5d7470', '#5f5a72'],
+  name: ['#76626a', '#6d5562'],
+}
+const tinted = []   // [layer, paint property, palette entry], for the dusk blend
 function brochureStyle(style) {
-  const paint = (layer, values) => { layer.paint = { ...layer.paint, ...values } }
+  tinted.length = 0
+  const paint = (layer, values) => Object.entries(values).forEach(([property, value]) => {
+    layer.paint = { ...layer.paint, [property]: PALETTE[value]?.[0] ?? value }
+    if (PALETTE[value]) tinted.push([layer.id, property, value])
+  })
   style.layers = style.layers.filter(layer => !/^boundary|shield|country|state/.test(layer.id))
+  // Paint changes take effect at once: the dusk blend sets them frame by frame.
+  style.transition = { duration: 0, delay: 0 }
   style.layers.forEach(layer => {
     const { id, type } = layer
-    if (id === 'background') paint(layer, { 'background-color': '#f6efd6' })
-    else if (id === 'water') paint(layer, { 'fill-color': '#d4dad3' })
-    else if (id === 'waterway') paint(layer, { 'line-color': '#d4dad3' })
-    else if (id === 'park' || id === 'landcover_wood') paint(layer, { 'fill-color': '#e3e1c0', 'fill-opacity': 0.9 })
-    else if (id === 'landuse_residential') paint(layer, { 'fill-color': '#f1e8cb', 'fill-opacity': 0.6 })
+    if (id === 'background' || id === 'road_area_pier') paint(layer, type === 'fill' ? { 'fill-color': 'ground' } : { 'background-color': 'ground' })
+    else if (id === 'water') paint(layer, { 'fill-color': 'water', 'fill-outline-color': 'shore' })
+    else if (id === 'waterway') paint(layer, { 'line-color': 'water' })
+    else if (id === 'park' || id === 'landcover_wood') paint(layer, { 'fill-color': 'park', 'fill-opacity': 0.9 })
+    else if (id === 'landuse_residential') paint(layer, { 'fill-color': 'homes', 'fill-opacity': 0.6 })
     // Flat footprints only until the 3D buildings take over, so the two
     // never share a surface (which flickers), and in the same brown.
     else if (id === 'building') {
       layer.maxzoom = 13.5
-      paint(layer, { 'fill-color': BUILDING, 'fill-outline-color': BUILDING, 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0.4, 13.5, 0.85] })
+      paint(layer, { 'fill-color': 'building', 'fill-outline-color': 'building', 'fill-opacity': ['interpolate', ['linear'], ['zoom'], 12, 0.4, 13.5, 0.85] })
     }
-    else if (id.startsWith('aeroway')) paint(layer, type === 'fill' ? { 'fill-color': '#ece3c7' } : { 'line-color': '#e2d6b6' })
-    else if (type === 'line' && id.includes('casing')) paint(layer, { 'line-color': '#e0d1ab' })
-    else if (type === 'line' && id.includes('motorway')) paint(layer, { 'line-color': '#f0dbb0' })
-    else if (type === 'line' && /highway|road/.test(id)) paint(layer, { 'line-color': '#fdfaf0' })
-    else if (type === 'line' && id.includes('railway')) paint(layer, { 'line-color': '#c9b79d' })
-    else if (type === 'symbol') paint(layer, { 'text-color': '#6f5a5e', 'text-halo-color': '#f6efd6', 'text-halo-width': 1.2 })
+    else if (id.startsWith('aeroway')) paint(layer, type === 'fill' ? { 'fill-color': 'airfield' } : { 'line-color': 'runway' })
+    else if (type === 'line' && id.includes('motorway') && id.includes('casing')) paint(layer, { 'line-color': 'expressEdge' })
+    else if (type === 'line' && id.includes('casing')) paint(layer, { 'line-color': 'edge' })
+    else if (type === 'line' && id.includes('motorway')) paint(layer, { 'line-color': 'express' })
+    else if (type === 'line' && /highway|road/.test(id)) paint(layer, { 'line-color': 'street' })
+    else if (type === 'line' && id.includes('railway')) paint(layer, { 'line-color': 'rail' })
+    else if (type === 'symbol') paint(layer, { 'text-color': id.startsWith('water') ? 'waterName' : id.startsWith('label') ? 'place' : 'name', 'text-halo-color': 'ground', 'text-halo-width': 1.2 })
   })
   return style
 }
+
+// '#rrggbb' colours mixed, a share t of the way from one to the other.
+const mixHex = (from, to, t) => '#' + [1, 3, 5].map(i => Math.round(parseInt(from.slice(i, i + 2), 16) * (1 - t) + parseInt(to.slice(i, i + 2), 16) * t).toString(16).padStart(2, '0')).join('')
+const mixed = (pair, t) => mixHex(pair[0], pair[1], t)
+
+// How much weather the device draws (QUALITY in towerLayer.js): none where
+// it asks to save data or has little memory or few cores, a lighter deck on
+// touch screens and small ones; a slow first flight lowers it further.
+function weatherQuality() {
+  const device = navigator
+  if (device.connection?.saveData || device.deviceMemory <= 2 || device.hardwareConcurrency <= 2) return 'none'
+  if (matchMedia('(pointer: coarse)').matches || Math.min(screen.width, screen.height) < 600) return 'low'
+  return 'high'
+}
+const LOWER = { high: 'low', low: 'none', none: 'none' }
 
 // OpenStreetMap carries some impossible heights (single buildings tagged at
 // 900 m and 1,582 m around Kandivali). The tallest towers in these suburbs
@@ -85,6 +135,17 @@ function brochureStyle(style) {
 // drawn as an ordinary low-rise instead of a sky-high sliver.
 const MAX_HEIGHT = 200
 const FALLBACK_HEIGHT = 12
+// One warm sun for the city and the tower, fixed to the compass (so faces
+// and the tower's shadow hold as the map turns): by day in the east-south-
+// east, where the tower's named face looks, 35 degrees up; at dusk low in
+// the west-south-west, 18 degrees up and amber. It swings across the south.
+const SUN = { anchor: 'map', color: '#ffefd6', intensity: 0.42, position: [1.4, 110, 55] }
+const DUSK_SUN = { color: '#ffd6b8', intensity: 0.46, position: [1.4, 252, 72] }
+const sunAt = t => ({
+  ...SUN, color: mixHex(SUN.color, DUSK_SUN.color, t), intensity: SUN.intensity + (DUSK_SUN.intensity - SUN.intensity) * t,
+  position: SUN.position.map((value, i) => value + (DUSK_SUN.position[i] - value) * t),
+})
+
 const heightOf = ['let', 'h', ['coalesce', ['get', 'render_height'], ['get', 'height'], 10],
   ['case', ['>', ['var', 'h'], MAX_HEIGHT], FALLBACK_HEIGHT, ['var', 'h']]]
 const baseOf = ['let', 'b', ['coalesce', ['get', 'render_min_height'], ['get', 'min_height'], 0],
@@ -105,7 +166,8 @@ function addBuildings(map) {
       'fill-extrusion-vertical-gradient': true,
     },
   }, firstSymbol)
-  map.setLight({ anchor: 'viewport', color: '#fff4e0', intensity: 0.4, position: [1.4, 200, 35] })
+  if (!tinted.some(([id]) => id === 'buildings-3d')) tinted.push(['buildings-3d', 'fill-extrusion-color', 'building'])
+  map.setLight(SUN)
 }
 
 // A gentle arc, used when no road route is available.
@@ -155,7 +217,7 @@ function pin(className, label, onClick) {
   return element
 }
 
-export default function LiveMap({ origin, places, group, active, hovered, tilted, inset, onSelect, onFail }) {
+export default function LiveMap({ origin, places, group, active, hovered, tilted, dusk = false, inset, onSelect, onFail }) {
   const box = useRef(null)
   const map = useRef(null)
   const pins = useRef(new Map())
@@ -176,6 +238,8 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
   const arrived = useRef(false)      // the first framing is the arrival
   const [towerOnScreen, setTowerOnScreen] = useState(false)
   const [noteBox, setNoteBox] = useState(null)
+  const quality = useRef(null)
+  const daylight = useRef({ t: 0 })  // 0 day, 1 dusk
 
   // The part of the map left open by the page's header, view switch and
   // panel, which float over it, and by the map's own controls (the zoom
@@ -192,38 +256,63 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
     const fits = width - left - right >= 120 && height - top - bottom >= 80
     return fits ? { width: width - left - right, height: height - top - bottom, top, right, bottom, left } : { width, height, top: 0, right: 0, bottom: 0, left: 0 }
   }
-  const angle = () => {
-    if (!tiltRef.current) return FLAT
+  // The camera as shots.js models it, and a shot as a camera to fly to (its
+  // `foot`: where it stands the tower on screen).
+  const lensSetup = () => ({ height: box.current.clientHeight, fov: map.current.getVerticalFieldOfView?.() ?? 36.87, metresPerPixel, towerHeight: TOWER_HEIGHT })
+  const cameraOf = shot => ({ center: lngLatOf([-shot.offset[0], -shot.offset[1]]), zoom: shot.zoom, pitch: shot.pitch, bearing: shot.bearing, foot: shot.foot })
+  // Where the tower's foot is on screen for a camera, if it is in or near view.
+  const footOn = (camera, setup) => {
+    const centre = local([camera.lng, camera.lat])
+    const spot = lens(camera, setup).see([-centre[0], -centre[1], 0])
     const area = open()
-    return area.height < 300 ? TILT_LOW : area.width < 700 ? TILT_COMPACT : TILT
+    return spot && Math.abs(spot[0]) < area.width && Math.abs(spot[1]) < area.height ? spot : null
   }
 
   // The camera moves through a proxy, so it carries the site's ease and a
   // gentle zoom-out through the middle: a cinematic pull, not a flat pan.
-  // The arrival is longer and only descends.
-  const fly = (target, { duration = 1.8, arrival = false } = {}) => {
+  // The arrival is longer and only descends. Towards a shot of the tower,
+  // the tower is held where it stands on screen while the camera turns,
+  // tilts and closes in, so the camera circles the building instead of
+  // sliding across the city (the arrival spirals down onto it).
+  const fly = (target, { duration = 1.8, arrival = false, pull = true, then } = {}) => {
     const instance = map.current
     // A flight already under way is retargeted from where it is, without a
     // second pull-back, so quick choices read as one movement.
     const midFlight = camera.current?.isActive()
     camera.current?.kill()
-    if (prefersReducedMotion()) { instance.jumpTo(target); return }
+    const { foot, ...view } = target
+    if (prefersReducedMotion()) { instance.jumpTo(view); return }
     const from = { lng: instance.getCenter().lng, lat: instance.getCenter().lat, zoom: instance.getZoom(), pitch: instance.getPitch(), bearing: instance.getBearing() }
-    const dip = midFlight || arrival ? 0 : Math.min(1.2, 0.3 + Math.abs(target.zoom - from.zoom) * 0.45)
-    let turn = target.bearing - from.bearing
+    const setup = lensSetup()
+    const held = foot && footOn(from, setup)
+    const dip = midFlight || arrival || !pull ? 0 : held ? 0.35 : Math.min(1.2, 0.3 + Math.abs(view.zoom - from.zoom) * 0.45)
+    let turn = view.bearing - from.bearing
     if (turn > 180) turn -= 360
     if (turn < -180) turn += 360
     const proxy = { t: 0 }
+    // A flight that draws under 22 frames a second asks for lighter weather.
+    const frames = { count: 0, start: 0 }
     camera.current = gsap.to(proxy, {
-      t: 1, duration, ease: arrival ? 'power2.inOut' : 'silk',
+      t: 1, duration, ease: arrival || held ? 'power2.inOut' : 'silk',
+      onStart: () => { frames.start = performance.now() },
       onUpdate: () => {
         const t = proxy.t
-        instance.jumpTo({
-          center: [from.lng + (target.center[0] - from.lng) * t, from.lat + (target.center[1] - from.lat) * t],
-          zoom: from.zoom + (target.zoom - from.zoom) * t - dip * Math.sin(Math.PI * t),
-          pitch: from.pitch + (target.pitch - from.pitch) * t,
-          bearing: from.bearing + turn * t,
-        })
+        frames.count++
+        const zoom = from.zoom + (view.zoom - from.zoom) * t - dip * Math.sin(Math.PI * t)
+        const pitch = from.pitch + (view.pitch - from.pitch) * t
+        const bearing = from.bearing + turn * t
+        if (held) {
+          const offset = lens({ zoom, pitch, bearing }, setup).ground([held[0] + (foot[0] - held[0]) * t, held[1] + (foot[1] - held[1]) * t])
+          if (offset) instance.jumpTo({ center: lngLatOf([-offset[0], -offset[1]]), zoom, pitch, bearing })
+          return
+        }
+        instance.jumpTo({ center: [from.lng + (view.center[0] - from.lng) * t, from.lat + (view.center[1] - from.lat) * t], zoom, pitch, bearing })
+      },
+      onComplete: () => {
+        then?.()
+        if (frames.count < 8 || (performance.now() - frames.start) / frames.count < 45 || quality.current === 'none' || document.hidden) return
+        quality.current = LOWER[quality.current]
+        tower.current?.setQuality(quality.current)
       },
     })
   }
@@ -242,44 +331,56 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
     instance.jumpTo({ padding: next, center: instance.unproject(point) })
   }
 
-  const frame = points => {
-    lastView.current = { points }
+  // A journey. In 3D: first from the tower out towards the place, both in
+  // view, then (after a moment) the camera rises above the whole route, so
+  // the distance it covers shows (shots.js); `above` goes straight there
+  // (a resize, or reduced motion). In 2D, the whole of it fitted into the
+  // open part, straight down. The clouds part from what is framed (the
+  // route and the tower).
+  const frame = (points, above = false) => {
+    lastView.current = { points, above }
     pad()
-    const view = angle()
+    const arrival = !arrived.current
+    arrived.current = true
+    const clouds = arrival && throughClouds
+    throughClouds &&= !arrival
+    const duration = clouds ? 3.6 : arrival ? 2.8 : tiltRef.current ? OUT : 1.8
+    tower.current?.focus([...points, TOWER_CENTRE], { duration, arrival: clouds })
+    if (tiltRef.current) {
+      const area = open(), setup = lensSetup()
+      const out = lookOut(local(points[points.length - 1]), area, setup)
+      const high = out && aerial(points.map(local), out, area, setup)
+      const rise = () => {
+        lastView.current = { points, above: true }
+        fly(cameraOf(high), { duration: RISE, pull: false })
+      }
+      if (high && (above || prefersReducedMotion())) { lastView.current = { points, above: true }; fly(cameraOf(high), { duration }); return }
+      if (out) {
+        // The hold is the camera's too: a new choice, or a drag, cancels it.
+        fly(cameraOf(out), { duration, arrival, then: high && (() => { camera.current = gsap.delayedCall(HOLD, rise) }) })
+        return
+      }
+    }
     const area = open()
     const side = Math.round(Math.min(150, Math.max(28, area.width * 0.12)))
     const top = Math.round(Math.min(110, Math.max(28, area.height * 0.16)))
     // Margins inside the open part; the project's own label hangs below its pin.
     const padding = { top, bottom: Math.round(top * 0.5) + 34, left: side, right: side }
-    const fitOf = list => map.current.cameraForBounds(boundsOf(list), { padding, bearing: view.bearing, maxZoom: 16 })
-    let fit = fitOf(points)
-    if (!fit) return
-    // The tower stands up into the view, its label above it: the ray past
-    // its top meets the ground further on, so that point is framed too.
-    if (tower.current && view.pitch && fit.zoom - 0.35 > TOWER_RAMP) {
-      const reach = (TOWER_HEIGHT + 60 * metresPerPixel(fit.zoom)) * Math.tan(view.pitch * Math.PI / 180)
-      fit = fitOf([...points, ahead(TOWER_CENTRE, view.bearing, reach)]) ?? fit
-    }
-    // A tilted view shows more ground towards the top, so step back a little.
-    const arrival = !arrived.current
-    arrived.current = true
-    fly({ center: [fit.center.lng, fit.center.lat], zoom: fit.zoom - (view.pitch ? 0.35 : 0), ...view }, arrival ? { duration: 2.8, arrival } : undefined)
+    const fit = map.current.cameraForBounds(boundsOf(points), { padding, bearing: 0, maxZoom: 16 })
+    if (fit) fly({ center: [fit.center.lng, fit.center.lat], zoom: fit.zoom, ...(tiltRef.current ? { pitch: 45, bearing: 0 } : FLAT) }, { duration, arrival })
   }
 
-  // The tower, close, from its best side, filling about half the open part
-  // of the map (in 2D, straight down over its site).
+  // The tower, close, from its front (in 2D, straight down over its site).
   const frameTower = () => {
     lastView.current = { tower: true }
     pad()
-    const view = angle()
-    if (!view.pitch) { fly({ center: TOWER_CENTRE, zoom: 17.4, ...view }); return }
-    const p = view.pitch * Math.PI / 180
-    const zoom = Math.log2(EARTH * Math.cos(TOWER_CENTRE[1] * Math.PI / 180) / (512 * TOWER_HEIGHT * Math.sin(p) / (open().height * 0.55)))
-    fly({ center: ahead(TOWER_CENTRE, TOWER_BEARING, TOWER_HEIGHT / 2 * Math.tan(p)), zoom: Math.min(17.8, Math.max(15.5, zoom)), pitch: view.pitch, bearing: TOWER_BEARING })
+    tower.current?.focus([TOWER_CENTRE])
+    if (!tiltRef.current) { fly({ center: TOWER_CENTRE, zoom: 17.4, ...FLAT }); return }
+    fly(cameraOf(towerShot(open(), lensSetup())), { duration: 2.2 })
   }
   const reframe = () => {
     if (lastView.current?.tower) frameTower()
-    else if (lastView.current?.points) frame(lastView.current.points)
+    else if (lastView.current?.points) frame(lastView.current.points, lastView.current.above)
   }
 
   useEffect(() => {
@@ -287,6 +388,9 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
     let instance
     const fail = () => { if (!cancelled) handlers.current.onFail() }
     const timer = setTimeout(fail, LOAD_TIMEOUT)
+    quality.current = weatherQuality()
+    // The tower and the weather (three.js) load alongside the map.
+    const towerCode = import('./towerLayer.js')
     fetch(STYLE_URL)
       .then(response => { if (!response.ok) throw new Error(response.statusText); return response.json() })
       .then(style => {
@@ -295,6 +399,8 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
           // The old buildings on the tower's site are taken out of the tiles.
           container: box.current, style: clearSite(maplibregl, brochureStyle(style), TOWER.site), center: origin, ...ARRIVAL,
           minZoom: 10, maxZoom: 18, maxPitch: 75, attributionControl: false, canvasContextAttributes: { antialias: true },
+          // Phones draw at most two pixels per point: the weather is drawn per pixel.
+          pixelRatio: Math.min(devicePixelRatio, quality.current === 'high' ? 3 : 2),
         })
         // Bottom left, clear of the location panel (attribution lowest).
         instance.addControl(new maplibregl.AttributionControl({ compact: true }), 'bottom-left')
@@ -307,18 +413,21 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
           addBuildings(instance)
           instance.addSource('route', { type: 'geojson', lineMetrics: true, data: { type: 'Feature', geometry: { type: 'LineString', coordinates: [origin, origin] } } })
           const hidden = ['step', ['line-progress'], 'rgba(0,0,0,0)', 0, 'rgba(0,0,0,0)']
+          // The route lies a little above the map: a soft shadow under it.
+          instance.addLayer({ id: 'route-shadow', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' },
+            paint: { 'line-width': 10, 'line-blur': 7, 'line-translate': [0, 3], 'line-translate-anchor': 'viewport', 'line-gradient': hidden } })
           instance.addLayer({ id: 'route-halo', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': 9, 'line-gradient': hidden } })
           instance.addLayer({ id: 'route', type: 'line', source: 'route', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': 4, 'line-gradient': hidden } })
           // The tower's site and wings, flat, for the 2D view (shown there only).
           instance.addSource('tower-plan', { type: 'geojson', data: TOWER_PLAN })
           const fade = { duration: 900, delay: 0 }
           instance.addLayer({ id: 'tower-plan-ground', type: 'fill', source: 'tower-plan', minzoom: TOWER_RAMP, filter: ['==', ['get', 'part'], 'ground'],
-            paint: { 'fill-color': '#ece0c4', 'fill-opacity': 0, 'fill-opacity-transition': fade } }, 'route-halo')
+            paint: { 'fill-color': '#ece0c4', 'fill-opacity': 0, 'fill-opacity-transition': fade } }, 'route-shadow')
           instance.addLayer({ id: 'tower-plan-wings', type: 'fill', source: 'tower-plan', minzoom: TOWER_RAMP, filter: ['==', ['get', 'part'], 'wing'],
-            paint: { 'fill-color': '#e2cfb0', 'fill-opacity': 0, 'fill-opacity-transition': fade } }, 'route-halo')
+            paint: { 'fill-color': '#e2cfb0', 'fill-opacity': 0, 'fill-opacity-transition': fade } }, 'route-shadow')
           instance.addLayer({ id: 'tower-plan-line', type: 'line', source: 'tower-plan', minzoom: TOWER_RAMP, layout: { 'line-join': 'round' },
             paint: { 'line-color': ['match', ['get', 'part'], 'wing', PLUM, '#b8894f'], 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.6, 17, 1.6],
-              'line-opacity': 0, 'line-opacity-transition': fade } }, 'route-halo')
+              'line-opacity': 0, 'line-opacity-transition': fade } }, 'route-shadow')
           const originPin = pin('map-origin', 'Arkade Ascend')
           markers.current.push(new maplibregl.Marker({ element: originPin }).setLngLat(origin).addTo(instance))
           // The project's name rides on the tower's top while the tower
@@ -367,19 +476,40 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
           })
           map.current = instance
           if (import.meta.env.DEV) window.__map = instance   // for automated checks
-          setReady(true)
-          // The tower, drawn in the map's own WebGL context, once the map is
-          // up (its code loads only then); the map works without it. It is
-          // the top layer: MapLibre draws flat layers above its first 3D
-          // layer without a depth test, so the route, drawn before the tower,
-          // is covered where it passes behind it (and stays in view in front).
-          import('./towerLayer.js').then(({ createTowerLayer }) => {
+          // The tower and the weather, drawn in the map's own WebGL context,
+          // are in place before the first flight (which comes down through
+          // the clouds); the map does not wait long for them, and works
+          // without them. The layer is the top one: MapLibre draws flat layers
+          // above its first 3D layer without a depth test, so the route,
+          // drawn before the tower, is covered where it passes behind it (and
+          // stays in view in front).
+          const addTower = ({ createTowerLayer }) => {
             if (cancelled || map.current !== instance) return
-            const layer = createTowerLayer({ ...TOWER, height: TOWER_HEIGHT, onFrame })
+            const layer = createTowerLayer({ ...TOWER, height: TOWER_HEIGHT, quality: quality.current, onFrame })
             instance.addLayer(layer)
             tower.current = layer
             if (!tiltRef.current) layer.setPlan(true)
-          }).catch(() => {})
+            layer.setDusk(daylight.current.t)
+          }
+          Promise.race([towerCode, new Promise((resolve, reject) => setTimeout(reject, 2500))])
+            .then(addTower)
+            .catch(() => {})
+            .finally(() => { if (!cancelled) setReady(true) })
+          // If the browser drops the map's WebGL context, MapLibre rebuilds
+          // its own layers once it is back (colours, light and route as they
+          // were), but not the tower: it is let go at once (its wind would
+          // keep asking a styleless map for frames) and added again, framed
+          // as before.
+          instance.on('webglcontextlost', () => { tower.current?.onRemove(); tower.current = null })
+          instance.on('webglcontextrestored', () => {
+            const restore = () => towerCode.then(module => {
+              addTower(module)
+              const view = lastView.current
+              tower.current?.focus(view?.points ? [...view.points, TOWER_CENTRE] : [TOWER_CENTRE], { duration: 0 })
+            }).catch(() => {})
+            if (instance.isStyleLoaded()) restore()
+            else instance.once('style.load', restore)
+          })
         })
       })
       .catch(fail)
@@ -391,13 +521,16 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
       resize.disconnect()
       draw.current?.kill()
       camera.current?.kill()
+      const layer = tower.current
       tower.current = null
       pins.current.clear()
       markers.current = []
       map.current = null
       // MapLibre's remove() skips custom layers' own clean-up, so the tower
       // is taken off first and frees what it holds.
-      if (instance?.getLayer('tower')) instance.removeLayer('tower')
+      // (After a lost context the map may have no style at all.)
+      if (instance?.style && instance.getLayer('tower')) instance.removeLayer('tower')
+      else layer?.onRemove()
       instance?.remove()
     }
   }, [])
@@ -446,6 +579,7 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
       const shown = Math.max(0.0001, progress.reach)
       instance.setPaintProperty('route', 'line-gradient', ['step', ['line-progress'], PLUM, shown, 'rgba(78,55,60,0)'])
       instance.setPaintProperty('route-halo', 'line-gradient', ['step', ['line-progress'], HALO, shown, 'rgba(251,248,236,0)'])
+      instance.setPaintProperty('route-shadow', 'line-gradient', ['step', ['line-progress'], 'rgba(61,42,47,0.22)', shown, 'rgba(61,42,47,0)'])
     }
     const setRoute = coordinates => instance.getSource('route').setData({ type: 'Feature', geometry: { type: 'LineString', coordinates } })
     draw.current?.kill()
@@ -472,7 +606,7 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
       afterRetract(() => {
         if (controller.signal.aborted) return
         setRoute(coordinates)   // still at zero, so nothing shows until it draws
-        draw.current = gsap.to(progress, { reach: 1, duration: reduced ? 0 : 1.5, delay: reduced ? 0 : 0.2, ease: 'power2.inOut', onUpdate: paint, onComplete: paint })
+        draw.current = gsap.to(progress, { reach: 1, duration: reduced ? 0 : 1.2, delay: reduced ? 0 : 0.1, ease: 'power2.inOut', onUpdate: paint, onComplete: paint })
       })
     }
     routeTo(origin, place, controller.signal)
@@ -489,6 +623,24 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
     return () => clearTimeout(timer)
   }, [ready, inset.top, inset.right, inset.bottom, inset.left])
 
+  // Day or dusk: the ground's colours, the sun and the tower's weather blend
+  // together, from wherever they are (reduced motion: at once).
+  useEffect(() => {
+    if (!ready) return
+    const instance = map.current
+    const light = () => {
+      const t = daylight.current.t
+      tinted.forEach(([id, property, name]) => { if (instance.getLayer(id)) instance.setPaintProperty(id, property, mixed(PALETTE[name], t)) })
+      instance.setLight(sunAt(t))
+      tower.current?.setDusk(t)
+    }
+    const target = dusk ? 1 : 0
+    if (daylight.current.t === target) return
+    if (prefersReducedMotion()) { daylight.current.t = target; light(); return }
+    const tween = gsap.to(daylight.current, { t: target, duration: 1.4, ease: 'power1.inOut', overwrite: true, onUpdate: light })
+    return () => tween.kill()
+  }, [ready, dusk])
+
   // 3D or plan view. In 2D the tower folds away and its plan shows instead.
   const firstTilt = useRef(true)
   useEffect(() => {
@@ -499,7 +651,8 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
     instance.setPaintProperty('tower-plan-wings', 'fill-opacity', tilted ? 0 : 1)
     instance.setPaintProperty('tower-plan-line', 'line-opacity', tilted ? 0 : 0.9)
     if (firstTilt.current) { firstTilt.current = false; return }
-    fly({ center: [instance.getCenter().lng, instance.getCenter().lat], zoom: instance.getZoom(), ...angle() })
+    if (lastView.current) reframe()
+    else fly({ center: [instance.getCenter().lng, instance.getCenter().lat], zoom: instance.getZoom(), ...(tilted ? HERO : FLAT) })
   }, [ready, tilted])
 
   // The model note sits at the foot of the open part of the map.

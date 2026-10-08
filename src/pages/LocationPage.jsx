@@ -12,6 +12,7 @@ export default function LocationPage() {
   const [active, setActive] = useState(places.find(place => place.group === locationGroups[0].id).id)
   const [hovered, setHovered] = useState(null)
   const [view, setView] = useState('tilt')   // tilt (3D) | plan (2D) | brochure
+  const [dusk, setDusk] = useState(false)    // the live map's light: day or dusk
   const [liveFailed, setLiveFailed] = useState(false)
   // What covers the map (header and view switch above, the panel at the
   // side or below), so routes are framed in the part left open.
@@ -74,7 +75,7 @@ export default function LocationPage() {
       data-own-gesture data-own-keys aria-label={`Map of Malad West showing Arkade Ascend${current ? ` and ${current.name}` : ''}`}>
       {live
         ? <Suspense fallback={<MapLoading />}>
-            <LiveMap origin={origin.lngLat} places={places} group={group} active={active} hovered={hovered} tilted={view !== 'plan'} inset={inset}
+            <LiveMap origin={origin.lngLat} places={places} group={group} active={active} hovered={hovered} tilted={view !== 'plan'} dusk={dusk} inset={inset}
               onSelect={id => setActive(id)} onFail={() => setLiveFailed(true)} />
           </Suspense>
         : <BrochureMap origin={origin} place={current} inset={inset} />}
@@ -105,7 +106,15 @@ export default function LocationPage() {
         split:right-(--gutter) split:top-[calc(var(--header-h)+0.5rem)] split:max-h-[calc(100%-var(--header-h)-0.5rem-clamp(1rem,4vh,2.5rem))] split:w-[clamp(19rem,26vw,27rem)] short:w-[min(19rem,44vw)]
         stack:inset-x-(--gutter) stack:bottom-[clamp(0.75rem,2.5vh,1.5rem)] stack:max-h-[min(50%,calc(100%-var(--header-h)-18rem))]">
       <div className="page-scroll min-h-0 flex-1 px-[clamp(1.25rem,2.2vw,2.25rem)] py-[clamp(1.1rem,3.5vh,2.5rem)] short:py-4">
-        <p data-reveal className="eyebrow flex items-center gap-4"><span className="num">09</span><span>Location</span></p>
+        {/* The live map's light, day or dusk, beside the page's title. */}
+        <div data-reveal className="flex min-h-11 items-center justify-between gap-3">
+          <p className="eyebrow flex items-center gap-4"><span className="num">09</span><span>Location</span></p>
+          {live && <button type="button" aria-pressed={dusk} onClick={() => setDusk(value => !value)} aria-label="Dusk light"
+            className={`flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-[0.6rem] font-medium uppercase tracking-[0.18em] transition-colors duration-500 ${dusk ? 'border-transparent bg-gold-400 text-espresso' : 'border-gold-500/35 text-ivory/80 hover:border-gold-400 hover:text-ivory'}`}>
+            <svg viewBox="0 0 20 20" aria-hidden="true" className="size-3.5 fill-none stroke-current" strokeWidth="1.4"><path d="M4 13a6 6 0 0 1 12 0M2 13h16M10 3.5v2M4.2 6.2l1.4 1.4M15.8 6.2l-1.4 1.4M6 16h8" /></svg>
+            Dusk
+          </button>}
+        </div>
         {/* The brochure's line; on phones and short screens the map takes priority. */}
         <h1 tabIndex={-1} data-reveal="lines" className="mt-3 font-display text-[clamp(1.1rem,min(1.55vw,3.2vh),1.85rem)] uppercase leading-[1.3] text-gold-400 outline-none max-sm:sr-only short:sr-only">
           {project.cityHeadline.map(line => <span key={line} className="block">{line}</span>)}

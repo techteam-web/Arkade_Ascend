@@ -166,3 +166,21 @@ inside) removed after drawing the model from 7,200 directions. The faces are
 shaded flat. Material names are unchanged, so the same finishes apply. When
 the final model replaces `ascend-block.glb`, run the tool again; check its
 material names against `EXACT` and `FINER` in `build.mjs` first.
+
+Swapping in the final model, on the map:
+
+1. Replace `ascend-block.glb`, check its material names against `EXACT` and
+   `FINER` in `tools/map-model/build.mjs`, and run the tool.
+2. Colours: `MAP_FINISHES` in `src/scenes/building/finishes.js` recolours the
+   temporary model for the map's daylight. A fully coloured final model
+   should show its own colours, so remove the entries it no longer needs.
+   Keep the glass's `gloss`: glass (gloss above 0.5) reflects the sky, and at
+   dusk its windows light up.
+3. Placement: `buildingModel.map` in `src/content/template.js` holds the site
+   outline (the city's buildings cut from the tiles), the model's ground, the
+   wings' footprints (picking, plan view), its position and bearing. Recheck
+   them against the final site plan, and `buildingModel.top` for its height.
+4. Once the model is final, `ModelNote` can come off the map with the rest.
+
+The map's clouds use no image: their noise is generated in the browser
+(`cloudNoise()` in `src/pages/location/towerLayer.js`).
