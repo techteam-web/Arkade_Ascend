@@ -61,3 +61,10 @@ export function ChevronIcon({ direction = 'right', className = '' }) {
     <path d={direction === 'right' ? 'm7 5 7 7-7 7' : 'm13 5-7 7 7 7'} />
   </svg>
 }
+
+// Play and pause for a panorama's slow turn.
+export function SpinIcon({ paused }) {
+  return <svg viewBox="0 0 20 24" fill="none" aria-hidden="true" strokeLinejoin="round">
+    <path d={paused ? 'M6.5 5.5v13l10-6.5z' : 'M7 6v12m6-12v12'} />
+  </svg>
+}

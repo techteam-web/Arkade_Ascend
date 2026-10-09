@@ -5,6 +5,7 @@ import { gsap } from '../app/reveal.js'
 import { useShell } from '../app/ShellContext.js'
 import { ArrowIcon } from '../components/Brand.jsx'
 import { Figure, PageHeading } from '../components/PageKit.jsx'
+import ViewOverlay from '../components/ViewOverlay.jsx'
 import { floorExceptions, positions, typicalPlan, wing } from '../content/floorPlans.js'
 import {
   area, featureLabel, features, floorRuns, floors, homeById, homeId, homes, homesOfType, ordinal, planById, typeAt,
@@ -44,6 +45,7 @@ export default function FloorPlansPage() {
   const fromFinder = params.get('from') === 'finder'
   const [hovered, setHovered] = useState(null)
   const [fullscreen, setFullscreen] = useState(false)
+  const [viewing, setViewing] = useState(false)
   const sheet = useRef(null)
   const opener = useRef(null)
 
@@ -85,10 +87,13 @@ export default function FloorPlansPage() {
   return <section data-tone="light" className="page page-scroll flex flex-col gap-[clamp(1rem,3vh,1.75rem)] split:grid split:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] split:grid-rows-[auto_minmax(0,1fr)] split:gap-x-[4vw] 3xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
     <div className="flex shrink-0 flex-col gap-[clamp(1rem,3vh,1.75rem)] split:col-start-1">
       <PageHeading id="floor-plans" title="Floor Plans" subtitle={subtitle.filter(Boolean).map(keep).join('\u00a0· ')} />
-      {(fromFinder || type) && <div data-reveal className="-mt-2 flex flex-wrap gap-x-6">
+      <div data-reveal className="-mt-2 flex flex-wrap gap-x-6">
         {type && <BackButton onClick={() => show({ unit: null })}>Typical floor plan</BackButton>}
         {fromFinder && <BackButton onClick={() => go('/residences?finder')}>Back to the unit finder</BackButton>}
-      </div>}
+        <button type="button" className="flex min-h-11 items-center gap-3 self-start text-[0.62rem] font-medium uppercase tracking-[0.24em] text-accent" onClick={() => setViewing(true)}>
+          See view<ArrowIcon className="h-3 w-7 fill-none stroke-current stroke-[1.1]" />
+        </button>
+      </div>
     </div>
 
     <div className="relative flex min-h-[min(60vh,var(--plan-h))] shrink-0 flex-col split:col-start-2 split:row-span-2 split:row-start-1 split:min-h-0 short:min-h-[82vh]!"
@@ -113,6 +118,7 @@ export default function FloorPlansPage() {
         : <FloorOverview floor={floor} hovered={hovered} onHover={setHovered} onFloor={n => show({ floor: n, unit: null })} onOpen={unit => show({ unit })} onFinder={() => go('/residences?finder')} />}
     </div>
 
+    {viewing && <ViewOverlay wing={wing} floor={floor} onClose={() => setViewing(false)} />}
     {fullscreen && <PlanFullscreen plan={plan} zones={zones} title={title} hovered={hovered} onHover={setHovered}
       onPick={unit => show({ unit })} onClose={closeFullscreen} />}
   </section>

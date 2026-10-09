@@ -20,7 +20,7 @@ let remembered = { filters: emptyFilters(), view: 'plans', sort: { plans: 'type'
 // results read as plan types (cards) or as single homes (a list);
 // up to three plan types compare side by side. `onOpenPlan` receives
 // { plan } or { home } and opens the Floor Plans page.
-const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) {
+const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan, onView }, ref) {
   const [filters, setFilters] = useState(remembered.filters)
   const [view, setView] = useState(remembered.view)
   const [sort, setSort] = useState(remembered.sort)
@@ -124,9 +124,10 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) 
               ? <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-4">
                 {groups.map(group => <PlanCard key={group.type.id} group={group} inCompare={compare.includes(group.type.id)}
                   compareFull={compare.length >= MAX_COMPARE} onCompare={() => toggleCompare(group.type.id)}
-                  onOpen={() => onOpenPlan({ plan: group.type.id })} onHomes={() => showHomes(group.type.id)} />)}
+                  onOpen={() => onOpenPlan({ plan: group.type.id })} onHomes={() => showHomes(group.type.id)}
+                  onView={() => onView({ wing: 'A', floor: group.floors[group.floors.length >> 1] })} />)}
               </ul>
-              : <HomeList homes={list} onOpen={home => onOpenPlan({ home: home.id })} />}
+              : <HomeList homes={list} onOpen={home => onOpenPlan({ home: home.id })} onView={home => onView({ wing: home.wing, floor: home.floor })} />}
         </div>
 
         {compare.length > 0 && <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
@@ -196,7 +197,7 @@ function RangeFacet({ label, unit, names, bounds: [min, max], step = 1, value: [
   </div>
 }
 
-function PlanCard({ group, inCompare, compareFull, onCompare, onOpen, onHomes }) {
+function PlanCard({ group, inCompare, compareFull, onCompare, onOpen, onHomes, onView }) {
   const { type, homes, floors } = group
   return <li className="finder-in">
     <article data-tone="light" className="group flex h-full flex-col overflow-hidden rounded-sm border border-line bg-cream-50 text-fg shadow-[0_24px_48px_-30px_rgba(0,0,0,.7)]">
@@ -220,6 +221,7 @@ function PlanCard({ group, inCompare, compareFull, onCompare, onOpen, onHomes })
         <div className="mt-auto flex flex-wrap items-center justify-between gap-2 pt-2">
           <button type="button" className="chip" aria-pressed={inCompare} disabled={!inCompare && compareFull} onClick={onCompare}
             aria-label={`${inCompare ? 'Remove' : 'Add'} ${type.label} ${inCompare ? 'from' : 'to'} compare`}>{inCompare ? 'Comparing' : 'Compare'}</button>
+          <button type="button" className="chip" onClick={onView} aria-label={`See the view from ${type.label}, floor ${group.floors[group.floors.length >> 1]}`}>View</button>
           <button type="button" className="btn-lux bg-transparent! px-4!" onClick={onHomes} aria-label={`See the ${plural(homes.length, 'home')} of ${type.label}`}>Homes<ArrowIcon /></button>
         </div>
       </div>
@@ -229,18 +231,18 @@ function PlanCard({ group, inCompare, compareFull, onCompare, onOpen, onHomes })
 
 // Single homes. Wide columns read as a table; narrow ones fold each home
 // into two lines (container query on the results column).
-function HomeList({ homes, onOpen }) {
+function HomeList({ homes, onOpen, onView }) {
   const columns = '@3xl:grid-cols-[6rem_4rem_minmax(0,1fr)_7rem_5rem_minmax(0,1.3fr)_1.75rem]'
   const extras = home => home.features.map(featureLabel).join(', ') || '—'
   return <div>
-    <div aria-hidden="true" className={`sticky top-0 z-1 hidden gap-x-4 border-b border-line bg-plum-950/90 py-2 text-[0.55rem] uppercase tracking-[0.24em] text-muted @3xl:grid ${columns}`}>
+    <div aria-hidden="true" className={`sticky top-0 z-1 hidden gap-x-4 border-b border-line bg-plum-950/90 py-2 pr-[5.25rem] text-[0.55rem] uppercase tracking-[0.24em] text-muted @3xl:grid ${columns}`}>
       <span>Home</span><span>Floor</span><span>Plan</span><span>RERA area</span><span>Deck</span><span>Features</span><span />
     </div>
     <ul>
-      {homes.map(home => <li key={home.id}>
+      {homes.map(home => <li key={home.id} className="flex items-center gap-3 border-b border-line">
         <button type="button" onClick={() => onOpen(home)}
           aria-label={`Home ${home.id}: Wing ${home.wing}, floor ${home.floor}, Unit ${home.position}, ${home.type.configuration}, ${area(home.type.reraArea)} square feet. Open its plan.`}
-          className={`group grid min-h-12 w-full grid-cols-[minmax(0,1fr)_1.75rem] items-center gap-x-4 border-b border-line py-2.5 text-left outline-offset-[-2px] transition-colors duration-300 hover:bg-gold-500/8 ${columns}`}>
+          className={`group grid min-h-12 min-w-0 flex-1 grid-cols-[minmax(0,1fr)_1.75rem] items-center gap-x-4 py-2.5 text-left outline-offset-[-2px] transition-colors duration-300 hover:bg-gold-500/8 ${columns}`}>
           <span className="flex flex-col gap-1 @3xl:hidden">
             <span className="text-[0.8rem] text-fg"><span className="num">{home.id}</span><span className="ml-3 text-[0.6rem] uppercase tracking-[0.16em] text-accent">Unit <span className="num">{home.position}</span> · {home.type.configuration}</span></span>
             <span className="text-[0.62rem] uppercase tracking-[0.12em] text-muted">Floor <span className="num">{home.floor}</span> · <span className="num">{area(home.type.reraArea)}</span> sq.ft · {extras(home)}</span>
@@ -253,6 +255,7 @@ function HomeList({ homes, onOpen }) {
           <span className="hidden truncate text-[0.72rem] text-muted @3xl:block">{extras(home)}</span>
           <ArrowIcon className="h-3 w-7 justify-self-end fill-none stroke-current stroke-[1.1] text-accent transition-[translate] duration-500 group-hover:translate-x-1" />
         </button>
+        <button type="button" className="chip w-[4.5rem] shrink-0" onClick={() => onView(home)} aria-label={`See the view from home ${home.id}, floor ${home.floor}`}>View</button>
       </li>)}
     </ul>
   </div>
