@@ -59,6 +59,8 @@ export default function OrbitStage({ engine, controller, world, light, sky, pick
     return () => { controller.onChange = null }
   }, [controller, invalidate])
   useEffect(() => { uniforms.uSky.value = sky ? 1 : 0; invalidate() }, [sky, uniforms, invalidate])
+  // A new light or zoom asks for a frame at once; the loop carries it on.
+  useEffect(() => { invalidate() }, [light, zoom, invalidate])
 
   // The chosen floor, lit on its own wing.
   useEffect(() => {

@@ -199,18 +199,18 @@ function Desired({ active }) {
   const { title, qualities } = neuGen.desired
   return <Chapter active={active} label="The New-Gen life, desired by those who want more">
     <Watermark />
-    <div className="page page-scroll grid [align-content:safe_center] items-center gap-x-[6vw] gap-y-10 pb-[clamp(5rem,12vh,7.5rem)] lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:pr-[calc(var(--gutter)+4rem)] short:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] short:gap-y-4 short:pb-16">
+    <div className="page page-scroll grid [align-content:safe_center] items-center gap-x-[6vw] gap-y-10 pb-[clamp(5rem,12vh,7.5rem)] max-sm:gap-y-5 lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:pr-[calc(var(--gutter)+4rem)] short:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] short:gap-y-4 short:pb-16">
       <h2 data-ch="lines" className="display text-center text-[clamp(1.7rem,min(3.1vw,6vh),3.4rem)] leading-[1.16] text-gold-300 drop-shadow-[0_2px_18px_rgba(33,22,26,.55)] short:text-[clamp(1.2rem,4.4vh,1.8rem)]">
         <span className="text-ivory">{title[0]}</span><br />{title[1]}<br />{title[2]}
       </h2>
-      <ol className="grid gap-x-[clamp(1.5rem,3vw,3.5rem)] gap-y-[clamp(1rem,3.4vh,2.25rem)] sm:grid-cols-2 short:gap-y-2.5">
-        {qualities.map((quality, i) => <li key={quality.name} className="relative pt-[clamp(0.7rem,1.8vh,1.1rem)] short:pt-1.5">
+      <ol className="grid gap-x-[clamp(1.5rem,3vw,3.5rem)] gap-y-[clamp(0.6rem,3.4vh,2.25rem)] max-sm:gap-y-2.5 sm:grid-cols-2 short:gap-y-2.5">
+        {qualities.map((quality, i) => <li key={quality.name} className="relative pt-[clamp(0.7rem,1.8vh,1.1rem)] max-sm:pt-2 short:pt-1.5">
           <span data-ch="rule" aria-hidden="true" className="absolute inset-x-0 top-0 h-px origin-left bg-linear-to-r from-gold-400/70 via-gold-500/30 to-transparent" />
           <p data-ch className="flex items-baseline gap-3">
             <span className="num text-[0.66rem] text-gold-500/90">{pad(i + 1)}</span>
             <span className="text-[clamp(0.72rem,0.85vw,0.86rem)] font-medium uppercase tracking-[0.24em] text-gold-300">{quality.name}</span>
           </p>
-          <p data-ch className="mt-2 text-[clamp(0.82rem,min(0.98vw,2vh),1rem)] leading-[1.7] text-ivory/88 short:mt-0.5 short:text-[0.72rem] short:leading-snug">{quality.line}</p>
+          <p data-ch className="mt-2 text-[clamp(0.82rem,min(0.98vw,2vh),1rem)] leading-[1.7] text-ivory/88 max-sm:mt-1 max-sm:text-[0.8rem] max-sm:leading-[1.5] short:mt-0.5 short:text-[0.72rem] short:leading-snug">{quality.line}</p>
         </li>)}
       </ol>
     </div>

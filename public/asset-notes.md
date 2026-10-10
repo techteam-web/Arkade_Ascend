@@ -200,7 +200,8 @@ pin positions.
 
 The tower's rendered 360° orbit, from the Orbit project (supplied 10 Oct
 2026): 100 frames, 3.6° apart. `1920/` holds the renders as delivered
-(day, night, alpha; WebP), `960/` the same resized for phones and tablets
+(day, night, alpha; WebP), `960/` the same resized for small views (the
+engine takes it only where the cropped view needs no more than 1500 px)
 (cwebp, quality 80, alpha 90), `depth/` the half-size depth pass both share,
 `world/` the per-pixel world positions (lossless WebP, 960 × 540, two maps
 per frame), the floor table (`manifest.json`) and the wing plan

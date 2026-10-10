@@ -84,8 +84,8 @@ export const upcoming = [
 // The rendered 360° orbit of the tower (Orbit project, supplied 10 Oct 2026):
 // 100 frames, 3.6° apart, each with day and night renders, a depth pass and
 // an alpha matte, plus the per-pixel world positions that name the floor
-// under the pointer. public/orbit/<width>/<layer>/NNN.webp (960 for phones
-// and tablets, 1920 above), public/orbit/depth/, public/orbit/world/.
+// under the pointer. public/orbit/<width>/<layer>/NNN.webp (960 where the
+// cropped view needs no more, 1920 otherwise), public/orbit/depth/, public/orbit/world/.
 export const orbit = {
   frames: 100, path: '/orbit', widths: [960, 1920], width: 1920, height: 1080,
   poster: { day: '/orbit/poster-day.webp', night: '/orbit/poster-night.webp' },

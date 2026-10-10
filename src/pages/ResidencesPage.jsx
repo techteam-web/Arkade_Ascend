@@ -12,7 +12,7 @@ import { selectable, stepFloor, towers } from '../scenes/building/floors.js'
 const OrbitView = lazy(() => import('../scenes/orbit/OrbitView.jsx'))
 
 // The rendered orbit, on the page's own plum: the city fades out at the edges.
-const FADE = '[mask-image:radial-gradient(ellipse_70%_76%_at_50%_50%,#000_55%,transparent_100%)]'
+const FADE = '[mask-image:linear-gradient(90deg,transparent,#000_16%,#000_84%,transparent),linear-gradient(transparent,#000_10%,#000_78%,transparent)] [mask-composite:intersect]'
 const RenderNote = ({ className = '' }) => <p className={`text-[0.58rem] uppercase leading-relaxed tracking-[0.22em] text-muted/90 ${className}`}>3D render · representational</p>
 
 export default function ResidencesPage() {

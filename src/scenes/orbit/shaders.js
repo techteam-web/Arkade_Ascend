@@ -58,7 +58,6 @@ export const orbitFragment = /* glsl */ `
 
   #define PI 3.14159265
   #define BAND 0.3
-  const vec2 WINDOWS = vec2(240.0, 135.0);
   const vec3 GOLD = vec3(0.91, 0.80, 0.62);
 
   float hash12(vec2 p) {
@@ -85,10 +84,8 @@ export const orbitFragment = /* glsl */ `
     // dusk: the day render dimmed and warmed, the night render's windows coming through
     float dusk = smoothstep(0.15, 0.5, w) * (1.0 - smoothstep(0.6, 1.0, w));
     vec3 warm = day * mix(vec3(1.0), vec3(1.06, 0.80, 0.62), dusk) * (1.0 - 0.45 * smoothstep(0.1, 1.0, w));
-    // windows light one by one as evening falls
-    float on = smoothstep(0.35, 0.8, w);
-    float h = hash12(floor(p * WINDOWS)) * 0.8;
-    float lit = smoothstep(h, h + 0.2, on);
+    // the night render's lit windows come through softly as evening falls
+    float lit = smoothstep(0.3, 0.8, w);
     vec3 lights = night * smoothstep(0.35, 0.8, luma(night)) * lit * (1.0 - w * w) * 0.8;
     return mix(warm, night, w * w) + lights;
   }
@@ -174,8 +171,8 @@ export const orbitFragment = /* glsl */ `
     float hov = uFloorHover > 0.5 && !same ? floorBand(uFloorHover, hM, soft) * tower * hovWing : 0.0;
     float selEdge = uFloorSel > 0.5 ? floorEdge(uFloorSel, hM, zw) * tower * crisp * selWing : 0.0;
     float hovEdge = hov > 0.0 ? floorEdge(uFloorHover, hM, zw) * tower * crisp * hovWing : 0.0;
-    vec3 c = mix(col, GOLD * max(luma(col) * 1.4, 0.55), sel * 0.42 + hov * 0.18);
-    c += GOLD * (selEdge * 0.4 + hovEdge * 0.18);
+    vec3 c = mix(col, GOLD * max(luma(col) * 1.4, 0.6), sel * 0.62 + hov * 0.3);
+    c += GOLD * (selEdge * 0.7 + hovEdge * 0.3);
     return mix(col, c, uWorldOn);
   }
 

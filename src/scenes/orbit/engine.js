@@ -26,8 +26,14 @@ export const shortestDelta = (a, b, n) => {
 }
 const pad = i => String(i).padStart(3, '0')
 
-// Phones and tablets take the 960 px set; larger screens the 1920 px one.
-const frameWidth = () => (window.screen?.width ?? window.innerWidth) * Math.min(window.devicePixelRatio || 1, 2) <= 1400 ? orbit.widths[0] : orbit.widths[1]
+// The 960 px set where it is enough; otherwise the 1920 px one. The view
+// fills the screen and crops the 16:9 frame, so a tall phone needs the
+// frame's height as much as a wide screen needs its width.
+const frameWidth = () => {
+  const w = window.screen?.width ?? window.innerWidth, h = window.screen?.height ?? window.innerHeight
+  const needed = Math.max(w, h * 16 / 9) * Math.min(window.devicePixelRatio || 1, 2)
+  return needed <= 1500 ? orbit.widths[0] : orbit.widths[1]
+}
 const lowMemory = () => (navigator.deviceMemory ?? 8) <= 4
 export const saveData = () => navigator.connection?.saveData === true
 
