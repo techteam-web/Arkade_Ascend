@@ -2,8 +2,9 @@ import { useEffect } from 'react'
 
 // Scene presets, one per brochure mood. Colours are sRGB hex; the scene damps
 // every value toward the active preset, so switching is always a smooth blend.
-// The silk veil appears only on Home and on the brochure's gilded spread;
-// every other page sits on a still gradient, so content leads.
+// The silk veil appears only on Home and in the Neu Gen chapters that ask
+// for it (the opening's gold ribbons, the gilded spread); every other page
+// sits on a still gradient, so content leads.
 // Pose x/y are fractions of the half-viewport, so placement holds at any aspect.
 const still = (top, bottom, glow, glowPos, glowStrength = 0.5, vignette = 0.5) => ({
   top, bottom, glow, glowPos, glowStrength, vignette,
@@ -23,6 +24,13 @@ export const presets = {
     top: '#dab686', bottom: '#b5895a', glow: '#efd6ab', glowPos: [0.78, 0.72], glowStrength: 0.5, vignette: 0.28,
     shadow: '#74502f', mid: '#c29462', high: '#fdeccf', opacity: 0.95, sheer: 0.56,
     pose: { x: 0, y: -0.14, rot: -0.06, scale: 1.08 }, speed: 0.7,
+  },
+  // The presentation's page 6: champagne-gold ground, the silk running low
+  // across it, behind the framed plum panel of the Neu Gen opening.
+  arrival: {
+    top: '#cfa97b', bottom: '#8a6340', glow: '#f1dcb4', glowPos: [0.5, 0.12], glowStrength: 0.45, vignette: 0.32,
+    shadow: '#5a3b24', mid: '#b88b5c', high: '#fbe8c6', opacity: 0.95, sheer: 0.5,
+    pose: { x: 0.04, y: -0.6, rot: -0.08, scale: 1.12 }, speed: 0.6,
   },
   // Full-bleed photographs cover these two; the ground only shows at the edges.
   cover: still('#23161a', '#0f090a', '#3f2a2c', [0.3, 0.7], 0.6, 0.6),

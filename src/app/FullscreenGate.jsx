@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
+import AscendLockup from '../components/AscendLockup.jsx'
 
 // The presentation only runs in full screen. The whole gate is one button, so
 // a tap or click anywhere (or Enter / Space) requests it. Leaving full screen
@@ -38,9 +39,11 @@ export default function FullscreenGate({ open, resumed, keyboardLocked, supporte
       style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 48%, rgba(27,17,19,.25), rgba(18,11,13,.82) 62%, rgba(12,7,8,.97))' }}
       aria-label={resumed ? 'Resume the presentation in full screen' : 'Enter the Arkade Ascend presentation in full screen'}>
       <span className="gate-rise eyebrow mb-8 short:mb-4">{resumed ? 'Presentation paused' : 'Arkade Developers presents'}</span>
-      <img src="/logo/arkade-white.png" alt="Arkade" className="h-12 w-auto sm:h-16 short:h-10" />
-      <span className="gate-rise mt-7 font-sans text-[clamp(1.6rem,4vw,3rem)] font-bold uppercase leading-none tracking-[0.04em] short:mt-4">Ascend</span>
-      <span className="gate-rise mt-3 text-[0.7rem] font-semibold uppercase tracking-[0.5em] text-gold-300">Malad West</span>
+      {/* The white Arkade Ascend · Malad West lockup, as on Home. */}
+      <span className="gate-rise block w-[min(34rem,80vw)] short:w-[min(24rem,60vw)]">
+        <AscendLockup className="block aspect-[1029/162] h-auto w-full text-white" />
+        <span className="sr-only">Arkade Ascend, Malad West</span>
+      </span>
       <span className="gate-rule hairline mt-10 w-[min(22rem,70vw)] short:mt-5" />
       <span className="gate-rise mt-10 flex items-center gap-5 short:mt-5">
         <span className="relative grid size-14 place-items-center rounded-full border border-gold-500/70 transition-colors duration-500 group-hover:bg-gold-500 group-hover:text-espresso group-focus-visible:bg-gold-500 group-focus-visible:text-espresso">

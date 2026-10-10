@@ -40,6 +40,19 @@ const LETTERS = [
   'M975.48 422.42L981.96 422.42L981.96 398.75L990.35 398.75L990.35 393.02L967.09 393.02L967.09 398.75L975.48 398.75Z',
 ]
 
+// The full-colour lockup (Arkade Ascend Logo-02.svg): the mark in three
+// greys with its orange arc, ARKADE and MALAD WEST in grey, ASCEND in orange.
+// The same outlines, as markup, for places outside React (the Location map's
+// label rides on the map's canvas); whatever holds it names it.
+const GREY = '#575756', ORANGE = '#ef8021'
+const MARK_COLOURS = ['#aeaeaf', '#818182', GREY, '#aeaeaf', '#818182', GREY, ORANGE]
+const letterColour = index => index >= 6 && index < 12 ? ORANGE : GREY
+export const colourLockupMarkup = () => `<svg viewBox="204 279 1029 162" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">`
+  + MARK.map((d, index) => `<path d="${d}" fill="${MARK_COLOURS[index]}" fill-rule="evenodd"/>`).join('')
+  + `<line x1="419.4" y1="290.81" x2="419.4" y2="429.19" stroke="${GREY}" stroke-width="2.72"/>`
+  + LETTERS.map((d, index) => `<path d="${d}" fill="${letterColour(index)}"/>`).join('')
+  + '</svg>'
+
 export default function AscendLockup({ className = '', ...props }) {
   return <svg viewBox="204 279 1029 162" fill="currentColor" aria-hidden="true" className={className} {...props}>
     {MARK.map((d, index) => <path key={index} data-draw="fill" d={d} fillRule="evenodd" stroke="currentColor" strokeOpacity="0" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />)}

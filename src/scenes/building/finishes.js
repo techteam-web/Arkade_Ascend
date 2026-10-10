@@ -1,5 +1,5 @@
-// The tower model's finishes, shared by Residences (BuildingModel.jsx) and the
-// Location map (src/pages/location/towerLayer.js). The model's CAD materials,
+// The tower model's finishes, for its copy on the Location map
+// (src/pages/location/towerLayer.js). The model's CAD materials,
 // recoloured to the concept render: champagne frames, dark bronze recesses,
 // blue-grey glass, warm paving and planting. Anything unlisted that is near
 // white becomes the lighter champagne of the fins; other colours keep their

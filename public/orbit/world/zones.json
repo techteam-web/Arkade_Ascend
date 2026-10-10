@@ -1,0 +1,12 @@
+[
+  {
+    "id": "pool",
+    "name": "Pool deck",
+    "detail": "Podium level · 16.8 m",
+    "x": 17.3,
+    "y": -15.5,
+    "z": 16.8,
+    "radius": 11,
+    "feather": 8
+  }
+]

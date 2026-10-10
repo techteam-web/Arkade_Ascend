@@ -2,6 +2,7 @@ import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useStat
 import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
 import { ArrowIcon } from './Brand.jsx'
+import SheetSwitch from './SheetSwitch.jsx'
 import {
   activeFilters, area, bounds, emptyFilters, facets, features, featureLabel, filterHomes, floorBands, floorRuns,
   groupByType, optionCounts, ordinal, planById, sortGroups, sortHomes, sorts, span,
@@ -14,7 +15,7 @@ const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`
 const Icon = ({ d }) => <svg viewBox="0 0 24 24"><path d={d} /></svg>
 
 // Remembered for the session, so coming back from a plan finds the same search.
-let remembered = { filters: emptyFilters(), view: 'plans', sort: { plans: 'type', homes: 'floor-asc' }, compare: [] }
+let remembered = { filters: emptyFilters(), view: 'plans', sort: { plans: 'type', homes: 'floor-asc' }, compare: [], look: 'plan' }
 
 // Search by unit, after Zenith's finder: facets narrow every home in Wing A;
 // results read as plan types (cards) or as single homes (a list);
@@ -25,12 +26,13 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) 
   const [view, setView] = useState(remembered.view)
   const [sort, setSort] = useState(remembered.sort)
   const [compare, setCompare] = useState(remembered.compare)
+  const [look, setLook] = useState(remembered.look)   // plan cards show the drawing, or its whole sheet
   const [comparing, setComparing] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)    // phones and tablets fold the filters away
   const compareButton = useRef(null)
   const scroller = useRef(null)
   const panelId = useId()
-  useEffect(() => { remembered = { filters, view, sort, compare } }, [filters, view, sort, compare])
+  useEffect(() => { remembered = { filters, view, sort, compare, look } }, [filters, view, sort, compare, look])
 
   const results = useMemo(() => filterHomes(filters), [filters])
   const groups = useMemo(() => sortGroups(groupByType(results), sort.plans), [results, sort.plans])
@@ -101,6 +103,7 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) 
             <span className="num text-fg">{results.length}</span> {results.length === 1 ? 'home' : 'homes'} · <span className="num text-fg">{groups.length}</span> {groups.length === 1 ? 'plan type' : 'plan types'}
           </p>
           <div className="flex flex-wrap items-center gap-2">
+            {view === 'plans' && <SheetSwitch value={look} onChange={setLook} />}
             <div role="group" aria-label="Show results as" className="flex gap-1 rounded-full border border-line p-1">
               {[['plans', 'Plans'], ['homes', 'Homes']].map(([id, label]) => <button key={id} type="button" className="chip border-transparent!" aria-pressed={view === id} onClick={() => setView(id)}>{label}</button>)}
             </div>
@@ -122,7 +125,7 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) 
             </div>
             : view === 'plans'
               ? <ul className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,15rem),1fr))] gap-4">
-                {groups.map(group => <PlanCard key={group.type.id} group={group} inCompare={compare.includes(group.type.id)}
+                {groups.map(group => <PlanCard key={group.type.id} group={group} look={look} inCompare={compare.includes(group.type.id)}
                   compareFull={compare.length >= MAX_COMPARE} onCompare={() => toggleCompare(group.type.id)}
                   onOpen={() => onOpenPlan({ plan: group.type.id })} onHomes={() => showHomes(group.type.id)} />)}
               </ul>
@@ -145,7 +148,7 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan }, ref) 
       </div>
     </div>
 
-    {comparing && <CompareDialog ids={compare} results={results} onClose={closeCompare} onOpen={plan => onOpenPlan({ plan })} />}
+    {comparing && <CompareDialog ids={compare} results={results} look={look} onLook={setLook} onClose={closeCompare} onOpen={plan => onOpenPlan({ plan })} />}
   </div>
 })
 
@@ -196,13 +199,13 @@ function RangeFacet({ label, unit, names, bounds: [min, max], step = 1, value: [
   </div>
 }
 
-function PlanCard({ group, inCompare, compareFull, onCompare, onOpen, onHomes }) {
+function PlanCard({ group, look, inCompare, compareFull, onCompare, onOpen, onHomes }) {
   const { type, homes, floors } = group
   return <li className="finder-in">
     <article data-tone="light" className="group flex h-full flex-col overflow-hidden rounded-sm border border-line bg-cream-50 text-fg shadow-[0_24px_48px_-30px_rgba(0,0,0,.7)]">
       <button type="button" onClick={onOpen} aria-label={`Open the ${type.label} plan, ${type.configuration}`}
         className="relative block aspect-[3/2] w-full overflow-hidden bg-cream-100 outline-offset-[-3px]">
-        <img src={type.image.src} alt="" loading="lazy" decoding="async" draggable="false"
+        <img src={type[look === 'sheet' ? 'sheet' : 'image'].src} alt="" loading="lazy" decoding="async" draggable="false"
           className="size-full select-none object-contain p-3 transition-[translate] duration-500 ease-silk group-hover:-translate-y-0.5" />
         <span className={`absolute left-2 top-2 rounded-full px-2.5 py-1 text-[0.52rem] font-medium uppercase tracking-[0.18em] ${type.floor ? 'bg-plum-800/85 text-cream-50' : 'bg-gold-500 text-espresso'}`}>
           {type.floor ? <><span className="num">{ordinal(type.floor)}</span> floor only</> : 'Typical floor'}
@@ -260,7 +263,7 @@ function HomeList({ homes, onOpen }) {
 
 // Up to three plan types side by side, over the whole presentation. It is
 // portalled into the page frame, so the full-screen gate still covers it.
-function CompareDialog({ ids, results, onClose, onOpen }) {
+function CompareDialog({ ids, results, look, onLook, onClose, onOpen }) {
   const root = useRef(null)
   const types = ids.map(planById)
   const matching = Object.fromEntries(groupByType(results).map(group => [group.type.id, group]))
@@ -296,9 +299,12 @@ function CompareDialog({ ids, results, onClose, onOpen }) {
 
   return createPortal(<div ref={root} role="dialog" aria-modal="true" aria-label="Compare plan types" data-tone="light"
     className="absolute inset-0 z-70 flex flex-col bg-cream-100 px-(--gutter) pb-[clamp(0.75rem,3vh,2rem)] text-fg">
-    <div className="flex h-(--header-h) shrink-0 items-center justify-between gap-4">
+    <div className="flex min-h-(--header-h) shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2">
       <p className="eyebrow">Compare · {types.map(type => type.label).join(' · ')}</p>
-      <button type="button" data-close className="btn-icon" onClick={onClose} aria-label="Close comparison"><Icon d="m5 5 14 14M19 5 5 19" /></button>
+      <div className="ml-auto flex items-center gap-3">
+        <SheetSwitch value={look} onChange={onLook} />
+        <button type="button" data-close className="btn-icon" onClick={onClose} aria-label="Close comparison"><Icon d="m5 5 14 14M19 5 5 19" /></button>
+      </div>
     </div>
     <div data-compare-sheet className="page-scroll min-h-0 flex-1">
       <div className="overflow-x-auto pb-2" data-own-gesture>
@@ -308,7 +314,7 @@ function CompareDialog({ ids, results, onClose, onOpen }) {
               <th scope="col" className="w-[24%]"><span className="sr-only">Detail</span></th>
               {types.map(type => <th key={type.id} scope="col" className="px-3 pb-4 align-bottom font-normal">
                 <div className="overflow-hidden rounded-sm border border-line bg-cream-50">
-                  <img src={type.image.src} alt="" className="aspect-[3/2] w-full object-contain p-2" draggable="false" />
+                  <img src={type[look === 'sheet' ? 'sheet' : 'image'].src} alt="" className="aspect-[3/2] w-full object-contain p-2" draggable="false" />
                 </div>
                 <div className="mt-3 flex items-baseline justify-between gap-2">
                   <span className="font-display text-[1.5rem] uppercase leading-none">Unit <span className="num">{type.unit}</span>{type.floor && <span className="ml-2 align-middle font-sans text-[0.55rem] tracking-[0.16em] text-muted"><span className="num">{ordinal(type.floor)}</span> floor</span>}</span>

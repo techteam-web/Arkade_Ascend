@@ -6,19 +6,21 @@ import { setScenePreset } from '../scenes/sceneStore.js'
 import { ArrowIcon } from '../components/Brand.jsx'
 import NeuGenMark from '../components/NeuGenMark.jsx'
 import { pad } from '../app/routes.js'
-import { project } from '../content/project.js'
+import { neuGen } from '../content/project.js'
 import useStepper from '../hooks/useStepper.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
-// The brochure's opening pages as four chapters. Each chapter re-themes the
-// shared 3D scene: satin cover, the gilded silk, the plum of the new
-// generation homebuyers, then the balcony photograph that welcomes visitors
-// to the Neu Gen life (page 5 of the 24 Sep 2026 brochure).
+// The Neu Gen story as five chapters, from the customer presentation (pages
+// 6 to 9) and the brochure's gilded spread. Each chapter re-themes the shared
+// 3D scene: gold silk behind the framed opening, the gilded silk, the plum of
+// the new generation homebuyers and of the life they want, then the balcony
+// photograph where the Neu Gen life brings it all together.
 const chapters = [
-  { id: 'life', label: 'Neu Gen life', scene: 'cover' },
+  { id: 'arrival', label: 'Has arrived', scene: 'arrival' },
   { id: 'masterpiece', label: 'A masterpiece', scene: 'gilded' },
   { id: 'homebuyers', label: 'Want it all', scene: 'homebuyers' },
-  { id: 'welcome', label: 'Welcome', scene: 'heart' },
+  { id: 'desired', label: 'Want more', scene: 'homebuyers' },
+  { id: 'together', label: 'All together', scene: 'heart' },
 ]
 
 export default function NeuGenPage() {
@@ -89,10 +91,11 @@ export default function NeuGenPage() {
 
   const last = chapter === chapters.length - 1
   return <section ref={root} className="absolute inset-0 overflow-hidden" aria-roledescription="presentation" aria-label="Neu Gen life">
-    <Cover active={chapter === 0} />
+    <Arrival active={chapter === 0} />
     <Masterpiece active={chapter === 1} />
     <Homebuyers active={chapter === 2} />
-    <Welcome active={chapter === 3} />
+    <Desired active={chapter === 3} />
+    <Together active={chapter === 4} />
 
     <nav data-reveal="fade" aria-label="Chapters" className="absolute right-(--gutter) top-1/2 z-10 hidden -translate-y-1/2 flex-col items-end gap-1 xl:flex short:hidden">
       {chapters.map((item, index) => <button key={item.id} type="button" onClick={() => change(index)} aria-current={chapter === index ? 'step' : undefined}
@@ -125,21 +128,23 @@ function Chapter({ active, children, className = '', label }) {
   return <section data-chapter aria-label={label} aria-hidden={!active} inert={active ? undefined : ''} className={`absolute inset-0 ${className}`}>{children}</section>
 }
 
-// Page 1: satin, NEU / GEN, Life, has arrived.
-function Cover({ active }) {
+// Presentation page 6: the gold silk runs behind a framed plum panel, and
+// MALAD'S / NEU GEN / LIFE / HAS ARRIVED draws in at its centre. The panel is
+// a little translucent, so the ribbons read through its lower edge.
+function Arrival({ active }) {
   return <Chapter active={active} label="Malad's Neu Gen life has arrived">
-    <div data-ch="image" className="absolute inset-0">
-      <img src="/brochure/cover-satin.webp" alt="" className="size-full object-cover opacity-95" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_45%,rgba(18,11,13,.15),rgba(18,11,13,.7)_75%)]" />
-      <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-espresso/90 to-transparent" />
+    <div data-ch="glyph" aria-hidden="true" className="pointer-events-none absolute inset-x-[clamp(0.75rem,2.6vw,2.75rem)] top-[calc(var(--header-h)+0.25rem)] bottom-[clamp(4.5rem,11vh,6.75rem)] short:bottom-16">
+      <div className="absolute inset-0 rounded-[2px] bg-[linear-gradient(180deg,rgba(52,31,30,.96),rgba(62,38,40,.93)_55%,rgba(64,40,42,.72))] shadow-[0_30px_80px_-40px_rgba(40,22,14,.8)]" />
+      <div className="absolute inset-0 rounded-[2px] border border-gold-300/55" />
+      <div className="absolute -inset-[clamp(0.3rem,0.6vw,0.55rem)] rounded-[3px] border border-gold-100/30" />
     </div>
-    <div className="page page-scroll flex flex-col items-center justify-center-safe text-center">
-      <p data-ch className="font-display text-[clamp(1rem,2.2vw,1.9rem)] uppercase tracking-[0.34em] text-gold-400">Malad&rsquo;s</p>
+    <div className="page page-scroll flex flex-col items-center justify-center-safe pb-[clamp(5.5rem,13vh,8rem)] text-center short:pb-20">
+      <p data-ch className="font-display text-[clamp(1rem,min(2vw,3.6vh),1.9rem)] uppercase tracking-[0.34em] pl-[0.34em] text-gold-300">Malad&rsquo;s</p>
       {/* The brochure's monogram draws itself in (NeuGenMark). */}
-      <h1 tabIndex={-1} className="mt-[clamp(0.75rem,2.5vh,1.5rem)] text-gold-400 outline-none" aria-label="Malad's Neu Gen life has arrived">
-        <NeuGenMark withLife data-ch="draw" className="block h-auto w-[clamp(11rem,min(56vw,46vh),34rem)]" />
+      <h1 tabIndex={-1} className="mt-[clamp(0.6rem,2.2vh,1.4rem)] text-gold-300 outline-none" aria-label="Malad's Neu Gen life has arrived">
+        <NeuGenMark withLife data-ch="draw" className="block h-auto w-[clamp(9.5rem,min(44vw,40vh),26rem)]" />
       </h1>
-      <p data-ch className="mt-[clamp(1rem,3.5vh,2rem)] font-display text-[clamp(0.85rem,1.4vw,1.2rem)] uppercase tracking-[0.5em] text-gold-400/90 short:mt-3">Has arrived</p>
+      <p data-ch className="mt-[clamp(0.9rem,3vh,1.75rem)] font-display text-[clamp(0.85rem,min(1.4vw,2.6vh),1.25rem)] uppercase tracking-[0.42em] pl-[0.42em] text-gold-300/95 short:mt-2">Has arrived</p>
     </div>
   </Chapter>
 }
@@ -161,54 +166,81 @@ function Masterpiece({ active }) {
   </Chapter>
 }
 
-// Page 3: plum ground, the NEU GEN glyphs as a watermark.
+// The NEU GEN glyphs, faint, behind the left half of the plum chapters.
+function Watermark() {
+  return <div aria-hidden="true" className="pointer-events-none absolute left-[-3vw] top-1/2 -translate-y-1/2 select-none max-md:left-1/2 max-md:-translate-x-1/2 max-md:opacity-50">
+    <NeuGenMark data-ch="glyph" className="block h-[clamp(18rem,min(58vw,80vh),64rem)] w-auto text-[#5a4046]/45" />
+  </div>
+}
+
+// Presentation page 7: the headline over the glyphs; across from it, the
+// thought in gold and the way of living it describes, set off by a rule.
 function Homebuyers({ active }) {
+  const { title, lead, body } = neuGen.homebuyers
   return <Chapter active={active} label="The new generation homebuyers want it all">
-    <div aria-hidden="true" className="pointer-events-none absolute left-[-4vw] top-1/2 -translate-y-1/2 select-none max-md:left-1/2 max-md:-translate-x-1/2 max-md:opacity-60">
-      <NeuGenMark data-ch="glyph" className="block h-[clamp(19rem,min(60vw,82vh),66rem)] w-auto text-[#5a4046]/45" />
-    </div>
-    <div className="page page-scroll grid [align-content:safe_center] items-center gap-10 md:grid-cols-2 md:gap-[6vw] sm:pr-[calc(var(--gutter)+4rem)]">
-      <h2 data-ch="lines" className="display text-center text-[clamp(1.8rem,3.4vw,3.6rem)] leading-[1.18] text-gold-300 drop-shadow-[0_2px_18px_rgba(33,22,26,.55)]">
-        The<br />new generation<br />homebuyers,<br /><span className="text-ivory">want it all.</span>
+    <Watermark />
+    <div className="page page-scroll grid [align-content:safe_center] items-center gap-10 pb-[clamp(5rem,12vh,7.5rem)] md:grid-cols-2 md:gap-[6vw] sm:pr-[calc(var(--gutter)+4rem)] short:pb-16">
+      <h2 data-ch="lines" className="display text-center text-[clamp(1.8rem,min(3.4vw,6.6vh),3.8rem)] leading-[1.16] text-gold-300 drop-shadow-[0_2px_18px_rgba(33,22,26,.55)]">
+        {title[0]}<br />{title[1]}<br />{title[2]}<br /><span className="text-ivory">{title[3]}</span>
       </h2>
-      <div className="mx-auto max-w-md md:mx-0">
-        <span data-ch="rule" className="mb-6 block h-px w-16 origin-left bg-gold-500/70" />
-        <p data-ch className="text-[clamp(0.9rem,1.05vw,1.1rem)] leading-[1.95] text-ivory/90 drop-shadow-[0_1px_12px_rgba(33,22,26,.6)]">{project.homebuyers}</p>
+      <div className="relative mx-auto max-w-md md:mx-0 md:pl-[clamp(1.5rem,3vw,3rem)]">
+        <span data-ch="rule" aria-hidden="true" className="absolute left-0 top-1 hidden h-[calc(100%-0.5rem)] w-px origin-top bg-linear-to-b from-gold-400/80 via-gold-500/40 to-transparent md:block" />
+        <span data-ch="rule" aria-hidden="true" className="mb-6 block h-px w-14 origin-left bg-gold-500/70 md:hidden" />
+        <p data-ch className="text-[clamp(1rem,min(1.45vw,2.8vh),1.4rem)] font-medium leading-[1.5] tracking-[0.01em] text-gold-300">{lead[0]}<br />{lead[1]}</p>
+        <p data-ch className="mt-[clamp(1rem,3vh,1.75rem)] text-[clamp(0.9rem,1.05vw,1.1rem)] leading-[1.9] text-ivory/90">{body}</p>
       </div>
     </div>
   </Chapter>
 }
 
-// Brochure page 5: the balcony at dusk, and its WELCOME TO NEU GEN LIFE
-// copy in the frosted card. Landscape screens float the card at the right,
-// beside her. Portrait phones and tablets give the photograph the top of the
-// screen and the card the dark ground below, so the card never covers her.
-// The card always clears the chapter buttons along the bottom.
-function Welcome({ active }) {
-  return <Chapter active={active} label="Welcome to the Neu Gen life">
+// Presentation page 8: what the New-Gen life asks for, as six qualities in
+// two columns, each with its index and a gold rule drawn in above it.
+function Desired({ active }) {
+  const { title, qualities } = neuGen.desired
+  return <Chapter active={active} label="The New-Gen life, desired by those who want more">
+    <Watermark />
+    <div className="page page-scroll grid [align-content:safe_center] items-center gap-x-[6vw] gap-y-10 pb-[clamp(5rem,12vh,7.5rem)] lg:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] sm:pr-[calc(var(--gutter)+4rem)] short:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)] short:gap-y-4 short:pb-16">
+      <h2 data-ch="lines" className="display text-center text-[clamp(1.7rem,min(3.1vw,6vh),3.4rem)] leading-[1.16] text-gold-300 drop-shadow-[0_2px_18px_rgba(33,22,26,.55)] short:text-[clamp(1.2rem,4.4vh,1.8rem)]">
+        <span className="text-ivory">{title[0]}</span><br />{title[1]}<br />{title[2]}
+      </h2>
+      <ol className="grid gap-x-[clamp(1.5rem,3vw,3.5rem)] gap-y-[clamp(1rem,3.4vh,2.25rem)] sm:grid-cols-2 short:gap-y-2.5">
+        {qualities.map((quality, i) => <li key={quality.name} className="relative pt-[clamp(0.7rem,1.8vh,1.1rem)] short:pt-1.5">
+          <span data-ch="rule" aria-hidden="true" className="absolute inset-x-0 top-0 h-px origin-left bg-linear-to-r from-gold-400/70 via-gold-500/30 to-transparent" />
+          <p data-ch className="flex items-baseline gap-3">
+            <span className="num text-[0.66rem] text-gold-500/90">{pad(i + 1)}</span>
+            <span className="text-[clamp(0.72rem,0.85vw,0.86rem)] font-medium uppercase tracking-[0.24em] text-gold-300">{quality.name}</span>
+          </p>
+          <p data-ch className="mt-2 text-[clamp(0.82rem,min(0.98vw,2vh),1rem)] leading-[1.7] text-ivory/88 short:mt-0.5 short:text-[0.72rem] short:leading-snug">{quality.line}</p>
+        </li>)}
+      </ol>
+    </div>
+  </Chapter>
+}
+
+// Presentation page 9: the balcony at dusk, and across the sky beside her
+// THE / NEU GEN / LIFE / BRINGS IT ALL TOGETHER. Landscape screens set the
+// words over the open sky at the right; portrait phones and tablets give
+// the photograph the top of the screen and the words the dark ground below.
+function Together({ active }) {
+  const { line, close, image } = neuGen.together
+  return <Chapter active={active} label="The Neu Gen life brings it all together">
     <div data-ch="image" className="absolute inset-0 bg-espresso">
-      <div className="absolute inset-0 max-lg:portrait:bottom-[38%]">
-        <img src="/brochure/welcome-balcony-1600.webp" srcSet="/brochure/welcome-balcony-1600.webp 1600w, /brochure/welcome-balcony-2880.webp 2880w" sizes="100vw"
-          alt="A woman in a flowing gown on a high balcony at dusk, looking out over the city" className="size-full object-cover object-[0%_55%] max-lg:portrait:object-[6%_60%]" />
+      <div className="absolute inset-0 max-lg:portrait:bottom-[40%]">
+        <img src={image.src} srcSet={image.srcSet} sizes="100vw" alt={image.alt} className="size-full object-cover object-[38%_55%] max-lg:portrait:object-[44%_60%]" />
         <div className="absolute inset-x-0 bottom-0 hidden h-2/5 bg-linear-to-t from-espresso to-transparent max-lg:portrait:block" />
       </div>
-      <div className="absolute inset-y-0 right-0 w-3/5 bg-linear-to-l from-plum-950/75 via-plum-950/30 to-transparent max-lg:portrait:hidden" />
-      <div className="absolute inset-0 bg-linear-to-t from-espresso/65 via-transparent to-espresso/25" />
+      <div className="absolute inset-y-0 right-0 w-3/5 bg-linear-to-l from-ink/55 via-ink/20 to-transparent max-lg:portrait:hidden" />
+      <div className="absolute inset-0 bg-linear-to-t from-espresso/70 via-transparent to-espresso/20" />
     </div>
-    {/* From 1280px the card also clears the chapter index (and its names,
-        shown on hover); below that the index gives way to the bottom bar. */}
-    <div className="page flex items-center justify-end pb-[clamp(4.75rem,11vh,7rem)] pr-[calc(var(--gutter)+2rem)] xl:pr-[calc(var(--gutter)+11.5rem)]
-      max-lg:portrait:items-end max-lg:portrait:justify-center max-lg:portrait:pr-(--gutter) short:pb-[4.5rem]">
-      <div data-ch className="glass-panel w-[min(28rem,100%)] px-[clamp(1.25rem,3vw,3rem)] py-[clamp(1.1rem,4.5vh,3.25rem)] text-center lg:max-xl:w-[min(24rem,100%)]
-        max-lg:portrait:w-[min(34rem,100%)] short:w-[min(30rem,58vw)] short:py-3">
-        <p className="text-[clamp(0.56rem,0.7vw,0.7rem)] font-medium uppercase tracking-[0.32em] pl-[0.32em] text-ivory/90">Welcome to</p>
-        <NeuGenMark data-ch="draw" title="Neu Gen" className="mx-auto mt-[clamp(0.6rem,1.8vh,1.1rem)] block h-auto w-[clamp(6.5rem,min(12vw,17vh),11rem)] text-ivory short:mt-1.5 short:w-24" />
-        <p className="mt-[clamp(0.6rem,2vh,1.25rem)] flex items-center justify-center gap-4 text-[clamp(0.8rem,1.2vw,1.1rem)] font-medium uppercase tracking-[0.42em] pl-[0.42em] text-ivory short:mt-1.5">
-          <span className="h-px w-[clamp(1.75rem,4vw,3.5rem)] bg-ivory/60" aria-hidden="true" />Life<span className="h-px w-[clamp(1.75rem,4vw,3.5rem)] bg-ivory/60" aria-hidden="true" />
-        </p>
-        <p className="mt-[clamp(0.75rem,3vh,1.75rem)] text-left text-[clamp(0.7rem,0.85vw,0.86rem)] leading-[1.85] tracking-[0.02em] text-ivory/90 sm:text-justify sm:[text-align-last:left] compact-h:leading-[1.65] short:mt-2 short:text-[0.66rem]">{project.welcome}</p>
+    <div className="page flex items-center justify-end pb-[clamp(4.75rem,11vh,7rem)] pr-[calc(var(--gutter)+1.5rem)] xl:pr-[calc(var(--gutter)+10rem)]
+      max-lg:portrait:items-end max-lg:portrait:justify-center max-lg:portrait:pr-(--gutter) short:pb-[4.25rem]">
+      <div className="w-[min(30rem,100%)] text-center text-ivory drop-shadow-[0_2px_16px_rgba(20,10,8,.45)] lg:max-xl:w-[min(25rem,100%)] short:w-[min(26rem,52vw)]">
+        <NeuGenMark withThe withLife data-ch="draw" title="The Neu Gen life" className="mx-auto block h-auto w-[clamp(8rem,min(17vw,30vh),15rem)] short:w-28" />
+        <p data-ch className="mt-[clamp(0.8rem,2.6vh,1.6rem)] font-display text-[clamp(1rem,min(1.75vw,3.4vh),1.7rem)] uppercase tracking-[0.18em] pl-[0.18em] short:mt-1.5">{line}</p>
+        <span data-ch="rule" aria-hidden="true" className="mx-auto mt-[clamp(0.8rem,2.4vh,1.4rem)] block h-px w-12 bg-gold-200/70 short:hidden" />
+        <p data-ch className="mt-[clamp(0.8rem,2.4vh,1.4rem)] text-[clamp(0.84rem,1vw,1.02rem)] leading-[1.75] text-ivory/92 short:mt-1.5 short:text-[0.7rem]">{close[0]}<br />{close[1]}</p>
       </div>
     </div>
-    <p className="absolute bottom-3 left-(--gutter) text-[0.5rem] uppercase tracking-[0.2em] text-ivory/50">All representational image</p>
+    <p className="absolute bottom-3 left-(--gutter) text-[0.5rem] uppercase tracking-[0.2em] text-ivory/55">Representative image</p>
   </Chapter>
 }

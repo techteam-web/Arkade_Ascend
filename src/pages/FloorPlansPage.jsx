@@ -5,6 +5,7 @@ import { gsap } from '../app/reveal.js'
 import { useShell } from '../app/ShellContext.js'
 import { ArrowIcon } from '../components/Brand.jsx'
 import { Figure, PageHeading } from '../components/PageKit.jsx'
+import SheetSwitch from '../components/SheetSwitch.jsx'
 import { floorExceptions, positions, typicalPlan, wing } from '../content/floorPlans.js'
 import {
   area, featureLabel, features, floorRuns, floors, homeById, homeId, homes, homesOfType, ordinal, planById, typeAt,
@@ -44,6 +45,7 @@ export default function FloorPlansPage() {
   const fromFinder = params.get('from') === 'finder'
   const [hovered, setHovered] = useState(null)
   const [fullscreen, setFullscreen] = useState(false)
+  const [view, setView] = useState('plan')   // the drawing, or its whole sheet
   const sheet = useRef(null)
   const opener = useRef(null)
 
@@ -74,10 +76,16 @@ export default function FloorPlansPage() {
   if (pending) return <WingPending id={pending} onShow={() => show({ floor: Number(params.get('floor')) || null, unit: null })} />
 
   const subtitle = [`Wing ${wing}`, floor ? `Floor ${floor}` : 'Typical floor', home && `Home ${home.id}`, type && `Unit ${type.unit}`, type?.configuration]
-  const plan = type
+  const drawing = type
     ? { id: type.id, ...type.image, alt: `Floor plan of ${type.label}, ${type.configuration}, Wing ${wing}` }
     : { id: 'typical', ...typicalPlan, alt: `Typical floor plan of Wing ${wing}${floor ? `, floor ${floor}` : ''}, with its homes outlined` }
-  const zones = type ? null : floorZones(floor)
+  const whole = view === 'sheet'
+  const plan = whole
+    ? { id: `${drawing.id}-sheet`, ...(type ?? typicalPlan).sheet, alt: `Plan sheet of ${type ? `${type.label}, ${type.configuration}` : 'the typical floor'}, Wing ${wing}, with its key plans and area table` }
+    : drawing
+  // The outlines and the small key plan belong to the drawing; the sheet has its own.
+  const zones = type || whole ? null : floorZones(floor)
+  const switcher = <SheetSwitch value={view} onChange={setView} plain={type ? 'Unit plan' : 'Floor plan'} />
   const title = type ? `${type.label} · ${type.configuration}` : `Wing ${wing} · ${floor ? `Floor ${floor}` : 'Typical floor'}`
 
   // Laptops set the plan beside the heading and the controls; phones and
@@ -92,7 +100,8 @@ export default function FloorPlansPage() {
     </div>
 
     <div className="relative flex min-h-[min(60vh,var(--plan-h))] shrink-0 flex-col split:col-start-2 split:row-span-2 split:row-start-1 split:min-h-0 short:min-h-[82vh]!"
-      style={{ '--plan-h': `calc((100vw - 2 * var(--gutter, 1rem)) / ${plan.ratio} + 7rem)` }}>
+      style={{ '--plan-h': `calc((100vw - 2 * var(--gutter, 1rem)) / ${plan.ratio} + 10rem)` }}>
+      <div data-reveal className="mb-3 flex shrink-0 justify-end max-sm:justify-start">{switcher}</div>
       <div className="relative min-h-0 flex-1">
         <div ref={sheet} className="absolute inset-0">
           <PlanStage plan={plan} zones={zones} hovered={hovered} onHover={setHovered} onPick={unit => show({ unit })}
@@ -100,9 +109,9 @@ export default function FloorPlansPage() {
               <Icon d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
             </button>}
             note={<p className="ml-auto text-right text-[0.58rem] uppercase tracking-[0.26em] text-muted/80 max-sm:hidden">
-              {type ? `Wing ${wing} plan sheet · sizes as printed` : <><span className="pointer-coarse:hidden">Point at a home to see it, click to open its plan</span><span className="hidden pointer-coarse:inline">Tap a home to open its plan</span></>}
+              {type || whole ? `Wing ${wing} plan sheet · sizes as printed` : <><span className="pointer-coarse:hidden">Point at a home to see it, click to open its plan</span><span className="hidden pointer-coarse:inline">Tap a home to open its plan</span></>}
             </p>}
-            keyPlan={type && <KeyPlan unit={type.unit} />} />
+            keyPlan={type && !whole && <KeyPlan unit={type.unit} />} />
         </div>
       </div>
     </div>
@@ -113,7 +122,7 @@ export default function FloorPlansPage() {
         : <FloorOverview floor={floor} hovered={hovered} onHover={setHovered} onFloor={n => show({ floor: n, unit: null })} onOpen={unit => show({ unit })} onFinder={() => go('/residences?finder')} />}
     </div>
 
-    {fullscreen && <PlanFullscreen plan={plan} zones={zones} title={title} hovered={hovered} onHover={setHovered}
+    {fullscreen && <PlanFullscreen plan={plan} zones={zones} title={title} switcher={switcher} hovered={hovered} onHover={setHovered}
       onPick={unit => show({ unit })} onClose={closeFullscreen} />}
   </section>
 }
@@ -428,7 +437,7 @@ function ZoneLayer({ zones, hovered, onHover, onPick }) {
 
 // The plan filling the presentation. It is portalled into the page frame so
 // the full-screen gate still covers it if the visitor leaves full screen.
-function PlanFullscreen({ plan, zones, title, hovered, onHover, onPick, onClose }) {
+function PlanFullscreen({ plan, zones, title, switcher, hovered, onHover, onPick, onClose }) {
   const root = useRef(null)
   useLayoutEffect(() => {
     root.current.querySelector('[data-close]')?.focus({ preventScroll: true })
@@ -449,9 +458,12 @@ function PlanFullscreen({ plan, zones, title, hovered, onHover, onPick, onClose 
 
   return createPortal(<div ref={root} role="dialog" aria-modal="true" aria-label={`${title} floor plan, full screen`} data-tone="light"
     className="absolute inset-0 z-70 flex flex-col bg-cream-100 px-(--gutter) pb-[clamp(0.75rem,3vh,2rem)] text-fg">
-    <div className="flex h-(--header-h) shrink-0 items-center justify-between gap-4">
+    <div className="flex min-h-(--header-h) shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2">
       <p className="eyebrow">{title}</p>
+      <div className="ml-auto flex items-center gap-3">
+      {switcher}
       <button type="button" data-close className="btn-icon" onClick={onClose} aria-label="Close full-screen plan"><Icon d="m5 5 14 14M19 5 5 19" /></button>
+      </div>
     </div>
     <div data-plan-sheet className="relative min-h-0 flex-1">
       <PlanStage plan={plan} zones={zones} hovered={hovered} onHover={onHover} onPick={onPick} />

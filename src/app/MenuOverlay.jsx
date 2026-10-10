@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from './reveal.js'
 import { routes, pad } from './routes.js'
 import { ArkadeMark, BrandLockup } from '../components/Brand.jsx'
+import { rera } from '../content/project.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
 export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
@@ -65,8 +66,15 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
     {/* The section under consideration, as a full-height picture. It takes
         about two thirds of wide screens; the compact list keeps the rest. */}
     <aside className="menu-fade pointer-events-none absolute inset-y-0 right-0 hidden w-(--menu-picture) overflow-hidden lg:block" aria-hidden="true">
-      {routes.map((route, index) => <img key={route.id} src={route.preview} alt="" loading="lazy"
-        className={`absolute inset-0 size-full object-cover transition-opacity duration-700 ease-silk ${index === shown ? 'opacity-100' : 'opacity-0'}`} />)}
+      {routes.map((route, index) => {
+        const fade = `absolute inset-0 size-full transition-opacity duration-700 ease-silk ${index === shown ? 'opacity-100' : 'opacity-0'}`
+        // A logo sits a little above centre, clear of the caption below.
+        return route.previewLogo
+          ? <div key={route.id} className={`${fade} grid place-items-center bg-[radial-gradient(ellipse_70%_60%_at_55%_42%,#5f444a,#3a272c_55%,#1f1417)] pb-[18vh]`}>
+            <img src={route.preview} alt="" loading="lazy" draggable="false" className="w-[min(48%,34rem)] select-none" />
+          </div>
+          : <img key={route.id} src={route.preview} alt="" loading="lazy" className={`${fade} object-cover`} />
+      })}
       <div className="absolute inset-0 bg-linear-to-r from-[#35252a] via-[#35252a]/25 to-transparent" />
       <div className="absolute inset-0 bg-linear-to-t from-ink/85 via-ink/5 to-ink/45" />
       <div className="absolute inset-x-[clamp(2rem,4vw,4.5rem)] bottom-[clamp(2.5rem,10vh,6rem)]">
@@ -116,8 +124,19 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
       </nav>
 
 
-      <div className="menu-fade flex items-center justify-end gap-6 py-[clamp(0.75rem,3vh,2rem)] text-[0.62rem] uppercase tracking-[0.3em] text-gold-200/80">
-        <span className="hidden sm:inline">Malad West · Mumbai</span>
+      <div className="menu-fade flex items-end justify-between gap-6 py-[clamp(0.75rem,3vh,2rem)] text-[0.62rem] uppercase tracking-[0.3em] text-gold-200/80">
+        {/* The MahaRERA registration, bottom left. The QR code keeps a light
+            tile and its quiet margin so phones can scan it off the screen. */}
+        <div className="flex items-center gap-[clamp(0.75rem,1.2vw,1.25rem)]">
+          <img src={rera.qr} alt={`QR code for the MahaRERA project page, ${rera.qrTarget}`} draggable="false"
+            className="size-[clamp(3.75rem,min(7vw,9vh),5.5rem)] shrink-0 rounded-xs bg-ivory p-[clamp(0.4rem,0.6vw,0.6rem)] short:size-14" />
+          <div className="min-w-0 normal-case tracking-normal">
+            <p className="text-[0.6rem] uppercase tracking-[0.3em] text-gold-200/80">MahaRERA Reg. No.</p>
+            <p className="num mt-1.5 text-[clamp(0.85rem,1.1vw,1.1rem)] tracking-[0.06em] text-ivory">{rera.number}</p>
+            <p className="mt-1 text-[0.62rem] tracking-[0.04em] text-ivory/60 short:hidden">{rera.site.replace('https://', '')}</p>
+          </div>
+        </div>
+        <span className="hidden sm:inline lg:pb-1">Malad West · Mumbai</span>
       </div>
     </div>
   </div>

@@ -5,6 +5,7 @@ import { gsap } from '../../app/reveal.js'
 import { prefersReducedMotion } from '../../hooks/useMediaQuery.js'
 import { buildingModel } from '../../content/template.js'
 import { ModelNote } from '../../components/PageKit.jsx'
+import { colourLockupMarkup } from '../../components/AscendLockup.jsx'
 import { clearSite } from './siteTiles.js'
 import { HERO, aerial, lens, lookOut, towerShot } from './shots.js'
 
@@ -428,7 +429,11 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
           instance.addLayer({ id: 'tower-plan-line', type: 'line', source: 'tower-plan', minzoom: TOWER_RAMP, layout: { 'line-join': 'round' },
             paint: { 'line-color': ['match', ['get', 'part'], 'wing', PLUM, '#b8894f'], 'line-width': ['interpolate', ['linear'], ['zoom'], 14, 0.6, 17, 1.6],
               'line-opacity': 0, 'line-opacity-transition': fade } }, 'route-shadow')
+          // The project is marked with its own logo, in full colour, on a cream card.
           const originPin = pin('map-origin', 'Arkade Ascend')
+          const originLabel = originPin.querySelector('.map-pin-label')
+          originLabel.classList.add('map-logo')
+          originLabel.innerHTML = colourLockupMarkup()
           markers.current.push(new maplibregl.Marker({ element: originPin }).setLngLat(origin).addTo(instance))
           // The project's name rides on the tower's top while the tower
           // stands (the pin's own label otherwise); choosing it frames the tower.
@@ -436,8 +441,8 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
           towerLabel.type = 'button'
           towerLabel.className = 'map-tower-label'
           towerLabel.tabIndex = -1
-          towerLabel.setAttribute('aria-label', 'Arkade Ascend: view the tower')
-          towerLabel.innerHTML = '<span>Arkade Ascend</span>'
+          towerLabel.setAttribute('aria-label', 'Arkade Ascend, Malad West: view the tower')
+          towerLabel.innerHTML = `<span class="map-logo">${colourLockupMarkup()}</span>`
           towerLabel.addEventListener('click', event => { event.stopPropagation(); frameTower() })
           instance.getCanvasContainer().append(towerLabel)
           let onScreen = false
@@ -535,11 +540,13 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
     }
   }, [])
 
-  // Pins: the chosen group shows, the active place carries its label.
+  // Pins: the chosen group shows, the active place carries its label. The
+  // active place stays shown with its route even while another group is
+  // looked at (Nearby's categories).
   useEffect(() => {
     if (!ready) return
     pins.current.forEach((element, id) => {
-      element.dataset.state = !groupIds.includes(id) ? 'hidden' : id === active ? 'active' : id === hovered ? 'hover' : 'idle'
+      element.dataset.state = id === active ? 'active' : !groupIds.includes(id) ? 'hidden' : id === hovered ? 'hover' : 'idle'
     })
   }, [ready, groupIds, active, hovered])
 

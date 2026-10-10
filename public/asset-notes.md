@@ -1,28 +1,8 @@
-# Skyline asset
+# Asset notes
 
-File: public/mumbai-dusk.png
-Generated with the built-in imagegen tool. This is an atmospheric illustration of a Mumbai skyline, not a verified view from the property.
-
-Prompt:
-Create a photorealistic atmospheric background asset for a luxury Mumbai property website, landscape 1536x1024. Mumbai suburban skyline at dusk, small distant residential towers silhouetted, one slim tall tower on left third, a few midrises, low hazy hills behind. Tiny warm window lights, dark trees in foreground. Amber setting sun very near left edge at 50% image height. Sky muted copper brown with soft textured clouds, fading into extremely dark espresso burgundy at right and top. Skyline concentrated lower half. Cinematic warm bronze monochrome, underexposed, subtle film grain. No text, no letters, no logos, no ribbons. This is a background layer, realistic photographic detail, gentle atmospheric haze.
-
-## Gallery assets
-
-Generated with the built-in imagegen tool and saved in `public/gallery/`. These are concept illustrations, not verified property photographs. The existing `public/mumbai-dusk.png` is used in the Lifestyle category.
-
-Each prompt uses this prefix and suffix:
-
-Prefix: Use case: ads-marketing. Create a photorealistic luxury property gallery concept image, wide landscape 1536x1024.
-
-Suffix: Cinematic architectural photography, premium editorial quality, refined warm copper, espresso and champagne palette, realistic materials, detailed but restrained, no people, no text, no logos, no watermark. This is a standalone full-bleed photograph, no frames or UI.
-
-Subjects between prefix and suffix:
-
-- `gallery/interior.png`: An expansive luxury apartment living room, ivory curved sectional sofa on left, dark marble oval coffee table, textured rug and bronze armchair on right, walnut panels and abstract painting at left, floor-to-ceiling glass across the back looking over a Mumbai-like skyline and distant hills at amber sunset.
-- `gallery/amenities.png`: An elegant rooftop infinity swimming pool at dusk, water reflecting amber architectural lights, planted trees and lounge seating, bronze-toned covered terrace on right, Mumbai-like skyline and sunset beyond. Wide architectural photography.
-
-The generated exterior concept (`gallery/exterior.png`) was removed on 6 Oct
-2026: the gallery's Exterior category now shows the project's final renders.
+The gallery's generated concept images (interior, amenities, the Mumbai
+skyline) and the brochure's page 4 arrival photograph were removed on 9 Oct
+2026: the gallery shows only the project's final exterior renders for now.
 
 ## Exterior renders (`public/gallery/exterior/`)
 
@@ -39,8 +19,9 @@ per screen (`srcSet`). The originals' names map as follows:
 - `cam38-twilight`: Ascend_Cam38_Twilight_Final; `cam27-evening`:
   Ascend_Cam27_Evening_Final; `cam06-evening`: Ascend_Cam06_Evening_Final
 
-`cam02-twilight` is also the menu's picture for The Tower. The renders show
-the two wings in the same V as the tower model (`ascend-block.glb`).
+`cam02-twilight` is also the menu's picture for The Tower, and `cam12-day`
+for the Gallery. The renders show the two wings in the same V as the tower's
+orbit.
 
 ## Residences assets
 
@@ -68,7 +49,6 @@ Full prompt: Create a photorealistic architectural concept asset with a truly tr
 
 Taken from `brochure design.pdf` (Adobe Illustrator, September 2026). The embedded photos are CMYK JPEGs inverted by a PDF Decode array; they were decoded, negated back to positive and graded with sharp. The vector pages were rendered with mutool at 220 dpi and cropped.
 
-- `lifestyle-arrival.webp`: page 4 photograph (the brochure marks it "All representational image").
 - `cover-satin.webp`: page 1 satin fabric, remapped to the cover's plum-brown tones.
 - `silk-fallback.webp`: page 2 silk photograph multiplied at 50% over the #cea572 ground, matching the spread. Kept as a static reference or fallback for the 3D silk.
 - `location-map.webp`: page 5 map, left two-thirds. The brochure marks it "Indicative map, not to scale".
@@ -129,11 +109,8 @@ for the image boxes, structured text for the labels), then resized to at most
 representational image"; the tower is a "Dummy render" and the kitchen an
 "artist impression", and the pages show those notes.
 
-- `welcome-balcony-1600.webp`, `-2880.webp`: page 5 (WELCOME TO NEU GEN LIFE),
-  cropped to 1.6:1 from the 7210 × 5084 original with the woman about 28%
-  across, so she stays clear of the card on wide and 4:3 screens alike.
 - `specs/`: tower (p. 10), arrival lobby (p. 12), living & dining, guest suite,
-  kitchen and bedroom (p. 14), parking, security, fire-fighting and CCTV
+  kitchen and bedroom (p. 14), parking, fire-fighting and CCTV
   (p. 21). The bedroom original is CMYK, so it was cut from a 220 dpi page
   render instead, without its printed label.
 - `amenities/`: the 22 Club Ark photographs of pages 15–20. Page 19's text
@@ -164,12 +141,15 @@ material, each material simplified as far as it still looks the same (about
 and faces no map camera can see (backs of fins, undersides of ledges, the
 inside) removed after drawing the model from 7,200 directions. The faces are
 shaded flat. Material names are unchanged, so the same finishes apply. When
-the final model replaces `ascend-block.glb`, run the tool again; check its
-material names against `EXACT` and `FINER` in `build.mjs` first.
+the final model arrives, run the tool again on it; check its material names
+against `EXACT` and `FINER` in `build.mjs` first. (`ascend-block.glb`, the
+temporary full model, was removed on 10 Oct 2026 when Residences moved to the
+rendered orbit; it remains in the git history, at commit c4cd234, if the map
+copy ever has to be rebuilt from it.)
 
 Swapping in the final model, on the map:
 
-1. Replace `ascend-block.glb`, check its material names against `EXACT` and
+1. Put the final model in place of `ascend-block.glb`, check its material names against `EXACT` and
    `FINER` in `tools/map-model/build.mjs`, and run the tool.
 2. Colours: `MAP_FINISHES` in `src/scenes/building/finishes.js` recolours the
    temporary model for the map's daylight. A fully coloured final model
@@ -184,3 +164,56 @@ Swapping in the final model, on the map:
 
 The map's clouds use no image: their noise is generated in the browser
 (`cloudNoise()` in `src/pages/location/towerLayer.js`).
+
+## Wing A plan sheets (`public/plans/wing-a/sheet-*.webp`)
+
+The client's full JPG sheets (supplied 8 Oct 2026: each unit at 7000 × 5494,
+the typical floor at 20000 × 14000), with the key plans and the area table,
+shown by the "Key plan & areas" switch beside each plan. Converted with
+`cwebp -q 80 -m 6`: units at 1600 and 3200 px wide, the typical floor at
+2400 and 4800, about 2.3 MB for all eighteen files (the JPGs were 2 to
+12 MB each). A new sheet keeps the same names and sizes; the cut-outs
+(`unit-*`, `typical-*`) stay as they are.
+
+## MahaRERA QR code (`public/rera/qr.svg`)
+
+From `Ascend Rera.pdf` (9 Oct 2026). The PDF's QR code is a 136 px CMYK
+image; it was read square by square (33 × 33) and redrawn as an SVG so it
+stays sharp at any size. It decodes to the same address as the original,
+https://maharerait.maharashtra.gov.in/project/view/64988. Replace it the same
+way, and check that it still decodes, if the registration changes.
+
+## Arkade Family (`public/arkade-family/`)
+
+From `Ascend_Customer PPT.pdf` (9 Oct 2026), pages 1 to 4. The two
+photographs, marked "Representative Image" in the deck, were taken from the
+PDF at full size (8736 × 4896 and 5490 × 2800) and saved as WebP (quality 80)
+at 1600 and 2880 px wide: `legacy-skyline-*` (page 1) and
+`landmarks-hands-*` (page 4). `mumbai-map.svg` is page 3's vector map: its
+land shapes and ward boundaries only (the pins and labels are drawn by the
+page), recoloured to the plum and gold palette and cut to viewBox
+1150 15 710 1050 of the 1920 × 1080 page. Locality pins in
+`src/content/arkadeFamily.js` use the same coordinates, read from the deck's
+pin positions.
+
+## Orbit (`public/orbit/`)
+
+The tower's rendered 360° orbit, from the Orbit project (supplied 10 Oct
+2026): 100 frames, 3.6° apart. `1920/` holds the renders as delivered
+(day, night, alpha; WebP), `960/` the same resized for phones and tablets
+(cwebp, quality 80, alpha 90), `depth/` the half-size depth pass both share,
+`world/` the per-pixel world positions (lossless WebP, 960 × 540, two maps
+per frame), the floor table (`manifest.json`) and the wing plan
+(`wings.png`). The renders are premultiplied over black. `poster-day.webp`
+and `poster-night.webp` are frame 0 with the matte applied as real
+transparency (1600 px), shown until the first frame is drawn and without
+WebGL. Replacement renders keep these names and the 1920 × 1080 frame; run
+the Orbit project's converters (`scripts/convert-frames.mjs`,
+`convert-worldpos-all.sh`) and copy their output here, then resize `960/`.
+
+## Neu Gen (`public/neu-gen/`)
+
+`together-1600.webp`, `-2880.webp`: page 9 of `Ascend_Customer PPT.pdf` (the
+balcony at dusk, 8128 × 5084 as embedded, uncropped), WebP quality 80. The
+deck marks it "Representative Image". It replaces the brochure's cropped
+`welcome-balcony` copy of the same photograph.

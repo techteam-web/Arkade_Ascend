@@ -387,6 +387,15 @@ html { font-size: 100%; }
   transition: translate .4s var(--ease-silk), background-color .4s;
 }
 .map-tower-label:hover > span, .map-tower-label:focus-visible > span { translate: 0 -2px; background: var(--color-gold-300); }
+/* The project's label is its logo (the full-colour lockup, Logo-02) on a
+   cream card, sized to the screen: small enough on a phone to leave the
+   tower in view, larger on big displays (the root font size steps up too). */
+.map-pin-label.map-logo, .map-tower-label > span.map-logo {
+  padding: .4rem .65rem; border-radius: .55rem; background: color-mix(in oklab, var(--color-cream-50) 94%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-plum-700) 12%, transparent), 0 8px 20px -10px rgba(61, 42, 47, .5);
+}
+.map-logo > svg { display: block; width: clamp(7rem, 5rem + 6vw, 11.5rem); height: auto; aspect-ratio: 1029 / 162; }
+.map-tower-label:hover > span.map-logo, .map-tower-label:focus-visible > span.map-logo { background: var(--color-cream-50); }
 /* Location: the full-screen map's controls sit on the page gutter, above
    the location sheet when it docks along the bottom (--map-inset-bottom). */
 .location-map .maplibregl-ctrl-bottom-left { left: calc(var(--gutter) - 10px); bottom: calc(var(--map-inset-bottom, 0px) + clamp(0.75rem, 3vh, 2rem) - 10px); }

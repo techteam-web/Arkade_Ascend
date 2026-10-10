@@ -1,4 +1,4 @@
-import { lazy, Suspense, useLayoutEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from '../app/reveal.js'
 import { locationGroups, nearby, origin, places, project } from '../content/project.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
@@ -11,6 +11,8 @@ export default function LocationPage() {
   const [group, setGroup] = useState(locationGroups[0].id)
   const [active, setActive] = useState(places.find(place => place.group === locationGroups[0].id).id)
   const [hovered, setHovered] = useState(null)
+  // Nearby: the brochure's category open in the panel (and on the map).
+  const [category, setCategory] = useState(nearby.groups[0].id)
   const [view, setView] = useState('tilt')   // tilt (3D) | plan (2D) | brochure
   const [dusk, setDusk] = useState(false)    // the live map's light: day or dusk
   const [liveFailed, setLiveFailed] = useState(false)
@@ -22,15 +24,17 @@ export default function LocationPage() {
   const band = useRef(null)
   const switcher = useRef(null)
   const panel = useRef(null)
-  const shown = places.filter(place => place.group === group)
+  // Nearby's places sit in one map group per category.
+  const mapGroup = group === 'nearby' ? `nearby-${category}` : group
+  const shown = places.filter(place => place.group === mapGroup)
   const current = places.find(place => place.id === active)
 
-  // Nearby (brochure page 9) has no positions: it lists places, and the map
-  // returns to the project.
+  // Choosing a group flies to its first place; Nearby instead opens on its
+  // categories with the tower framed, and a place is flown to once chosen.
   const chooseGroup = id => {
     if (id === group) return
     setGroup(id)
-    setActive(places.find(place => place.group === id)?.id ?? null)
+    setActive(id === 'nearby' ? null : places.find(place => place.group === id)?.id ?? null)
     setHovered(null)
   }
 
@@ -75,10 +79,10 @@ export default function LocationPage() {
       data-own-gesture data-own-keys aria-label={`Map of Malad West showing Arkade Ascend${current ? ` and ${current.name}` : ''}`}>
       {live
         ? <Suspense fallback={<MapLoading />}>
-            <LiveMap origin={origin.lngLat} places={places} group={group} active={active} hovered={hovered} tilted={view !== 'plan'} dusk={dusk} inset={inset}
+            <LiveMap origin={origin.lngLat} places={places} group={mapGroup} active={active} hovered={hovered} tilted={view !== 'plan'} dusk={dusk} inset={inset}
               onSelect={id => setActive(id)} onFail={() => setLiveFailed(true)} />
           </Suspense>
-        : <BrochureMap origin={origin} place={current} inset={inset} />}
+        : <BrochureMap origin={origin} place={current?.point ? current : null} inset={inset} />}
     </figure>
     {/* A soft cream ground under the header keeps the logo and menu legible. */}
     <div ref={band} aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-(--header-h)">
@@ -95,6 +99,9 @@ export default function LocationPage() {
           className={`min-h-11 min-w-11 rounded-full px-4 text-[0.58rem] font-medium uppercase tracking-[0.2em] transition-colors duration-500 disabled:opacity-40 ${pressed ? 'bg-plum-700 text-ivory' : 'text-plum-700 hover:text-plum-900'}`}>{label}</button>
       })}
     </div>
+    {!live && current && !current.point && <p className="pointer-events-none absolute left-(--gutter) z-10 rounded-full bg-cream-50/90 px-3 py-1.5 text-[0.55rem] uppercase tracking-[0.14em] text-plum-700" style={{ top: inset.top + (liveFailed ? 32 : 0) }}>
+      {current.name} is not on the brochure map
+    </p>}
     {liveFailed && view !== 'brochure' && <p className="pointer-events-none absolute left-(--gutter) z-10 rounded-full bg-cream-50/90 px-3 py-1.5 text-[0.55rem] uppercase tracking-[0.14em] text-plum-700" style={{ top: inset.top }}>
       Live map unavailable offline · showing the brochure map
     </p>}
@@ -125,12 +132,7 @@ export default function LocationPage() {
         {group === 'nearby'
           ? <div ref={list} id="location-places" role="tabpanel" aria-labelledby={`location-tab-${group}`} className="mt-3">
             <p className="font-display text-[clamp(0.95rem,1.2vw,1.2rem)] uppercase leading-snug text-gold-300">{nearby.headline}</p>
-            {nearby.groups.map(item => <div key={item.id} className="mt-3 border-b border-gold-500/20 pb-3">
-              <p className="text-[0.55rem] font-medium uppercase tracking-[0.22em] text-gold-300">{item.label}</p>
-              <ul className="mt-1.5 text-[0.76rem] leading-[1.75] text-ivory/85">
-                {item.places.map(name => <li key={name}>{name}</li>)}
-              </ul>
-            </div>)}
+            <NearbyCategories open={category} onOpen={setCategory} active={active} onSelect={setActive} onHover={setHovered} />
           </div>
           : <ul ref={list} data-reveal id="location-places" role="tabpanel" aria-labelledby={`location-tab-${group}`} className="mt-2">
             {shown.map(place => <li key={place.id}>
@@ -138,7 +140,7 @@ export default function LocationPage() {
             </li>)}
           </ul>}
         <p data-reveal="fade" className="mt-3 text-[0.52rem] uppercase leading-relaxed tracking-[0.16em] text-ivory/50">
-          {group === 'nearby' ? 'As listed in the brochure.' : 'Indicative locations. Routes by road from OpenStreetMap; distances as per Google Maps.'}
+          {group === 'nearby' ? 'Places as listed in the brochure. Indicative locations from OpenStreetMap and published addresses; distances by road, approximate.' : 'Indicative locations. Routes by road from OpenStreetMap; distances as per Google Maps.'}
         </p>
       </div>
     </aside>
@@ -203,6 +205,42 @@ function GroupTabs({ group, onChoose }) {
         </button>
       })}
     </div>
+  </div>
+}
+
+// Nearby: the brochure's categories. Pointing at one (or clicking or
+// tapping it, for touch and keyboard) opens its places beneath it and shows
+// them on the map; choosing a place flies there as on the other tabs. A short
+// delay keeps a pointer passing over other categories from opening them.
+function NearbyCategories({ open, onOpen, active, onSelect, onHover }) {
+  const timer = useRef(0)
+  useEffect(() => () => clearTimeout(timer.current), [])
+  const hover = id => { clearTimeout(timer.current); timer.current = setTimeout(() => onOpen(id), 140) }
+  return <div className="mt-3">
+    {nearby.groups.map(item => {
+      const expanded = item.id === open
+      const items = places.filter(place => place.group === `nearby-${item.id}`)
+      return <div key={item.id} className="border-b border-gold-500/20"
+        onPointerEnter={event => { if (event.pointerType === 'mouse') hover(item.id) }}
+        onPointerLeave={() => clearTimeout(timer.current)}>
+        <button type="button" aria-expanded={expanded} aria-controls={`nearby-${item.id}`} onClick={() => { clearTimeout(timer.current); onOpen(item.id) }}
+          className={`group flex min-h-11 w-full items-center justify-between gap-3 text-left transition-colors duration-500 ${expanded ? 'text-gold-200' : 'text-ivory/80 hover:text-ivory'}`}>
+          <span className="text-[0.6rem] font-medium uppercase tracking-[0.2em]">{item.label}</span>
+          <span className="flex shrink-0 items-center gap-2 text-gold-300/80">
+            <span className="num text-[0.7rem]">{items.length}</span>
+            <svg viewBox="0 0 20 20" aria-hidden="true" className={`size-3 fill-none stroke-current transition-[rotate] duration-500 ${expanded ? 'rotate-180' : ''}`} strokeWidth="1.5"><path d="m5 8 5 5 5-5" /></svg>
+          </span>
+        </button>
+        {/* Opens to its full height smoothly (grid rows from 0fr to 1fr). */}
+        <div id={`nearby-${item.id}`} inert={expanded ? undefined : ''} className={`grid transition-[grid-template-rows,opacity] duration-500 ease-silk ${expanded ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+          <ul className="min-h-0 overflow-hidden pl-3">
+            {items.map(place => <li key={place.id}>
+              <PlaceButton place={place} active={active === place.id} onSelect={onSelect} onHover={onHover} />
+            </li>)}
+          </ul>
+        </div>
+      </div>
+    })}
   </div>
 }
 

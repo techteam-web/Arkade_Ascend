@@ -8,11 +8,11 @@
 
 export const isTemplate = true
 
-// The gallery. Exterior is the project's own final renders (supplied
-// 6 Oct 2026, public/gallery/exterior/); the other categories are still
-// concept images. Each render comes in two widths (`srcSet`); `focus` keeps
-// the tower in the gallery's 16:10 frame, and the tall views are shown whole
-// (`fit: 'contain'`). Full screen always shows the whole render.
+// The gallery: the project's own final exterior renders (supplied
+// 6 Oct 2026, public/gallery/exterior/); other categories join when their
+// images are supplied. Each render comes in two widths (`srcSet`); `focus`
+// keeps the tower in the gallery's 16:10 frame, and the tall views are shown
+// whole (`fit: 'contain'`). Full screen always shows the whole render.
 const RENDER_NOTE = 'Exterior render · representational'
 const render = (name, [width, height], alt, look = {}) => ({
   src: `/gallery/exterior/${name}-1600.webp`,
@@ -29,10 +29,6 @@ export const gallery = [
   render('cam38-twilight', [1600, 889], 'Arkade Ascend at twilight above the trees, the city and the sunset beyond', { focus: '25% 50%' }),
   render('cam27-evening', [1600, 889], 'Aerial evening view of Arkade Ascend, lit from podium to crown above its pool'),
   render('cam06-evening', [1600, 640], 'The crown of Arkade Ascend at evening, its name on the facade and the city lights beyond', { focus: '15% 50%' }),
-  { src: '/gallery/interior.png', category: 'Interior', alt: 'Concept living room with a curved sofa and panoramic sunset city views' },
-  { src: '/gallery/amenities.png', category: 'Amenities', alt: 'Concept rooftop infinity pool with landscaped seating at sunset' },
-  { src: '/brochure/lifestyle-arrival.webp', category: 'Lifestyle', alt: 'A couple arriving at a grand, warmly lit entrance beside a chauffeured car' },
-  { src: '/mumbai-dusk.png', category: 'Lifestyle', alt: 'Illustrative Mumbai skyline and distant hills at sunset' },
 ]
 
 // The architectural model of the tower (public/models, optimised from the
@@ -40,18 +36,18 @@ export const gallery = [
 // heights, in model metres with the ground at 0; confirm against the approved
 // plans. Floors 1 to 5 are the podium: the model has no levels for them, so
 // they share its height evenly below the 6th floor (3.5 m each). Each wing
-// lists the floors that hold homes. Wing A has homes on every floor (as
-// instructed, 8 Oct 2026, pending the approved floor list); Wing B is
+// lists the floors that hold homes: from the 6th floor up, the first lived-in
+// floor (floors 1 to 4 are the podium and the 5th the amenities, as
+// instructed 10 Oct 2026), pending the approved floor list; Wing B is
 // unchanged until its plans are supplied. Wing outlines are convex [x, z]
 // footprints measured on the model.
 export const buildingModel = {
-  src: '/models/ascend-block.glb',
   towerFloor: 6,        // the first floor above the podium
   towerY: 21,           // floor line of the 6th floor
   floorHeight: 3.15,
   top: 131.25,
   wings: [
-    { id: 'A', floors: [1, 37], refuge: [], outline: [[-49.8, 15.5], [-49.4, 14.1], [-32.7, 9.7], [-23, 9.1], [-10, 9.2], [-6.4, 9.6], [6.9, 11.9], [9.8, 14.1], [9.8, 21], [8.6, 23.4], [-1.8, 33.2], [-29.4, 33.2], [-49.4, 23.9], [-49.8, 21.8]] },
+    { id: 'A', floors: [6, 37], refuge: [], outline: [[-49.8, 15.5], [-49.4, 14.1], [-32.7, 9.7], [-23, 9.1], [-10, 9.2], [-6.4, 9.6], [6.9, 11.9], [9.8, 14.1], [9.8, 21], [8.6, 23.4], [-1.8, 33.2], [-29.4, 33.2], [-49.4, 23.9], [-49.8, 21.8]] },
     { id: 'B', floors: [6, 37], refuge: [8], outline: [[7, 11.5], [9.5, -2.5], [22, -18.3], [36.9, -23.6], [42.9, -19.4], [47.3, -16], [49.1, -14], [39.3, 1.6], [32.8, 10.5], [29.2, 15.1], [19.3, 21.1], [16.6, 19]] },
   ],
   // Where the model stands on the Location map, in its lighter map copy

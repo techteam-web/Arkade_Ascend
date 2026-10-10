@@ -3,20 +3,19 @@ import { useSearchParams } from 'react-router'
 import { gsap } from '../app/reveal.js'
 import { useShell } from '../app/ShellContext.js'
 import { ArrowIcon, ChevronIcon } from '../components/Brand.jsx'
-import { Figure, ModelNote, PageHeading } from '../components/PageKit.jsx'
+import { PageHeading } from '../components/PageKit.jsx'
 import UnitFinder from '../components/UnitFinder.jsx'
-import { planTypes } from '../content/inventory.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import { selectable, stepFloor, towers } from '../scenes/building/floors.js'
 
-const BuildingModel = lazy(() => import('../scenes/building/BuildingModel.jsx'))
+const OrbitView = lazy(() => import('../scenes/orbit/OrbitView.jsx'))
 
-// Wing A at a glance, from its plan sheets.
-const reraAreas = planTypes.map(type => type.reraArea)
-const configurations = planTypes.map(type => parseFloat(type.configuration))
+// The rendered orbit, on the page's own plum: the city fades out at the edges.
+const FADE = '[mask-image:radial-gradient(ellipse_70%_76%_at_50%_50%,#000_55%,transparent_100%)]'
+const RenderNote = ({ className = '' }) => <p className={`text-[0.58rem] uppercase leading-relaxed tracking-[0.22em] text-muted/90 ${className}`}>3D render · representational</p>
 
 export default function ResidencesPage() {
-  const { go } = useShell()
+  const { go, menuOpen } = useShell()
   // Visual selection or the unit finder takes over the page; ?finder (from a
   // plan's "back to results") opens straight into the finder.
   const [params] = useSearchParams()
@@ -40,18 +39,33 @@ export default function ResidencesPage() {
   const finderOpener = useRef(null)
 
   // The text column fades away and the chosen way of exploring takes the
-  // page: the building model, where a floor is chosen to see its plans, or
+  // page: the tower's orbit, where a floor is chosen to see its plans, or
   // the unit finder. Leaving brings the text back.
   const open = next => {
     const duration = prefersReducedMotion() ? 0 : 0.4
     gsap.to(intro.current, { autoAlpha: 0, y: -8, duration, ease: 'power2.in', overwrite: true, onComplete: () => setMode(next) })
   }
   const close = () => setMode(null)
+  // Leaving for the menu closes whichever way of exploring is open, quietly
+  // behind the menu, so coming back always finds the page as it starts.
+  const quiet = useRef(false)
+  useEffect(() => {
+    if (!menuOpen) return
+    gsap.killTweensOf(intro.current)
+    setPreview(null)
+    if (mode) { quiet.current = true; setMode(null) }
+    else gsap.set(intro.current, { autoAlpha: 1, y: 0 })
+  }, [menuOpen])
   const was = useRef(mode)
   useLayoutEffect(() => {
     const previous = was.current
     if (previous === mode) return
     was.current = mode
+    if (quiet.current) {
+      quiet.current = false
+      gsap.set([intro.current, art.current], { autoAlpha: 1, y: 0, overwrite: true })
+      return
+    }
     const reduced = prefersReducedMotion()
     if (mode) {
       // Fade opacity only, so the arriving side stays focusable.
@@ -73,8 +87,8 @@ export default function ResidencesPage() {
       if (!visual) return
       if (event.key === 'ArrowUp') { event.preventDefault(); step(1) }
       if (event.key === 'ArrowDown') { event.preventDefault(); step(-1) }
-      if (event.key === 'ArrowLeft') { event.preventDefault(); rotate(1) }
-      if (event.key === 'ArrowRight') { event.preventDefault(); rotate(-1) }
+      if (event.key === 'ArrowLeft') { event.preventDefault(); rotate(-1) }
+      if (event.key === 'ArrowRight') { event.preventDefault(); rotate(1) }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -84,11 +98,6 @@ export default function ResidencesPage() {
   return <section className={`page page-scroll flex flex-col gap-8 ${mode ? '' : 'split:grid split:grid-cols-[minmax(0,29rem)_minmax(0,1fr)] split:gap-x-[5vw] 3xl:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]'}`}>
     <div ref={intro} hidden={!!mode} className="flex flex-col justify-center-safe gap-[clamp(1.25rem,4vh,2.5rem)]">
       <PageHeading id="residences" title="Residences" subtitle="Discover your residence" />
-      <div className="grid max-w-md grid-cols-3 gap-4">
-        <Figure value={`${Math.min(...configurations)}–${Math.max(...configurations)} BHK`} label="Wing A homes" />
-        <Figure value={Math.min(...reraAreas)} suffix="sq.ft" label="RERA carpet, from" />
-        <Figure value={Math.max(...reraAreas)} suffix="sq.ft" label="RERA carpet, up to" />
-      </div>
       <div>
         <p data-reveal className="eyebrow mb-3">Two ways to explore</p>
         <div className="flex max-w-md flex-col">
@@ -105,7 +114,7 @@ export default function ResidencesPage() {
             <div>
               <p className="eyebrow">01 · Visual selection</p>
               <h2 tabIndex={-1} className="display mt-2 text-[clamp(1.5rem,2.4vw,2.4rem)] text-fg outline-none">Select a floor</h2>
-              <ModelNote className="mt-2 max-w-xl" />
+              <RenderNote className="mt-2 max-w-xl" />
             </div>
             <button type="button" className="btn-icon" onClick={close} aria-label="Close visual selection">
               <svg viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19" /></svg>
@@ -117,8 +126,8 @@ export default function ResidencesPage() {
           <div className="flex min-h-0 flex-1 flex-col gap-4 short:flex-row short:items-center">
             <div className="relative min-h-[40vh] flex-1 self-stretch split:min-h-0">
               <Suspense fallback={null}>
-                <BuildingModel selectable floor={chosen} onFloor={setChoice} onHover={setPreview} turn={turn}
-                  label="3D model of Wing A and Wing B. Point at a wing's floor to preview it, click or tap to select it; use the up and down arrow keys to change floor within the chosen wing." />
+                <OrbitView pickable sky={false} floor={chosen} onFloor={setChoice} onHover={setPreview} canPick={selectable} turn={turn} className={FADE}
+                  label="Rendered orbit of Wing A and Wing B. Point at a wing's floor to preview it, click or tap to select it; drag to turn the tower; use the up and down arrow keys to change floor within the chosen wing." />
               </Suspense>
             </div>
             <div className="glass-panel flex flex-wrap items-center gap-x-6 gap-y-3 rounded-sm px-5 py-4 split:mx-auto split:w-full split:max-w-4xl short:w-[19rem]! short:shrink-0 short:flex-col short:gap-y-2 short:py-3 short:flex-nowrap short:items-stretch">
@@ -139,8 +148,8 @@ export default function ResidencesPage() {
                 <div className="flex gap-2">
                   <button type="button" className="btn-icon" aria-label="Floor down" onClick={() => step(-1)}><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg></button>
                   <button type="button" className="btn-icon" aria-label="Floor up" onClick={() => step(1)}><svg viewBox="0 0 24 24"><path d="m6 15 6-6 6 6" /></svg></button>
-                  <button type="button" className="btn-icon max-sm:hidden short:hidden" aria-label="Turn the building left" onClick={() => rotate(1)}><ChevronIcon direction="left" /></button>
-                  <button type="button" className="btn-icon max-sm:hidden short:hidden" aria-label="Turn the building right" onClick={() => rotate(-1)}><ChevronIcon /></button>
+                  <button type="button" className="btn-icon max-sm:hidden short:hidden" aria-label="Turn the building left" onClick={() => rotate(-1)}><ChevronIcon direction="left" /></button>
+                  <button type="button" className="btn-icon max-sm:hidden short:hidden" aria-label="Turn the building right" onClick={() => rotate(1)}><ChevronIcon /></button>
                 </div>
               </div>
               <button type="button" className="btn-lux whitespace-nowrap" disabled={!chosen} onClick={() => go(`/floor-plans?wing=${choice.tower}&floor=${choice.n}`)}>Floor plans<ArrowIcon className="shrink-0" /></button>
@@ -151,9 +160,9 @@ export default function ResidencesPage() {
           ? <UnitFinder ref={region} onClose={close} onOpenPlan={openPlan} />
           : <div ref={art} className="absolute inset-0 flex flex-col">
             <div data-reveal="fade" className="relative min-h-0 flex-1">
-              <Suspense fallback={null}><BuildingModel label="3D model of the Arkade Ascend tower. Drag to orbit." /></Suspense>
+              <Suspense fallback={null}><OrbitView sky={false} zoom={1.12} className={FADE} label="Rendered orbit of the Arkade Ascend tower. Drag to turn it." /></Suspense>
             </div>
-            <ModelNote className="mx-auto max-w-xl text-center" />
+            <RenderNote className="mx-auto max-w-xl text-center" />
           </div>}
     </div>
   </section>

@@ -13,6 +13,7 @@ import AmenitiesPage from '../pages/AmenitiesPage.jsx'
 import ViewsPage from '../pages/ViewsPage.jsx'
 import LocationPage from '../pages/LocationPage.jsx'
 import GalleryPage from '../pages/GalleryPage.jsx'
+import ArkadeFamilyPage from '../pages/ArkadeFamilyPage.jsx'
 
 // Holds the outgoing page on screen while its elements release, then swaps
 // to the new route and choreographs its arrival: a simple cross-fade. The
@@ -99,6 +100,7 @@ export default function TransitionStage({ active }) {
         <Route path="/views" element={<ViewsPage />} />
         <Route path="/location" element={<LocationPage />} />
         <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/arkade-family" element={<ArkadeFamilyPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

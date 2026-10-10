@@ -44,9 +44,10 @@ export default function GalleryPage() {
   return <section ref={root} className="page page-scroll grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(14rem,1fr)_auto] gap-4">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <PageHeading id="gallery" title="Gallery" subtitle="Curated visions of Ascend" className="flex-1 basis-64" />
-      <div data-reveal role="group" aria-label="Filter gallery" className="flex flex-wrap gap-2">
+      {/* Filters only once there is more than one category to choose from. */}
+      {categories.length > 2 && <div data-reveal role="group" aria-label="Filter gallery" className="flex flex-wrap gap-2">
         {categories.map(value => <button key={value} type="button" className="chip" aria-pressed={category === value} onClick={() => choose(value)}>{value}</button>)}
-      </div>
+      </div>}
     </div>
 
     <div data-reveal="fade" className="relative min-h-0 overflow-hidden @container-size" role="region" aria-roledescription="carousel" aria-label="Gallery images">
