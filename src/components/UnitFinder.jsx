@@ -125,9 +125,9 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan, onView 
                 {groups.map(group => <PlanCard key={group.type.id} group={group} inCompare={compare.includes(group.type.id)}
                   compareFull={compare.length >= MAX_COMPARE} onCompare={() => toggleCompare(group.type.id)}
                   onOpen={() => onOpenPlan({ plan: group.type.id })} onHomes={() => showHomes(group.type.id)}
-                  onView={() => onView({ wing: 'A', floor: group.floors[group.floors.length >> 1] })} />)}
+                  onView={() => onView({ wing: 'A', floor: group.floors[group.floors.length >> 1], unit: group.type.unit })} />)}
               </ul>
-              : <HomeList homes={list} onOpen={home => onOpenPlan({ home: home.id })} onView={home => onView({ wing: home.wing, floor: home.floor })} />}
+              : <HomeList homes={list} onOpen={home => onOpenPlan({ home: home.id })} onView={home => onView({ wing: home.wing, floor: home.floor, unit: home.position })} />}
         </div>
 
         {compare.length > 0 && <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">

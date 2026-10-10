@@ -118,7 +118,7 @@ export default function FloorPlansPage() {
         : <FloorOverview floor={floor} hovered={hovered} onHover={setHovered} onFloor={n => show({ floor: n, unit: null })} onOpen={unit => show({ unit })} onFinder={() => go('/residences?finder')} />}
     </div>
 
-    {viewing && <ViewOverlay wing={wing} floor={floor} onClose={() => setViewing(false)} />}
+    {viewing && <ViewOverlay wing={wing} floor={floor} unit={type?.unit} onClose={() => setViewing(false)} />}
     {fullscreen && <PlanFullscreen plan={plan} zones={zones} title={title} hovered={hovered} onHover={setHovered}
       onPick={unit => show({ unit })} onClose={closeFullscreen} />}
   </section>

@@ -162,7 +162,7 @@ export default function ResidencesPage() {
             <ModelNote className="mx-auto max-w-xl text-center" />
           </div>}
     </div>
-    {viewing && <ViewOverlay wing={viewing.wing} floor={viewing.floor} onClose={() => setViewing(null)} />}
+    {viewing && <ViewOverlay wing={viewing.wing} floor={viewing.floor} unit={viewing.unit} onClose={() => setViewing(null)} />}
   </section>
 }
 

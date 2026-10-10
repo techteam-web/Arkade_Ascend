@@ -8,6 +8,12 @@ import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 // for the viewer's life: give it a new `key` to show another set.
 //
 // scenes: [{ id, url }], url being the export's folder (preview.jpg, {z}/{f}/{y}/{x}.jpg).
+//
+// A lock keeps the whole picture inside one outlook: { yaw, span, pitch: [min, max] }
+// in radians (the sector's centre and width, and the tilt range). While it is
+// on the view cannot leave it (zooming out stops where the sector's edges meet
+// the screen's) and the slow turn is off. focus() flies to a view and then
+// applies the lock, so nothing jumps; focus(view, null) frees the view.
 const LEVELS = [
   { tileSize: 256, size: 256, fallbackOnly: true },
   { tileSize: 512, size: 512 },
@@ -21,14 +27,34 @@ const SPIN = 2.3 * deg        // per second: one turn in about two and a half mi
 const SPIN_EASE = 0.6         // seconds for the spin to ease in or out
 const RESUME_AFTER = 4000     // ms after the last drag or step
 const FADE = 1                // seconds for a crossfade
+const TAU = Math.PI * 2
+const wrap = angle => angle - TAU * Math.round(angle / TAU)
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+// Vertical field of view whose horizontal field is `hfov` on a width x height screen.
+const vfovFor = (hfov, width, height) => 2 * Math.atan(Math.tan(hfov / 2) * height / width)
+const hfovFor = (vfov, width, height) => 2 * Math.atan(Math.tan(vfov / 2) * width / height)
+function applyLock(params, lock) {
+  if (!lock || !params.width || !params.height) return params
+  const { width, height } = params
+  params.fov = Math.min(params.fov, vfovFor(lock.span, width, height), lock.pitch[1] - lock.pitch[0])
+  const halfH = hfovFor(params.fov, width, height) / 2
+  const halfV = params.fov / 2
+  params.yaw = lock.yaw + clamp(wrap(params.yaw - lock.yaw), -(lock.span / 2 - halfH), lock.span / 2 - halfH)
+  params.pitch = clamp(params.pitch, lock.pitch[0] + halfV, lock.pitch[1] - halfV)
+  return params
+}
 const HIDDEN = { opacity: 0, rect: { relativeWidth: 0, relativeHeight: 0 } }
 
-const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, start, spinning, paused, label, className = '' }, ref) {
+const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, start, lock: startLock = null, spinning, paused, label, onView, className = '' }, ref) {
   const frame = useRef(null)
   const pano = useRef(null)                  // { view, layers, loop } once loaded
   const mix = useRef(Object.fromEntries(scenes.map(scene => [scene.id, scene.id === active ? 1 : 0])))
   const aim = useRef({ yaw: 0 })             // tweened by look()
   const motion = useRef({ pace: 0, held: false, last: 0, resume: 0 })
+  const watcher = useRef(onView)
+  watcher.current = onView                   // told the yaw and horizontal field of view whenever the view changes
+  const lockRef = useRef(startLock)          // the outlook the view is kept in, or null
+  const pending = useRef(undefined)          // the lock a flight is bound for, until it lands
   const spinOn = useRef(false)
   spinOn.current = spinning && !paused
   const [failed, setFailed] = useState(false)
@@ -65,6 +91,28 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
   }
 
   useImperativeHandle(ref, () => ({
+    // The view's yaw, pitch and field of view, in radians.
+    getView() {
+      const view = pano.current?.view
+      return view ? { yaw: view.yaw(), pitch: view.pitch(), fov: view.fov() } : null
+    },
+    // Fly to a view (yaw and pitch in radians, by the shortest way round), then
+    // keep it inside `lock` ({ yaw, span, pitch: [min, max] }); null frees it at once.
+    focus({ yaw, pitch }, lock = null) {
+      const view = pano.current?.view
+      if (!view) return
+      lockRef.current = null
+      hold()
+      const fov = lock ? Math.min(view.fov(), vfovFor(lock.span * 0.98, view.width(), view.height())) : view.fov()
+      const to = { yaw: view.yaw() + wrap(yaw - view.yaw()), pitch, fov }
+      pending.current = lock
+      const done = () => { pending.current = undefined; lockRef.current = lock; if (!lock) release() }
+      if (prefersReducedMotion()) { view.setParameters({ ...to, roll: 0 }); done(); return }
+      const proxy = aim.current
+      Object.assign(proxy, { yaw: view.yaw(), pitch: view.pitch(), fov: view.fov() })
+      gsap.to(proxy, { ...to, duration: 0.9, ease: 'power2.inOut', overwrite: true,
+        onUpdate: () => view.setParameters({ yaw: proxy.yaw, pitch: proxy.pitch, fov: proxy.fov, roll: 0 }), onComplete: done })
+    },
     look(direction) {
       const view = pano.current?.view
       if (!view) return
@@ -94,7 +142,9 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
       // Keys are handled by the page, so they never reach the panorama behind the menu.
       const controls = instance.controls()
       Object.keys(controls.methods()).filter(name => /Key/.test(name)).forEach(name => controls.disableMethod(name))
-      const limiter = Marzipano.RectilinearView.limit.traditional(FACE_SIZE, 100 * deg, 120 * deg)
+      const limiter = Marzipano.util.compose(
+        Marzipano.RectilinearView.limit.traditional(FACE_SIZE, 100 * deg, 120 * deg),
+        params => applyLock(params, lockRef.current))
       const view = new Marzipano.RectilinearView(start, limiter)
       const scene = instance.createEmptyScene({ view })
       const layers = {}
@@ -108,6 +158,9 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
       scene.switchTo({ transitionDuration: 0, transitionUpdate: () => {} })
       const loop = instance.renderLoop()
       pano.current = { view, layers, loop }
+      const report = () => view.width() && view.height() && watcher.current?.({ yaw: view.yaw(), hfov: 2 * Math.atan(Math.tan(view.fov() / 2) * view.width() / view.height()) })
+      view.addEventListener('change', report)
+      report()
       blend()
       // Once the first view is sharp, keep a coarse level of every scene in
       // memory, so a crossfade starts from real detail rather than the preview.
@@ -126,13 +179,18 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
         const now = performance.now()
         const dt = Math.min(0.1, (now - m.last) / 1000)
         m.last = now
-        const target = spinOn.current && !m.held ? SPIN : 0
+        const target = spinOn.current && !m.held && !lockRef.current ? SPIN : 0
         m.pace += (target - m.pace) * Math.min(1, dt / SPIN_EASE)
         if (!target && m.pace < SPIN / 200) { m.pace = 0; return }
         view.setYaw(view.yaw() + m.pace * dt)
         loop.renderOnNextFrame()
       })
-      controls.addEventListener('active', () => { gsap.killTweensOf(aim.current); hold() })
+      controls.addEventListener('active', () => {
+        gsap.killTweensOf(aim.current)
+        // A drag that interrupts a flight still ends up inside its lock.
+        if (pending.current !== undefined) { lockRef.current = pending.current; pending.current = undefined }
+        hold()
+      })
       controls.addEventListener('inactive', release)
       wake()
       context.add(() => {

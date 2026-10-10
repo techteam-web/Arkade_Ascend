@@ -59,3 +59,9 @@ export const topView = {
     { id: 'night', label: 'Night', url: base('Top View', '1-top_night_120m'), caption: 'The site from directly above, after dark.' },
   ],
 }
+
+// How the panorama's heading sits on a wing's floor plan, in degrees: the
+// direction on the plan (clockwise from the top of the drawing) that a view
+// straight ahead (yaw 0) faces. INDICATIVE until measured against the site:
+// the radar on the mini plan turns by this much more than the view does.
+export const planHeading = { A: 0, B: 0 }
