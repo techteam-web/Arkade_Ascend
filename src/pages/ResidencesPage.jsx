@@ -5,6 +5,7 @@ import { useShell } from '../app/ShellContext.js'
 import { ArrowIcon, ChevronIcon } from '../components/Brand.jsx'
 import { PageHeading } from '../components/PageKit.jsx'
 import UnitFinder from '../components/UnitFinder.jsx'
+import ViewOverlay from '../components/ViewOverlay.jsx'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import { selectable, stepFloor, towers } from '../scenes/building/floors.js'
 
@@ -26,6 +27,8 @@ export default function ResidencesPage() {
   const [choice, setChoice] = useState({ tower: towers[0].id, n: null })
   const [preview, setPreview] = useState(null)
   const step = direction => setChoice(value => ({ ...value, n: stepFloor(value.tower, value.n, direction) }))
+  // The drone view of a wing at a floor, over the whole presentation.
+  const [viewing, setViewing] = useState(null)
   const pickTower = id => setChoice(value => ({ tower: id, n: value.n && selectable(id, value.n) ? value.n : null }))
   const [turn, setTurn] = useState({ count: 0, direction: 1 })
   const rotate = direction => setTurn(value => ({ count: value.count + 1, direction }))
@@ -53,6 +56,7 @@ export default function ResidencesPage() {
     if (!menuOpen) return
     gsap.killTweensOf(intro.current)
     setPreview(null)
+    setViewing(null)
     if (mode) { quiet.current = true; setMode(null) }
     else gsap.set(intro.current, { autoAlpha: 1, y: 0 })
   }, [menuOpen])
@@ -82,7 +86,7 @@ export default function ResidencesPage() {
   useEffect(() => {
     if (!mode) return
     const onKey = event => {
-      if (event.target.closest?.('input, select, [role="dialog"]') || event.defaultPrevented) return
+      if (viewing || event.target.closest?.('input, select, [role="dialog"]') || event.defaultPrevented) return
       if (event.key === 'Escape') { event.preventDefault(); close() }
       if (!visual) return
       if (event.key === 'ArrowUp') { event.preventDefault(); step(1) }
@@ -92,7 +96,7 @@ export default function ResidencesPage() {
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [mode])
+  }, [mode, viewing])
   const openPlan = ({ plan, home }) => go(`/floor-plans?${home ? `home=${home}` : `plan=${plan}`}&from=finder`)
 
   return <section className={`page page-scroll flex flex-col gap-8 ${mode ? '' : 'split:grid split:grid-cols-[minmax(0,29rem)_minmax(0,1fr)] split:gap-x-[5vw] 3xl:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]'}`}>
@@ -152,12 +156,15 @@ export default function ResidencesPage() {
                   <button type="button" className="btn-icon max-sm:hidden short:hidden" aria-label="Turn the building right" onClick={() => rotate(1)}><ChevronIcon /></button>
                 </div>
               </div>
+              <div className="flex flex-wrap items-center gap-3">
               <button type="button" className="btn-lux whitespace-nowrap" disabled={!chosen} onClick={() => go(`/floor-plans?wing=${choice.tower}&floor=${choice.n}`)}>Floor plans<ArrowIcon className="shrink-0" /></button>
+              <button type="button" className="btn-lux whitespace-nowrap" disabled={!chosen} onClick={() => setViewing({ wing: choice.tower, floor: choice.n })}>See view<ArrowIcon className="shrink-0" /></button>
+            </div>
             </div>
           </div>
         </div>
         : finder
-          ? <UnitFinder ref={region} onClose={close} onOpenPlan={openPlan} />
+          ? <UnitFinder ref={region} onClose={close} onOpenPlan={openPlan} onView={setViewing} />
           : <div ref={art} className="absolute inset-0 flex flex-col">
             <div data-reveal="fade" className="relative min-h-0 flex-1">
               <Suspense fallback={null}><OrbitView sky={false} zoom={1.12} className={FADE} label="Rendered orbit of the Arkade Ascend tower. Drag to turn it." /></Suspense>
@@ -165,6 +172,7 @@ export default function ResidencesPage() {
             <RenderNote className="mx-auto max-w-xl text-center" />
           </div>}
     </div>
+    {viewing && <ViewOverlay wing={viewing.wing} floor={viewing.floor} unit={viewing.unit} onClose={() => setViewing(null)} />}
   </section>
 }
 

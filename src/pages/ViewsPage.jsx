@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { gsap } from '../app/reveal.js'
 import { useShell } from '../app/ShellContext.js'
 import { PageHeading } from '../components/PageKit.jsx'
-import { ChevronIcon } from '../components/Brand.jsx'
+import { ChevronIcon, SpinIcon } from '../components/Brand.jsx'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
 // 360° drone panoramas over the site, one per time of day, as tiled cube maps
@@ -33,12 +33,6 @@ const RESUME_AFTER = 4000     // ms after the last drag or step
 const FADE = 1                // seconds for a time-of-day crossfade
 const HIDDEN = { opacity: 0, rect: { relativeWidth: 0, relativeHeight: 0 } }
 const only = id => Object.fromEntries(TIMES.map(item => [item.id, item.id === id ? 1 : 0]))
-
-function SpinIcon({ paused }) {
-  return <svg viewBox="0 0 20 24" fill="none" aria-hidden="true" strokeLinejoin="round">
-    <path d={paused ? 'M6.5 5.5v13l10-6.5z' : 'M7 6v12m6-12v12'} />
-  </svg>
-}
 
 export default function ViewsPage() {
   const { menuOpen } = useShell()

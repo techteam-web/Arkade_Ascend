@@ -217,3 +217,7 @@ the Orbit project's converters (`scripts/convert-frames.mjs`,
 balcony at dusk, 8128 × 5084 as embedded, uncropped), WebP quality 80. The
 deck marks it "Representative Image". It replaces the brochure's cropped
 `welcome-balcony` copy of the same photograph.
+
+## Wing and top-view panoramas (`public/assets/`)
+
+Marzipano Tool cube-map exports (4 levels, 512 px tiles, faces up to 4096 px), as supplied: `Tower A` and `Tower B` (11 flights each, at the height of floors 5, 6, 8, 12, 16, 20, 24, 28, 32, 36 and 37; the folder name carries the drone height in metres, e.g. `8845m` is 88.45 m) and `Top View` (day, evening and night at 120 m). About 580 MB in all. They have not been re-projected onto one frame (unlike `public/views/`), so a crossfade between two floors is in register only as far as the drone kept its heading. `src/content/panoramas.js` lists them.
