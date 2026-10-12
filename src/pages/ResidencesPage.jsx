@@ -13,7 +13,7 @@ const OrbitView = lazy(() => import('../scenes/orbit/OrbitView.jsx'))
 
 // The rendered orbit, on the page's own plum: the city fades out at the edges.
 const FADE = '[mask-image:linear-gradient(90deg,transparent,#000_16%,#000_84%,transparent),linear-gradient(transparent,#000_10%,#000_78%,transparent)] [mask-composite:intersect]'
-const RenderNote = ({ className = '' }) => <p className={`text-[0.58rem] uppercase leading-relaxed tracking-[0.22em] text-muted/90 ${className}`}>3D render · representational</p>
+const RenderNote = ({ className = '' }) => <p className={`text-[0.58rem] uppercase leading-relaxed tracking-[0.22em] text-muted/90 ${className}`}>Representational</p>
 
 export default function ResidencesPage() {
   const { go, menuOpen } = useShell()
@@ -35,6 +35,7 @@ export default function ResidencesPage() {
   const chosen = choice.n ? choice : null
   const shown = preview ?? chosen
   const previewing = preview && (preview.tower !== choice.tower || preview.n !== choice.n)
+  const litWing = preview?.tower ?? choice.tower
   const art = useRef(null)
   const intro = useRef(null)
   const region = useRef(null)          // the visual selection or the finder, whichever has the page
@@ -147,7 +148,16 @@ export default function ResidencesPage() {
               <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
                 <div role="group" aria-label="Wing" className="flex items-center gap-2">
                   <span className="eyebrow mr-1 short:hidden" aria-hidden="true">Wing</span>
-                  {towers.map(tower => <button key={tower.id} type="button" className="chip min-w-11" aria-pressed={choice.tower === tower.id} aria-label={`Wing ${tower.id}`} onClick={() => pickTower(tower.id)}>{tower.id}</button>)}
+                  {/* One gold pill follows the wing being pointed at on the
+                      building, else the chosen one, gliding between the two;
+                      the chosen wing keeps a gold ring while another is previewed. */}
+                  <div className="relative flex gap-2">
+                    <span aria-hidden="true" className="absolute left-0 top-0 size-11 rounded-full bg-gold-500 transition-[translate] duration-500 ease-silk motion-reduce:transition-none"
+                      style={{ translate: `calc(${Math.max(0, towers.findIndex(tower => tower.id === litWing))} * (2.75rem + 0.5rem)) 0` }} />
+                    {towers.map(tower => <button key={tower.id} type="button" aria-pressed={choice.tower === tower.id} aria-label={`Wing ${tower.id}`} onClick={() => pickTower(tower.id)}
+                      className={`relative grid size-11 place-items-center rounded-full border text-[0.66rem] font-medium uppercase tracking-[0.2em] transition-[color,border-color] duration-500
+                        ${litWing === tower.id ? 'border-transparent text-espresso' : choice.tower === tower.id ? 'border-gold-500/80 text-fg' : 'border-line text-muted hover:border-accent hover:text-fg focus-visible:text-fg'}`}>{tower.id}</button>)}
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button type="button" className="btn-icon" aria-label="Floor down" onClick={() => step(-1)}><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6" /></svg></button>

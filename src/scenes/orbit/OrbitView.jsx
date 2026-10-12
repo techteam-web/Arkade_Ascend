@@ -24,7 +24,9 @@ export default function OrbitView({ light = 'day', sky = true, pickable = false,
 
   useEffect(() => controller.attach(box.current, { keys }), [controller, keys])
   useEffect(() => { controller.onFirstMove = onFirstMove }, [controller, onFirstMove])
-  useEffect(() => { if (pickable && !world) orbitWorld().then(setWorld) }, [pickable, world])
+  // The world manifest (each frame's camera, the floor table) is small and
+  // always loaded; the per-frame world maps only where floors are picked.
+  useEffect(() => { if (!world) orbitWorld().then(setWorld) }, [world])
   useEffect(() => {
     if (engine.progress >= 1) return
     const update = value => setProgress(value)
@@ -56,7 +58,7 @@ export default function OrbitView({ light = 'day', sky = true, pickable = false,
       <Canvas className="absolute! inset-0" frameloop="demand" linear flat dpr={[1, coarse() ? 1.5 : 1.75]}
         gl={{ antialias: false, alpha: !sky, premultipliedAlpha: true, powerPreference: 'high-performance' }}
         onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0, 0, 0), 0)}>
-        <OrbitStage engine={engine} controller={controller} world={pickable ? world : null} light={light} sky={sky} pickable={pickable && !!world}
+        <OrbitStage engine={engine} controller={controller} world={world} light={light} sky={sky} pickable={pickable && !!world}
           floor={floor} zoom={zoom} onFloor={choose} onHover={hover} onReady={() => setReady(true)} />
       </Canvas>
     </WithoutWebGL>

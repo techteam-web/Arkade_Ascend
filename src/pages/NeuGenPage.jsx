@@ -5,18 +5,21 @@ import { useShell } from '../app/ShellContext.js'
 import { setScenePreset } from '../scenes/sceneStore.js'
 import { ArrowIcon } from '../components/Brand.jsx'
 import NeuGenMark from '../components/NeuGenMark.jsx'
+import LandmarkMark from '../components/LandmarkMark.jsx'
 import { pad } from '../app/routes.js'
 import { neuGen } from '../content/project.js'
 import useStepper from '../hooks/useStepper.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
-// The Neu Gen story as five chapters, from the customer presentation (pages
-// 6 to 9) and the brochure's gilded spread. Each chapter re-themes the shared
-// 3D scene: gold silk behind the framed opening, the gilded silk, the plum of
-// the new generation homebuyers and of the life they want, then the balcony
-// photograph where the Neu Gen life brings it all together.
+// The Neu Gen story as six chapters, from the customer presentation (pages
+// 5 to 9) and the brochure's gilded spread. Each chapter re-themes the shared
+// 3D scene: gold silk behind the two framed openings (our 9th landmark, then
+// the Neu Gen life arriving), the gilded silk, the plum of the new generation
+// homebuyers and of the life they want, then the balcony photograph where the
+// Neu Gen life brings it all together.
 const chapters = [
-  { id: 'arrival', label: 'Has arrived', scene: 'arrival' },
+  { id: 'landmark', label: 'Our 9th landmark', scene: 'arrival', framed: true },
+  { id: 'arrival', label: 'Has arrived', scene: 'arrival', framed: true },
   { id: 'masterpiece', label: 'A masterpiece', scene: 'gilded' },
   { id: 'homebuyers', label: 'Want it all', scene: 'homebuyers' },
   { id: 'desired', label: 'Want more', scene: 'homebuyers' },
@@ -31,14 +34,14 @@ export default function NeuGenPage() {
   const splits = useRef(new Map())
   const running = useRef(null)
   const change = next => setChapter(current => Math.max(0, Math.min(chapters.length - 1, typeof next === 'function' ? next(current) : next)))
-  useStepper(root, { onNext: () => change(c => c + 1), onPrev: () => change(c => c - 1), lock: 1300 })
+  useStepper(root, { onNext: () => change(c => c + 1), onPrev: () => change(c => c - 1), lock: 650 })
 
   useEffect(() => { setScenePreset(chapters[chapter].scene) }, [chapter])
 
   // Line splits are made once, after the fonts settle.
   useLayoutEffect(() => {
     const sections = root.current.querySelectorAll('[data-chapter]')
-    gsap.set(sections, { autoAlpha: 0 })
+    gsap.set([...sections, root.current.querySelector('[data-frame]')], { autoAlpha: 0 })
     let cancelled = false
     document.fonts.ready.then(() => {
       if (cancelled) return
@@ -59,43 +62,59 @@ export default function NeuGenPage() {
 
   // One chapter animation at a time: a new one stops the last and settles
   // every other chapter first, so quick clicks never blend two chapters.
+  // A change is a short crossfade: the old chapter lifts away as the new one
+  // rises in behind it (the other way when going back), all within about
+  // 0.8 s; the page's first entrance takes its time.
   function play(from, to) {
     running.current?.kill()
     const sections = root.current.querySelectorAll('[data-chapter]')
     const outgoing = from === null || from === to ? null : sections[from]
     const incoming = sections[to]
+    const entrance = !outgoing
+    const dir = from !== null && to < from ? -1 : 1
     sections.forEach(section => { if (section !== incoming && section !== outgoing) gsap.set(section, { autoAlpha: 0 }) })
     const reduced = prefersReducedMotion()
-    const timeline = gsap.timeline({ defaults: { ease: 'silk' } })
+    const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } })
     running.current = timeline
+    // The frame stays put between the two framed chapters and fades with the rest.
+    const frame = root.current.querySelector('[data-frame]')
+    const framed = Boolean(chapters[to].framed)
+    if (reduced) gsap.set(frame, { autoAlpha: framed ? 1 : 0 })
+    else timeline.to(frame, { autoAlpha: framed ? 1 : 0, duration: entrance ? 1.2 : 0.5, ease: 'power2.inOut' }, 0)
     if (outgoing) {
-      timeline.to(outgoing.querySelectorAll('[data-ch]'), { autoAlpha: 0, y: -8, duration: reduced ? 0 : 0.45, ease: 'power2.in' })
-        .set(outgoing, { autoAlpha: 0 })
+      if (reduced) gsap.set(outgoing, { autoAlpha: 0 })
+      else timeline.to(outgoing, { autoAlpha: 0, duration: 0.35, ease: 'power2.inOut' }, 0)
+        .to(outgoing.querySelectorAll('[data-ch]:not([data-ch="image"])'), { y: -14 * dir, duration: 0.35, ease: 'power2.in' }, 0)
     }
-    timeline.set(incoming, { autoAlpha: 1 })
+    gsap.set(incoming, { autoAlpha: 1 })
     const items = [...incoming.querySelectorAll('[data-ch]')]
     gsap.set(items, { clearProps: 'opacity,visibility,filter,transform' })
     items.forEach(item => { const split = splits.current.get(item); if (split) gsap.set(split.lines, { clearProps: 'transform' }) })
     if (reduced) { settleReveal(incoming); return }
+    const begin = entrance ? 0.1 : 0.12
+    const gap = entrance ? 0.07 : 0.045
     items.forEach((item, index) => {
-      const at = (outgoing ? 0.5 : 0.1) + Math.min(index * 0.07, 0.7)
+      const at = begin + Math.min(index * gap, entrance ? 0.7 : 0.3)
       const split = splits.current.get(item)
-      if (split) timeline.from(split.lines, { yPercent: 100, duration: 1, stagger: 0.08 }, at)
-      else if (item.dataset.ch === 'image') timeline.from(item, { scale: 1.04, autoAlpha: 0, duration: 1.6, ease: 'power2.out' }, at - 0.3)
-      else if (item.dataset.ch === 'rule') timeline.from(item, { scaleX: 0, duration: 1.1 }, at)
-      else if (item.dataset.ch === 'glyph') timeline.from(item, { autoAlpha: 0, duration: 1.6, ease: 'power2.out' }, at - 0.2)
-      else if (item.dataset.ch === 'draw') drawIn(item, timeline, at)
-      else timeline.from(item, { autoAlpha: 0, y: 14, duration: 1 }, at)
+      if (split) timeline.from(split.lines, { yPercent: 100 * dir, duration: entrance ? 1 : 0.7, stagger: entrance ? 0.08 : 0.05, ease: entrance ? 'silk' : 'power3.out' }, at)
+      else if (item.dataset.ch === 'image') timeline.from(item, { scale: 1.03, autoAlpha: 0, duration: entrance ? 1.6 : 0.8, ease: 'power2.out' }, 0)
+      else if (item.dataset.ch === 'rule') timeline.from(item, { scaleX: 0, duration: entrance ? 1.1 : 0.7 }, at)
+      else if (item.dataset.ch === 'glyph') timeline.from(item, { autoAlpha: 0, duration: entrance ? 1.6 : 0.7, ease: 'power2.out' }, at)
+      // the brand line art draws in at its own pace on entrance, quicker between chapters
+      else if (item.dataset.ch === 'draw') timeline.add(drawIn(item, gsap.timeline()).timeScale(entrance ? 1 : 1.7), at)
+      else timeline.from(item, { autoAlpha: 0, y: 16 * dir, duration: entrance ? 1 : 0.65 }, at)
     })
   }
 
   const last = chapter === chapters.length - 1
   return <section ref={root} className="absolute inset-0 overflow-hidden" aria-roledescription="presentation" aria-label="Neu Gen life">
-    <Arrival active={chapter === 0} />
-    <Masterpiece active={chapter === 1} />
-    <Homebuyers active={chapter === 2} />
-    <Desired active={chapter === 3} />
-    <Together active={chapter === 4} />
+    <Frame />
+    <Landmark active={chapter === 0} />
+    <Arrival active={chapter === 1} />
+    <Masterpiece active={chapter === 2} />
+    <Homebuyers active={chapter === 3} />
+    <Desired active={chapter === 4} />
+    <Together active={chapter === 5} />
 
     <nav data-reveal="fade" aria-label="Chapters" className="absolute right-(--gutter) top-1/2 z-10 hidden -translate-y-1/2 flex-col items-end gap-1 xl:flex short:hidden">
       {chapters.map((item, index) => <button key={item.id} type="button" onClick={() => change(index)} aria-current={chapter === index ? 'step' : undefined}
@@ -128,16 +147,37 @@ function Chapter({ active, children, className = '', label }) {
   return <section data-chapter aria-label={label} aria-hidden={!active} inert={active ? undefined : ''} className={`absolute inset-0 ${className}`}>{children}</section>
 }
 
-// Presentation page 6: the gold silk runs behind a framed plum panel, and
-// MALAD'S / NEU GEN / LIFE / HAS ARRIVED draws in at its centre. The panel is
-// a little translucent, so the ribbons read through its lower edge.
+// The framed plum panel of presentation pages 5 and 6, over the gold silk,
+// shared by both chapters. It is a little translucent, so the ribbons read
+// through its lower edge.
+function Frame() {
+  return <div data-frame aria-hidden="true" className="pointer-events-none absolute inset-x-[clamp(0.75rem,2.6vw,2.75rem)] top-[calc(var(--header-h)+0.25rem)] bottom-[clamp(4.5rem,11vh,6.75rem)] short:bottom-16">
+    <div className="absolute inset-0 rounded-[2px] bg-[linear-gradient(180deg,rgba(52,31,30,.96),rgba(62,38,40,.93)_55%,rgba(64,40,42,.72))] shadow-[0_30px_80px_-40px_rgba(40,22,14,.8)]" />
+    <div className="absolute inset-0 rounded-[2px] border border-gold-300/55" />
+    <div className="absolute -inset-[clamp(0.3rem,0.6vw,0.55rem)] rounded-[3px] border border-gold-100/30" />
+  </div>
+}
+
+// Presentation page 5: PRESENTING OUR / 9TH / LANDMARK / IN MALAD-GOREGAON
+// CORRIDOR at the centre of the frame, the lockup drawing itself in. The
+// lines of text keep the deck's proportion to the lockup.
+function Landmark({ active }) {
+  const { lead, line, label } = neuGen.landmark
+  return <Chapter active={active} label={label}>
+    <div className="page page-scroll flex flex-col items-center justify-center-safe pb-[clamp(5.5rem,13vh,8rem)] text-center short:pb-20">
+      <h1 tabIndex={-1} className="flex flex-col items-center outline-none" aria-label={label}>
+        <span data-ch aria-hidden="true" className="text-[clamp(0.85rem,min(3.6vw,3.2vh),2.2rem)] font-medium uppercase tracking-[0.06em] text-ivory">{lead}</span>
+        <LandmarkMark data-ch="draw" className="mt-[clamp(0.6rem,2vh,1.25rem)] block h-auto w-[clamp(11rem,min(46vw,40vh),28rem)] text-gold-300 short:mt-2 short:w-[clamp(8rem,34vh,12rem)]" />
+        <span data-ch aria-hidden="true" className="mt-[clamp(0.9rem,4.4vh,2.6rem)] text-[clamp(0.85rem,min(3.6vw,3.2vh),2.2rem)] font-medium uppercase tracking-[0.06em] text-ivory short:mt-2">{line}</span>
+      </h1>
+    </div>
+  </Chapter>
+}
+
+// Presentation page 6: MALAD'S / NEU GEN / LIFE / HAS ARRIVED draws in at
+// the centre of the same frame.
 function Arrival({ active }) {
   return <Chapter active={active} label="Malad's Neu Gen life has arrived">
-    <div data-ch="glyph" aria-hidden="true" className="pointer-events-none absolute inset-x-[clamp(0.75rem,2.6vw,2.75rem)] top-[calc(var(--header-h)+0.25rem)] bottom-[clamp(4.5rem,11vh,6.75rem)] short:bottom-16">
-      <div className="absolute inset-0 rounded-[2px] bg-[linear-gradient(180deg,rgba(52,31,30,.96),rgba(62,38,40,.93)_55%,rgba(64,40,42,.72))] shadow-[0_30px_80px_-40px_rgba(40,22,14,.8)]" />
-      <div className="absolute inset-0 rounded-[2px] border border-gold-300/55" />
-      <div className="absolute -inset-[clamp(0.3rem,0.6vw,0.55rem)] rounded-[3px] border border-gold-100/30" />
-    </div>
     <div className="page page-scroll flex flex-col items-center justify-center-safe pb-[clamp(5.5rem,13vh,8rem)] text-center short:pb-20">
       <p data-ch className="font-display text-[clamp(1rem,min(2vw,3.6vh),1.9rem)] uppercase tracking-[0.34em] pl-[0.34em] text-gold-300">Malad&rsquo;s</p>
       {/* The brochure's monogram draws itself in (NeuGenMark). */}

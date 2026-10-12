@@ -9,7 +9,7 @@ export const LIGHTS = [['day', 'Day'], ['evening', 'Evening'], ['night', 'Night'
 
 // The tower's rendered orbit fills the page under its own sky: drag, swipe,
 // scroll or use the arrow keys to turn it, and change the light. Changing
-// the light sweeps it through the scene, nearest first. The heading sits
+// the light plays as a time-lapse of dusk or dawn. The heading sits
 // over the shaded top left; one slim bar of controls sits at the foot.
 export default function TowerPage() {
   const [light, setLight] = useState('day')
@@ -50,7 +50,7 @@ export default function TowerPage() {
         </div>
         <button type="button" className="btn-icon border-transparent! max-sm:hidden" aria-label="Turn the tower right" onClick={() => rotate(1)}><ChevronIcon /></button>
       </div>
-      <p className="text-[0.52rem] uppercase tracking-[0.26em] text-ivory/75 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">3D render · representational</p>
+      <p className="text-[0.52rem] uppercase tracking-[0.26em] text-ivory/75 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Representational</p>
     </div>
   </section>
 }

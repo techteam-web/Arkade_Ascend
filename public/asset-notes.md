@@ -19,8 +19,8 @@ per screen (`srcSet`). The originals' names map as follows:
 - `cam38-twilight`: Ascend_Cam38_Twilight_Final; `cam27-evening`:
   Ascend_Cam27_Evening_Final; `cam06-evening`: Ascend_Cam06_Evening_Final
 
-`cam02-twilight` is also the menu's picture for The Tower, and `cam12-day`
-for the Gallery. The renders show the two wings in the same V as the tower's
+`cam02-twilight` is also the menu's picture for The Tower, `cam27-evening` for
+Residences, and `cam12-day` for the Gallery. The renders show the two wings in the same V as the tower's
 orbit.
 
 ## Residences assets
@@ -29,7 +29,8 @@ orbit.
 verified photograph of the property). It sits on a near-black vignette rather
 than transparency.
 
-`residences/tower-cutout.png` is the file the Residences screen actually loads.
+`residences/tower-cutout.png` was the menu's picture for Residences until 12 Oct
+2026, when the final render `cam27-evening` replaced it; nothing loads it now.
 It is the same pixels with a real alpha channel: the connected dark surround was
 flood-filled inwards from the image border (luminance threshold 0.14) and the
 resulting silhouette feathered with a 3px box blur. The building's own shadowed
@@ -213,6 +214,11 @@ the Orbit project's converters (`scripts/convert-frames.mjs`,
 `convert-worldpos-all.sh`) and copy their output here, then resize `960/`.
 
 ## Neu Gen (`public/neu-gen/`)
+
+`landmark-1600.webp`: page 5 of `Ascend_Customer PPT.pdf` (PRESENTING OUR
+9TH LANDMARK IN MALAD-GOREGAON CORRIDOR), rendered whole by mutool at
+1600 × 900 and saved as WebP (cwebp, quality 82). It is the menu's picture
+for Neu Gen Life; the chapter itself is live text and `LandmarkMark`.
 
 `together-1600.webp`, `-2880.webp`: page 9 of `Ascend_Customer PPT.pdf` (the
 balcony at dusk, 8128 × 5084 as embedded, uncropped), WebP quality 80. The

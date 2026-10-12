@@ -16,7 +16,20 @@ export const TUNING = {
   maxSpin: 90,              // frames per second cap for flicks
   minSpin: 0.6,
   parallax: 0.004,          // depth parallax from the mouse: a hint of depth, never a stretch
-  transitionSeconds: 0.8,   // the light sweeping through the scene
+  transitionSeconds: [1.5, 0.9], // a light change: base, plus this per full day-to-night swing
+  // 'flow' (down the tower, then out over the ground in curved streams, a
+  // satin ribbon at the front, the view still), 'silk' (a rippling wave),
+  // 'animus' (the relief breaks into shards and reassembles), '3d' (the city
+  // as a relief, the camera moving), 'timelapse' or 'radial'
+  transitionStyle: 'flow',
+  flowSeconds: [1.6, 0.9],
+  silkSeconds: [1.4, 0.8],
+  reliefSeconds: [1.9, 1.0],  // the 3D change: base, plus this per full day-to-night swing
+  animusSeconds: [2.4, 1.0],
+  // the 3D change's camera at its furthest: metres in towards the tower, metres up, degrees round, and
+  // the overscan that keeps the frame's edges covered (near blocks then shift about three times as far as the tower)
+  reliefMove: { dolly: 18, rise: 5, swing: 1.8, overscan: 0.065 },
+  reliefWait: 0.8,          // seconds a change waits for the frame's world data before going ahead flat
 }
 
 export const wrap = (i, n) => ((i % n) + n) % n
@@ -312,6 +325,8 @@ class WorldData {
     if (load && this.manifest.frames.includes(frame) && !this.loading.has(frame)) this.fetch(frame)
     return null
   }
+  // A frame's decoded world maps ({ a, b } RGBA bytes), if loaded.
+  bytes(frame) { return this.maps.get(frame) ?? null }
   // The world point at an image uv (0..1, v up); null on empty background.
   pick(frame, u, v) {
     const map = this.maps.get(frame)

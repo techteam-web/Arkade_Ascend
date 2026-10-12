@@ -32,9 +32,15 @@ export const rera = {
 
 export const origin ={ x: 352 / 720, y: 338 / 840, lngLat: [72.8401, 19.1854] }
 // The Neu Gen chapters from the customer presentation (Ascend_Customer
-// PPT.pdf, supplied 9 Oct 2026), pages 7 to 9, as printed. Page 6 is the
-// "Malad's Neu Gen life has arrived" lockup, drawn by NeuGenMark.
+// PPT.pdf, supplied 9 Oct 2026), pages 5 and 7 to 9, as printed. Page 5's
+// 9TH LANDMARK is drawn by LandmarkMark, page 6's "Malad's Neu Gen life has
+// arrived" lockup by NeuGenMark.
 export const neuGen = {
+  landmark: {
+    lead: 'Presenting our',
+    line: 'In Malad-Goregaon corridor',
+    label: 'Presenting our 9th landmark in Malad-Goregaon corridor',
+  },
   homebuyers: {
     title: ['The', 'new generation', 'homebuyers,', 'want it all.'],
     lead: ['New-Gen is not a generation.', 'It is a way of living.'],

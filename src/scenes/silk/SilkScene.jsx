@@ -85,8 +85,9 @@ function World({ quality }) {
   useFrame((_, delta) => {
     const target = targets[sceneStore.preset] || targets.home
     const dt = Math.min(delta, 0.05)
-    const k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 1.9)
-    const kPose = reducedMotion() ? 1 : 1 - Math.exp(-dt * 1.35)
+    // a mood settles in about a second, the silk's pose a little after
+    const k = reducedMotion() ? 1 : 1 - Math.exp(-dt * 2.8)
+    const kPose = reducedMotion() ? 1 : 1 - Math.exp(-dt * 2)
     COLOR_KEYS.forEach(key => theme[key].lerp(target[key], k))
     NUMBER_KEYS.forEach(key => { theme[key] += (target[key] - theme[key]) * k })
     POSE_KEYS.forEach(key => { theme.pose[key] += (target.pose[key] - theme.pose[key]) * kPose })
