@@ -7,7 +7,10 @@ import { PageHeading } from '../components/PageKit.jsx'
 import UnitFinder from '../components/UnitFinder.jsx'
 import ViewOverlay from '../components/ViewOverlay.jsx'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
-import { selectable, stepFloor, towers } from '../scenes/building/floors.js'
+import { onSale, selectable, stepFloor, towers } from '../scenes/building/floors.js'
+
+// Only floors with homes, in a wing on sale, light up and can be chosen.
+const canPick = (tower, n) => onSale(tower) && selectable(tower, n)
 
 const OrbitView = lazy(() => import('../scenes/orbit/OrbitView.jsx'))
 
@@ -36,6 +39,9 @@ export default function ResidencesPage() {
   const shown = preview ?? chosen
   const previewing = preview && (preview.tower !== choice.tower || preview.n !== choice.n)
   const litWing = preview?.tower ?? choice.tower
+  // The floor data for the orbit's opening angle starts loading as the page
+  // opens, so pointing at a floor in Visual selection works at once.
+  useEffect(() => { import('../scenes/orbit/engine.js').then(module => module.prefetchFloors()).catch(() => {}) }, [])
   const art = useRef(null)
   const intro = useRef(null)
   const region = useRef(null)          // the visual selection or the finder, whichever has the page
@@ -131,7 +137,7 @@ export default function ResidencesPage() {
           <div className="flex min-h-0 flex-1 flex-col gap-4 short:flex-row short:items-center">
             <div className="relative min-h-[40vh] flex-1 self-stretch split:min-h-0">
               <Suspense fallback={null}>
-                <OrbitView pickable sky={false} floor={chosen} onFloor={setChoice} onHover={setPreview} canPick={selectable} turn={turn} className={FADE}
+                <OrbitView pickable sky={false} floor={chosen} onFloor={setChoice} onHover={setPreview} canPick={canPick} turn={turn} className={FADE}
                   label="Rendered orbit of Wing A and Wing B. Point at a wing's floor to preview it, click or tap to select it; drag to turn the tower; use the up and down arrow keys to change floor within the chosen wing." />
               </Suspense>
             </div>
@@ -154,9 +160,10 @@ export default function ResidencesPage() {
                   <div className="relative flex gap-2">
                     <span aria-hidden="true" className="absolute left-0 top-0 size-11 rounded-full bg-gold-500 transition-[translate] duration-500 ease-silk motion-reduce:transition-none"
                       style={{ translate: `calc(${Math.max(0, towers.findIndex(tower => tower.id === litWing))} * (2.75rem + 0.5rem)) 0` }} />
-                    {towers.map(tower => <button key={tower.id} type="button" aria-pressed={choice.tower === tower.id} aria-label={`Wing ${tower.id}`} onClick={() => pickTower(tower.id)}
+                    {towers.map(tower => <button key={tower.id} type="button" aria-pressed={choice.tower === tower.id} disabled={!onSale(tower.id)}
+                      aria-label={onSale(tower.id) ? `Wing ${tower.id}` : `Wing ${tower.id}, not on sale at present`} title={onSale(tower.id) ? undefined : 'Not on sale at present'} onClick={() => pickTower(tower.id)}
                       className={`relative grid size-11 place-items-center rounded-full border text-[0.66rem] font-medium uppercase tracking-[0.2em] transition-[color,border-color] duration-500
-                        ${litWing === tower.id ? 'border-transparent text-espresso' : choice.tower === tower.id ? 'border-gold-500/80 text-fg' : 'border-line text-muted hover:border-accent hover:text-fg focus-visible:text-fg'}`}>{tower.id}</button>)}
+                        ${litWing === tower.id ? 'border-transparent text-espresso' : choice.tower === tower.id ? 'border-gold-500/80 text-fg' : 'border-line text-muted hover:border-accent hover:text-fg focus-visible:text-fg'} disabled:cursor-not-allowed disabled:opacity-35`}>{tower.id}</button>)}
                   </div>
                 </div>
                 <div className="flex gap-2">

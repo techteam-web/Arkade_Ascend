@@ -21,7 +21,6 @@ export default function FullscreenGate({ open, resumed, keyboardLocked, supporte
         gsap.set(root.current, { autoAlpha: 1 })
         if (!reduced) {
           gsap.timeline({ defaults: { ease: 'expo.out' } })
-            .from('[data-petal]', { autoAlpha: 0, stagger: 0.05, duration: 0.9 }, 0.1)
             .from('.gate-rise', { autoAlpha: 0, y: 10, stagger: 0.08, duration: 1 }, 0.25)
             .from('.gate-rule', { scaleX: 0, duration: 1.1, ease: 'expo.inOut' }, 0.3)
         }
@@ -38,7 +37,7 @@ export default function FullscreenGate({ open, resumed, keyboardLocked, supporte
       className="group absolute inset-0 flex h-full w-full cursor-pointer flex-col items-center justify-center-safe overflow-y-auto px-6 py-10 text-center text-ivory outline-none"
       style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 48%, rgba(27,17,19,.25), rgba(18,11,13,.82) 62%, rgba(12,7,8,.97))' }}
       aria-label={resumed ? 'Resume the presentation in full screen' : 'Enter the Arkade Ascend presentation in full screen'}>
-      <span className="gate-rise eyebrow mb-8 short:mb-4">{resumed ? 'Presentation paused' : 'Arkade Developers presents'}</span>
+      {resumed && <span className="gate-rise eyebrow mb-8 short:mb-4">Presentation paused</span>}
       {/* The white Arkade Ascend · Malad West lockup, as on Home. */}
       <span className="gate-rise block w-[min(34rem,80vw)] short:w-[min(24rem,60vw)]">
         <AscendLockup className="block aspect-[1029/162] h-auto w-full text-white" />

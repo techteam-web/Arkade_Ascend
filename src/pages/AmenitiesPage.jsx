@@ -1,13 +1,14 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from '../app/reveal.js'
-import { PageHeading } from '../components/PageKit.jsx'
+import { ImageSlot, PageHeading } from '../components/PageKit.jsx'
 import { ChevronIcon } from '../components/Brand.jsx'
 import { amenityGroups, club } from '../content/project.js'
 import { pad } from '../app/routes.js'
 import useStepper from '../hooks/useStepper.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
-// Club Ark from the brochure, as one sequence of photographs in five groups.
+// Club Ark from the brochure, as one sequence of photographs in its groups;
+// an amenity without a photograph yet shows the framed placeholder.
 const AMENITIES = amenityGroups.flatMap(group => group.items.map(item => ({ ...item, group })))
 const COUNT = AMENITIES.length
 
@@ -39,17 +40,18 @@ export default function AmenitiesPage() {
         {/* Only the shown photograph and its neighbours load. */}
         {AMENITIES.map((amenity, i) => {
           const near = Math.min(Math.abs(i - index), COUNT - Math.abs(i - index)) <= 1
-          return <img key={amenity.id} src={near ? amenity.image : undefined} alt={i === index ? amenity.name : ''} aria-hidden={i !== index} draggable="false"
-            className={`absolute inset-0 size-full select-none object-cover transition-opacity duration-700 ease-silk ${i === index ? 'opacity-100' : 'opacity-0'}`}
-            style={{ objectPosition: amenity.focus }} />
+          const fade = `absolute inset-0 size-full transition-opacity duration-700 ease-silk ${i === index ? 'opacity-100' : 'opacity-0'}`
+          if (!amenity.image) return <div key={amenity.id} aria-hidden={i !== index} className={fade}><ImageSlot label="Image to follow" className="pb-[22%]" /></div>
+          return <img key={amenity.id} src={near ? amenity.image : undefined} alt={i === index ? amenity.name : ''} aria-hidden={i !== index} draggable="false" decoding="async"
+            className={`${fade} select-none object-cover`} style={{ objectPosition: amenity.focus }} />
         })}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink/85 via-ink/35 to-transparent" />
         <figcaption ref={caption} className="absolute inset-x-0 bottom-0 px-[clamp(1.25rem,3vw,2.5rem)] pb-[clamp(1.1rem,3vh,2.25rem)] text-ivory">
           <p data-amenity-copy className="eyebrow text-gold-300!">{active.group.label} · <span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
           <h2 data-amenity-copy className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5vh),2.8rem)] leading-[1.04]">{active.name}</h2>
-          <p data-amenity-copy className="mt-2 max-w-[46ch] text-[0.62rem] uppercase leading-relaxed tracking-[0.2em] text-ivory/80 short:hidden">{active.group.line}</p>
+          {active.group.line && <p data-amenity-copy className="mt-2 max-w-[46ch] text-[0.62rem] uppercase leading-relaxed tracking-[0.2em] text-ivory/80 short:hidden">{active.group.line}</p>}
         </figcaption>
-        <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/60 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">All representational image</p>
+        {active.image && <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/60 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Representational image</p>}
       </figure>
 
       <div data-reveal className="flex min-w-0 flex-col gap-[clamp(0.75rem,2vh,1.25rem)] split:min-h-0 split:self-center">

@@ -148,11 +148,14 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
       const view = new Marzipano.RectilinearView(start, limiter)
       const scene = instance.createEmptyScene({ view })
       const layers = {}
+      // Few layers (the times of day) keep their first level from the start;
+      // many (a wing's floors) only the one on show, the rest when warmed.
+      const few = scenes.length <= 3
       scenes.forEach(({ id, url }) => {
         layers[id] = scene.createLayer({
           source: Marzipano.ImageUrlSource.fromString(`${url}/{z}/{f}/{y}/{x}.jpg`, { cubeMapPreviewUrl: `${url}/preview.jpg` }),
           geometry: new Marzipano.CubeGeometry(LEVELS),
-          pinFirstLevel: true,
+          pinFirstLevel: few || mix.current[id] === 1,
         })
       })
       scene.switchTo({ transitionDuration: 0, transitionUpdate: () => {} })
@@ -162,14 +165,18 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
       view.addEventListener('change', report)
       report()
       blend()
-      // Once the first view is sharp, keep a coarse level of every scene in
-      // memory, so a crossfade starts from real detail rather than the preview.
+      // A while after the first view is sharp, keep a coarse level of every
+      // scene in memory, so a crossfade starts from real detail rather than
+      // the preview, without competing with the view's own tiles.
       const stage = instance.stage()
       const warm = stable => {
         if (!stable) return
         stage.removeEventListener('renderComplete', warm)
-        const level = scenes.length > 3 || matchMedia('(max-width: 900px), (pointer: coarse)').matches ? 1 : 2
-        scenes.forEach(({ id }) => layers[id].pinLevel(level))
+        m.warm = setTimeout(() => {
+          if (cancelled) return
+          const level = !few || matchMedia('(max-width: 900px), (pointer: coarse)').matches ? 1 : 2
+          scenes.forEach(({ id }) => layers[id].pinLevel(level))
+        }, 2000)
       }
       stage.addEventListener('renderComplete', warm)
 
@@ -200,6 +207,7 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
     return () => {
       cancelled = true
       clearTimeout(m.resume)
+      clearTimeout(m.warm)
       gsap.killTweensOf([aim.current, mix.current])
       context.revert()
       instance?.destroy()

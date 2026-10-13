@@ -5,6 +5,8 @@ import { buildingModel as model } from '../../content/template.js'
 // Wing A and Wing B, each with its own floors.
 export const towers = model.wings
 export const towerById = id => towers.find(tower => tower.id === id)
+// Whether a wing's homes are offered at present (Wing B is not).
+export const onSale = id => towerById(id)?.onSale !== false
 
 // The floor line of floor n in model metres: the podium floors share the
 // height below the first tower floor evenly, the tower floors are regular.

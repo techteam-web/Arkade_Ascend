@@ -8,16 +8,19 @@
 
 export const isTemplate = true
 
-// The gallery: the project's own final exterior renders (supplied
-// 6 Oct 2026, public/gallery/exterior/); other categories join when their
-// images are supplied. Each render comes in two widths (`srcSet`); `focus`
+// The gallery: two tabs (client, 13 Oct 2026). Elevation holds the
+// project's own final exterior renders (supplied 6 Oct 2026,
+// public/gallery/exterior/); Amenities (interior and exterior renders) is
+// empty until its renders are supplied. Every render is marked as the
+// architect's impression. Each render comes in two widths (`srcSet`); `focus`
 // keeps the tower in the gallery's 16:10 frame, and the tall views are shown
 // whole (`fit: 'contain'`). Full screen always shows the whole render.
-const RENDER_NOTE = 'Exterior render · representational'
+export const galleryTabs = ['Elevation', 'Amenities']
+export const RENDER_NOTE = 'Architect’s impression'
 const render = (name, [width, height], alt, look = {}) => ({
   src: `/gallery/exterior/${name}-1600.webp`,
   srcSet: `/gallery/exterior/${name}-1600.webp ${Math.round(width * 1600 / Math.max(width, height))}w, /gallery/exterior/${name}-2880.webp ${Math.round(width * 2880 / Math.max(width, height))}w`,
-  aspect: width / height, category: 'Exterior', alt, note: RENDER_NOTE, ...look,
+  aspect: width / height, category: 'Elevation', alt, note: RENDER_NOTE, ...look,
 })
 
 export const gallery = [
@@ -48,7 +51,8 @@ export const buildingModel = {
   top: 131.25,
   wings: [
     { id: 'A', floors: [6, 37], refuge: [], outline: [[-49.8, 15.5], [-49.4, 14.1], [-32.7, 9.7], [-23, 9.1], [-10, 9.2], [-6.4, 9.6], [6.9, 11.9], [9.8, 14.1], [9.8, 21], [8.6, 23.4], [-1.8, 33.2], [-29.4, 33.2], [-49.4, 23.9], [-49.8, 21.8]] },
-    { id: 'B', floors: [6, 37], refuge: [8], outline: [[7, 11.5], [9.5, -2.5], [22, -18.3], [36.9, -23.6], [42.9, -19.4], [47.3, -16], [49.1, -14], [39.3, 1.6], [32.8, 10.5], [29.2, 15.1], [19.3, 21.1], [16.6, 19]] },
+    // Not on sale for now (client, 13 Oct 2026): its floors are not offered in Visual selection.
+    { id: 'B', floors: [6, 37], refuge: [8], onSale: false, outline: [[7, 11.5], [9.5, -2.5], [22, -18.3], [36.9, -23.6], [42.9, -19.4], [47.3, -16], [49.1, -14], [39.3, 1.6], [32.8, 10.5], [29.2, 15.1], [19.3, 21.1], [16.6, 19]] },
   ],
   // Where the model stands on the Location map, in its lighter map copy
   // (tools/map-model). `lngLat` is the model's origin; `bearing` is the

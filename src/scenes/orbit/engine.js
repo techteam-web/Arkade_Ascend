@@ -74,13 +74,15 @@ class FrameStore {
     this.listeners = new Set()
   }
   onDecoded(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn) }
-  load(layer, i) {
+  // `priority`: 'low' for the background download, so whatever the visitor
+  // is looking at (this frame, another page's pictures) goes first.
+  load(layer, i, priority = 'high') {
     const k = `${layer}:${i}`
     const blob = this.blobs.get(k)
     if (blob) return Promise.resolve(blob)
     let p = this.loading.get(k)
     if (!p) {
-      p = fetch(this.source.url(layer, i))
+      p = fetch(this.source.url(layer, i), { priority })
         .then(res => { if (!res.ok) throw new Error(`${res.status} ${res.url}`); return res.blob() })
         .then(b => { this.blobs.set(k, b); return b })
         .finally(() => this.loading.delete(k))
@@ -106,8 +108,9 @@ class FrameStore {
     const k = `${layer}:${i}`, n = (this.pinned.get(k) ?? 0) - 1
     if (n > 0) this.pinned.set(k, n); else this.pinned.delete(k)
   }
-  // Downloads (not decodes) every frame, nearest the view first.
-  async preload(layers, center, concurrency, onProgress) {
+  // Downloads (not decodes) every frame, nearest the view first. It waits
+  // while `hold()` says so: no orbit on screen, or floor data on its way.
+  async preload(layers, center, concurrency, onProgress, hold = () => false) {
     const n = this.source.count, order = [], seen = new Set()
     for (let d = 0; d <= n / 2; d++) for (const j of d === 0 ? [center] : [center + d, center - d]) {
       const i = wrap(j, n)
@@ -117,8 +120,9 @@ class FrameStore {
     let next = 0, done = 0
     const worker = async () => {
       while (next < tasks.length) {
+        while (hold()) await new Promise(resolve => setTimeout(resolve, 300))
         const [layer, i] = tasks[next++]
-        try { await this.load(layer, i) } catch { /* shown as missing */ }
+        try { await this.load(layer, i, 'low') } catch { /* shown as missing */ }
         onProgress?.(++done, tasks.length)
       }
     }
@@ -273,7 +277,7 @@ export class OrbitController {
 // and wing under the pointer and lighting them in the shader.
 const MAX_WORLD = 10
 const decodeBytes = async url => {
-  const res = await fetch(url)
+  const res = await fetch(url, { priority: 'high' })
   if (!res.ok) throw new Error(`${res.status} ${url}`)
   const bitmap = await createImageBitmap(await res.blob(), { colorSpaceConversion: 'none', premultiplyAlpha: 'none' })
   const canvas = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(bitmap.width, bitmap.height) : Object.assign(document.createElement('canvas'), { width: bitmap.width, height: bitmap.height })
@@ -394,21 +398,37 @@ export function orbitEngine() {
   if (engine) return engine
   const source = frameSource()
   const frames = new FrameStore(source, lowMemory() ? 18 : 36)
-  engine = { source, frames, world: null, worldPromise: null, frame: 0, progress: 0, progressListeners: new Set() }
+  engine = { source, frames, world: null, worldPromise: null, frame: 0, progress: 0, progressListeners: new Set(), views: 0 }
   const report = (done, total) => {
     engine.progress = done / total
     engine.progressListeners.forEach(fn => fn(engine.progress))
   }
   // Every pass of each angle together, nearest the view first, so the night
-  // render is already there when the light changes. One connection is left
-  // free for the frames the view asks for. With data saver on, frames load
-  // only as the view reaches them.
+  // render is already there when the light changes. It runs only while an
+  // orbit is on screen (engine.views, counted by useOrbitOnScreen) and steps
+  // aside while floor data loads, at low priority and three at a time, so it
+  // never holds up the frames the view asks for or another page's pictures.
+  // With data saver on, frames load only as the view reaches them.
+  const hold = () => engine.views === 0 || (engine.world?.loading.size ?? 0) > 0
   if (saveData()) report(1, 1)
-  else frames.preload(['day', 'depth', 'alpha', 'night'], engine.frame, 5, report)
+  else frames.preload(['day', 'depth', 'alpha', 'night'], engine.frame, 3, report, hold)
   return engine
 }
 export function orbitWorld() {
   const e = orbitEngine()
   if (!e.worldPromise) e.worldPromise = WorldData.load().catch(() => null).then(world => (e.world = world))
   return e.worldPromise
+}
+
+// Counts an orbit on screen for the background download (see orbitEngine).
+export function orbitOnScreen(e) {
+  e.views++
+  return () => { e.views = Math.max(0, e.views - 1) }
+}
+
+// The floor data for the angle the orbit opens at, fetched ahead (Residences
+// asks as it opens), so pointing at a floor works at once.
+export function prefetchFloors() {
+  const e = orbitEngine()
+  return orbitWorld().then(world => world?.textures(e.frame, true))
 }

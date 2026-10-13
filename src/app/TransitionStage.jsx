@@ -100,7 +100,8 @@ export default function TransitionStage({ active }) {
         <Route path="/views" element={<ViewsPage />} />
         <Route path="/location" element={<LocationPage />} />
         <Route path="/gallery" element={<GalleryPage />} />
-        <Route path="/arkade-family" element={<ArkadeFamilyPage />} />
+        <Route path="/about-us" element={<ArkadeFamilyPage />} />
+        <Route path="/arkade-family" element={<Navigate to="/about-us" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

@@ -2,7 +2,7 @@ import { Component, useEffect, useMemo, useRef, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import * as THREE from 'three'
 import { orbit } from '../../content/project.js'
-import { OrbitController, orbitEngine, orbitWorld } from './engine.js'
+import { OrbitController, orbitEngine, orbitOnScreen, orbitWorld } from './engine.js'
 import OrbitStage from './OrbitStage.jsx'
 
 const coarse = () => window.matchMedia?.('(pointer: coarse)').matches
@@ -23,6 +23,7 @@ export default function OrbitView({ light = 'day', sky = true, pickable = false,
   const [pointing, setPointing] = useState(false)
 
   useEffect(() => controller.attach(box.current, { keys }), [controller, keys])
+  useEffect(() => orbitOnScreen(engine), [engine])
   useEffect(() => { controller.onFirstMove = onFirstMove }, [controller, onFirstMove])
   // The world manifest (each frame's camera, the floor table) is small and
   // always loaded; the per-frame world maps only where floors are picked.

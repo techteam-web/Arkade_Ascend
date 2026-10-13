@@ -20,8 +20,10 @@ export const typeAt = (floor, position) => {
   return exception === null ? null : planById(exception ?? position)
 }
 
-// A home is its wing, floor and position: A-705 is Wing A, floor 7, Unit 05.
-export const homeId = (floor, position) => `${wing}-${floor}${position}`
+// A home is its wing, its residential level and position. The 6th floor is
+// the first with homes, so it is level 1 (client, 13 Oct 2026): A-105 is
+// Wing A, floor 6, Unit 05, and A-3205 is floor 37.
+export const homeId = (floor, position) => `${wing}-${floor - floorRange[0] + 1}${position}`
 export const homes = floors.flatMap(floor => positions.flatMap(position => {
   const type = typeAt(floor, position)
   return type ? [{ id: homeId(floor, position), wing, floor, position, type, features: type.features }] : []

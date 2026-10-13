@@ -20,7 +20,8 @@ per screen (`srcSet`). The originals' names map as follows:
   Ascend_Cam27_Evening_Final; `cam06-evening`: Ascend_Cam06_Evening_Final
 
 `cam02-twilight` is also the menu's picture for The Tower, `cam27-evening` for
-Residences, and `cam12-day` for the Gallery. The renders show the two wings in the same V as the tower's
+Residences, and `cam12-day` for the Gallery. All are marked "Architect’s
+impression" wherever they show. The renders show the two wings in the same V as the tower's
 orbit.
 
 ## Residences assets

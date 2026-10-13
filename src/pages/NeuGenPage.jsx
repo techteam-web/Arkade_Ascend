@@ -247,10 +247,10 @@ function Desired({ active }) {
         {qualities.map((quality, i) => <li key={quality.name} className="relative pt-[clamp(0.7rem,1.8vh,1.1rem)] max-sm:pt-2 short:pt-1.5">
           <span data-ch="rule" aria-hidden="true" className="absolute inset-x-0 top-0 h-px origin-left bg-linear-to-r from-gold-400/70 via-gold-500/30 to-transparent" />
           <p data-ch className="flex items-baseline gap-3">
-            <span className="num text-[0.66rem] text-gold-500/90">{pad(i + 1)}</span>
-            <span className="text-[clamp(0.72rem,0.85vw,0.86rem)] font-medium uppercase tracking-[0.24em] text-gold-300">{quality.name}</span>
+            <span className="num text-[0.72rem] text-gold-500/90">{pad(i + 1)}</span>
+            <span className="text-[clamp(0.8rem,min(1.05vw,2.1vh),1.1rem)] font-medium uppercase tracking-[0.24em] text-gold-300 short:text-[0.72rem]">{quality.name}</span>
           </p>
-          <p data-ch className="mt-2 text-[clamp(0.82rem,min(0.98vw,2vh),1rem)] leading-[1.7] text-ivory/88 max-sm:mt-1 max-sm:text-[0.8rem] max-sm:leading-[1.5] short:mt-0.5 short:text-[0.72rem] short:leading-snug">{quality.line}</p>
+          <p data-ch className="mt-2 text-[clamp(0.92rem,min(1.22vw,2.5vh),1.3rem)] leading-[1.65] text-ivory/90 max-sm:mt-1 max-sm:text-[0.86rem] max-sm:leading-[1.5] short:mt-0.5 short:text-[0.72rem] short:leading-snug">{quality.line}</p>
         </li>)}
       </ol>
     </div>
@@ -274,11 +274,11 @@ function Together({ active }) {
     </div>
     <div className="page flex items-center justify-end pb-[clamp(4.75rem,11vh,7rem)] pr-[calc(var(--gutter)+1.5rem)] xl:pr-[calc(var(--gutter)+10rem)]
       max-lg:portrait:items-end max-lg:portrait:justify-center max-lg:portrait:pr-(--gutter) short:pb-[4.25rem]">
-      <div className="w-[min(30rem,100%)] text-center text-ivory drop-shadow-[0_2px_16px_rgba(20,10,8,.45)] lg:max-xl:w-[min(25rem,100%)] short:w-[min(26rem,52vw)]">
-        <NeuGenMark withThe withLife data-ch="draw" title="The Neu Gen life" className="mx-auto block h-auto w-[clamp(8rem,min(17vw,30vh),15rem)] short:w-28" />
-        <p data-ch className="mt-[clamp(0.8rem,2.6vh,1.6rem)] font-display text-[clamp(1rem,min(1.75vw,3.4vh),1.7rem)] uppercase tracking-[0.18em] pl-[0.18em] short:mt-1.5">{line}</p>
+      <div className="w-[min(36rem,100%)] text-center text-ivory drop-shadow-[0_2px_16px_rgba(20,10,8,.45)] lg:max-xl:w-[min(30rem,100%)] short:w-[min(30rem,56vw)]">
+        <NeuGenMark withThe withLife data-ch="draw" title="The Neu Gen life" className="mx-auto block h-auto w-[clamp(9rem,min(20vw,34vh),18rem)] short:w-32" />
+        <p data-ch className="mt-[clamp(0.8rem,2.6vh,1.6rem)] font-display text-[clamp(1.1rem,min(2.1vw,4vh),2.1rem)] uppercase tracking-[0.18em] pl-[0.18em] short:mt-1.5">{line}</p>
         <span data-ch="rule" aria-hidden="true" className="mx-auto mt-[clamp(0.8rem,2.4vh,1.4rem)] block h-px w-12 bg-gold-200/70 short:hidden" />
-        <p data-ch className="mt-[clamp(0.8rem,2.4vh,1.4rem)] text-[clamp(0.84rem,1vw,1.02rem)] leading-[1.75] text-ivory/92 short:mt-1.5 short:text-[0.7rem]">{close[0]}<br />{close[1]}</p>
+        <p data-ch className="mt-[clamp(0.8rem,2.4vh,1.4rem)] text-[clamp(0.92rem,min(1.25vw,2.5vh),1.3rem)] leading-[1.7] text-ivory/92 short:mt-1.5 short:text-[0.78rem]">{close[0]}<br />{close[1]}</p>
       </div>
     </div>
     <p className="absolute bottom-3 left-(--gutter) text-[0.5rem] uppercase tracking-[0.2em] text-ivory/55">Representative image</p>

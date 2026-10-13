@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router'
 import { gsap } from '../app/reveal.js'
+import { prefetchImages } from '../app/prefetch.js'
 import { useShell } from '../app/ShellContext.js'
 import { ArrowIcon } from '../components/Brand.jsx'
 import { Figure, PageHeading } from '../components/PageKit.jsx'
@@ -9,7 +10,7 @@ import SheetSwitch from '../components/SheetSwitch.jsx'
 import ViewOverlay from '../components/ViewOverlay.jsx'
 import { floorExceptions, positions, typicalPlan, wing } from '../content/floorPlans.js'
 import {
-  area, featureLabel, features, floorRuns, floors, homeById, homeId, homes, homesOfType, ordinal, planById, typeAt,
+  area, featureLabel, features, floorRuns, floors, homeById, homeId, homes, homesOfType, ordinal, planById, planTypes, typeAt,
 } from '../content/inventory.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
@@ -50,6 +51,8 @@ export default function FloorPlansPage() {
   const [viewing, setViewing] = useState(false) // the drone view at this floor
   const sheet = useRef(null)
   const opener = useRef(null)
+  // Every unit's drawing and sheet load ahead, so choosing one shows it at once.
+  useEffect(() => prefetchImages([typicalPlan.sheet, ...planTypes.flatMap(item => [item.image, item.sheet])], '(min-width: 64rem) 70vw, 100vw'), [])
 
   // Every change is written back as Wing A, a floor and a unit.
   const show = ({ floor: nextFloor = floor, unit = type?.unit ?? null }) => {

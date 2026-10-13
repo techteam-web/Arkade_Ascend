@@ -1,16 +1,16 @@
 import { ArkadeMark } from './Brand.jsx'
-import { pad, routeIndex, routes } from '../app/routes.js'
+import { pad, sectionIndex, sections } from '../app/routes.js'
 import { isTemplate } from '../content/template.js'
 
 // Section index, headline and a supporting line, shared by every page.
 export function PageHeading({ id, title, subtitle, className = '', titleClass = '' }) {
-  const index = routeIndex(id)
+  const index = sectionIndex(id)
   // Long titles shrink to fit their column (about 0.74em per capital).
   const fit = `min(clamp(2.4rem, min(6vw, 9vh), 6.5rem), ${(130 / title.length).toFixed(2)}cqi)`
   // Inline-size containment: in a flex row, give the heading flex-1 so it has a width.
   return <div className={`min-w-0 [container-type:inline-size] ${className}`}>
     <p data-reveal className="eyebrow flex items-center gap-4">
-      <span className="num tracking-[0.12em]">{pad(index + 1)}</span><span>{routes[index].label}</span>
+      <span className="num tracking-[0.12em]">{pad(index + 1)}</span><span>{sections[index].label}</span>
     </p>
     <h1 tabIndex={-1} data-reveal="lines" className={`display mt-4 whitespace-nowrap text-fg outline-none ${titleClass}`} style={{ fontSize: fit }}>{title}</h1>
     {subtitle && <p data-reveal className="mt-4 text-[clamp(0.9rem,1.1vw,1.15rem)] tracking-[0.02em] text-muted">{subtitle}</p>}

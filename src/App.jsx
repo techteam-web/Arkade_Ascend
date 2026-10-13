@@ -7,7 +7,7 @@ import SiteHeader from './app/SiteHeader.jsx'
 import MenuOverlay from './app/MenuOverlay.jsx'
 import TransitionStage from './app/TransitionStage.jsx'
 import { ShellContext } from './app/ShellContext.js'
-import { routeForPath, routes } from './app/routes.js'
+import { routeForPath } from './app/routes.js'
 import useFullscreen from './hooks/useFullscreen.js'
 import useMediaQuery from './hooks/useMediaQuery.js'
 
@@ -19,12 +19,14 @@ export default function App() {
   const location = useLocation()
   const navigate = useNavigate()
   const route = routeForPath(location.pathname)
-  const index = routes.indexOf(route)
   const compact = useMediaQuery('(max-width: 900px), (pointer: coarse)')
   const fullscreen = useFullscreen()
   const [started, setStarted] = useState(false)
   const [everStarted, setEverStarted] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  // A page can set the header's tone while it shows a light ground (About
+  // Us on gold); it clears it again as it leaves.
+  const [tone, setTone] = useState(null)
   const menuButton = useRef(null)
 
   // Where the Fullscreen API exists it is required; where it does not (for
@@ -68,7 +70,7 @@ export default function App() {
     navigate(path, { state: { instant: menuOpenRef.current } })
   }, [navigate, location.pathname])
   useLayoutEffect(() => { setMenuOpen(false) }, [location.key])
-  const shell = useMemo(() => ({ openMenu: () => setMenuOpen(true), go, menuOpen }), [go, menuOpen])
+  const shell = useMemo(() => ({ openMenu: () => setMenuOpen(true), go, menuOpen, setTone }), [go, menuOpen])
 
   return <ShellContext.Provider value={shell}>
     <main className="fixed inset-0 overflow-hidden bg-espresso">
@@ -78,7 +80,7 @@ export default function App() {
         <div className={`absolute inset-0 transition-opacity duration-700 ${menuOpen ? 'opacity-0' : 'opacity-100'}`} inert={menuOpen ? '' : undefined}>
           <TransitionStage active={!gated} />
         </div>
-        <SiteHeader route={route} index={index} hidden={route.id === 'home' || menuOpen} menuOpen={menuOpen}
+        <SiteHeader route={route} tone={tone} hidden={route.id === 'home' || menuOpen} menuOpen={menuOpen}
           onMenu={() => setMenuOpen(true)} menuButton={menuButton} />
         <MenuOverlay open={menuOpen} currentId={route.id} onClose={closeMenu} onNavigate={go} />
       </div>

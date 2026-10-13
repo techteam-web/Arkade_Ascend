@@ -151,16 +151,20 @@ export const places = [...connectivity, ...upcoming, ...nearbyPlaces]
 // Brochure pages 10, 12, 14 and 21. Photographs are the brochure's own,
 // marked there as representational (the tower as a dummy render, the
 // kitchen as an artist impression). `focus` keeps the subject in frame.
+// The tower and residences copy was revised by the client on 13 Oct 2026
+// (WhatsApp message), and is set here as sent.
 const spec = name => `/brochure/specs/${name}.webp`
 export const specifications = [
   {
-    id: 'tower', title: 'The tower', line: 'A life above the ordinary', image: spec('tower'), note: 'Dummy render',
+    id: 'tower', title: 'The tower', line: 'Rise to a life extraordinaire', image: spec('tower'), note: 'Architect’s impression',
     items: [
-      { text: 'Rising elegantly across 37 storeys' },
-      { text: 'Two distinctive wings' },
-      { text: 'A grand arrival experience' },
-      { text: 'Eco-Deck Leisure Pad at Level 5' },
-      { text: 'First habitable floor at Level 6' },
+      { text: 'Contemporary 37 storey tower' },
+      { text: 'A grand double-height arrival experience' },
+      { text: 'First habitable floor starts at Level 6, ~63 feet of elevation from ground level' },
+      { text: 'Leisure’s of Club Ark at Eco Deck – Level 5' },
+      { text: '100% surface car parking' },
+      { text: 'Hi-tech security system' },
+      { text: 'Centrally nestled. Seamlessly connected. Elevated living.' },
     ],
   },
   {
@@ -174,17 +178,20 @@ export const specifications = [
   {
     id: 'residences', title: 'Residences', line: 'Abodes that redefine the norms of design',
     items: [
-      { text: 'Expansive living & dining areas', image: spec('living-dining') },
-      { text: 'Spacious & airy bedrooms', image: spec('bedroom') },
-      { text: 'Guest suite', image: spec('guest-suite') },
-      { text: 'Well-planned kitchens with premium fittings', image: spec('kitchen'), note: 'Artist impression', focus: '50% 45%' },
+      { text: 'Elite 2 & 3 bed residences' },
+      { text: 'Expansive living & dining spaces', image: spec('living-dining') },
+      { text: 'Exclusive sundeck apartments' },
+      { text: 'Spacious, airy bedrooms', image: spec('bedroom') },
+      { text: 'Abundant natural light & ventilation' },
+      { text: 'Thoughtfully planned kitchens with premium fittings', image: spec('kitchen'), note: 'Artist impression', focus: '50% 45%' },
+      { text: 'Provisions for dishwasher & washing machine' },
     ],
   },
   {
     id: 'safety', title: 'Safety & convenience', line: 'Exceptional convenience with absolute security',
     items: [
-      { text: 'Surface car parking, designed for ease', image: spec('parking') },
-      { text: '4-tier security system' },
+      { text: '100% surface car parking, designed for ease', image: spec('parking') },
+      { text: 'Advance high-tech security system' },
       { text: '24x7 manned security and CCTV surveillance', image: spec('cctv'), focus: '50% 45%' },
       { text: 'Fire-fighting system', image: spec('fire-safety'), focus: '50% 42%' },
     ],
@@ -192,7 +199,10 @@ export const specifications = [
 ]
 
 // Brochure pages 15 to 20: Club Ark. Group names are short labels for the
-// page; each group's line is the brochure's own.
+// page; each group's line is the brochure's own. Revised by the client on
+// 13 Oct 2026: Gatherings renamed Community living, the music studio
+// replaced by a golf simulator (no photograph yet), and a Guest suite group
+// added (the brochure's guest suite photograph, from its residences pages).
 const amenity = name => `/brochure/amenities/${name}.webp`
 export const club = { name: 'Club Ark', line: 'Affluent club indulgences that rise to your standards' }
 export const amenityGroups = [
@@ -229,18 +239,24 @@ export const amenityGroups = [
     id: 'pursuits', label: 'Pursuits', line: 'A private escape for your favourite pursuits',
     items: [
       { id: 'indoor-games', name: 'Indoor games arena', image: amenity('indoor-games'), focus: '30% 50%' },
-      { id: 'music-studio', name: 'Music studio', image: amenity('music-studio'), focus: '50% 52%' },
+      { id: 'golf-simulator', name: 'Golf simulator' },
       { id: 'private-screening', name: 'Private screening', image: amenity('private-screening'), focus: '50% 55%' },
       { id: 'hobby-studio', name: 'Hobby studio', image: amenity('hobby-studio') },
     ],
   },
   {
-    id: 'gatherings', label: 'Gatherings', line: 'Where good company meets the perfect setting',
+    id: 'community', label: 'Community living', line: 'Where good company meets the perfect setting',
     items: [
       { id: 'banquet-hall', name: 'Banquet hall', image: amenity('banquet-hall'), focus: '50% 55%' },
       { id: 'amphitheatre', name: 'Amphitheatre with central lawn', image: amenity('amphitheatre') },
       { id: 'party-hall', name: 'Party hall', image: amenity('party-hall'), focus: '50% 55%' },
       { id: 'senior-seating', name: 'Senior citizen seating area', image: amenity('senior-seating'), focus: '50% 62%' },
+    ],
+  },
+  {
+    id: 'guest-suite', label: 'Guest suite',
+    items: [
+      { id: 'guest-suite', name: 'Guest suite', image: spec('guest-suite') },
     ],
   },
 ]

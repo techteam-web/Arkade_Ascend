@@ -53,10 +53,13 @@ export const colourLockupMarkup = () => `<svg viewBox="204 279 1029 162" aria-hi
   + LETTERS.map((d, index) => `<path d="${d}" fill="${letterColour(index)}"/>`).join('')
   + '</svg>'
 
-export default function AscendLockup({ className = '', ...props }) {
+// `colour`: the full-colour lockup's own greys and orange instead of one
+// colour; it draws in the same way, each outline in its own colour.
+export default function AscendLockup({ className = '', colour = false, ...props }) {
+  const paint = c => colour ? c : 'currentColor'
   return <svg viewBox="204 279 1029 162" fill="currentColor" aria-hidden="true" className={className} {...props}>
-    {MARK.map((d, index) => <path key={index} data-draw="fill" d={d} fillRule="evenodd" stroke="currentColor" strokeOpacity="0" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />)}
-    <line data-draw x1="419.4" y1="290.81" x2="419.4" y2="429.19" stroke="currentColor" strokeWidth="2.72" />
-    {LETTERS.map((d, index) => <path key={index} data-draw="fill" d={d} stroke="currentColor" strokeOpacity="0" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />)}
+    {MARK.map((d, index) => <path key={index} data-draw="fill" d={d} fillRule="evenodd" fill={paint(MARK_COLOURS[index])} stroke={paint(MARK_COLOURS[index])} strokeOpacity="0" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />)}
+    <line data-draw x1="419.4" y1="290.81" x2="419.4" y2="429.19" stroke={paint(GREY)} strokeWidth="2.72" />
+    {LETTERS.map((d, index) => <path key={index} data-draw="fill" d={d} fill={paint(letterColour(index))} stroke={paint(letterColour(index))} strokeOpacity="0" strokeWidth="1.25" vectorEffect="non-scaling-stroke" />)}
   </svg>
 }

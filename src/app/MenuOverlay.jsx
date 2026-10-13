@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from './reveal.js'
-import { routes, pad } from './routes.js'
+import { sections, pad } from './routes.js'
 import { ArkadeMark, BrandLockup } from '../components/Brand.jsx'
 import { rera } from '../content/project.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
@@ -9,8 +9,9 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
   const root = useRef(null)
   const timeline = useRef(null)
   const [previewed, setPreviewed] = useState(null)
-  const currentIndex = Math.max(0, routes.findIndex(route => route.id === currentId))
-  const shown = previewed ?? currentIndex
+  // Home is not a row (the home button is); on Home the first row leads.
+  const currentIndex = sections.findIndex(route => route.id === currentId)
+  const shown = previewed ?? Math.max(0, currentIndex)
 
   useLayoutEffect(() => {
     const context = gsap.context(() => {
@@ -37,7 +38,7 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
 
   useEffect(() => {
     if (!open) { setPreviewed(null); return }
-    const frame = requestAnimationFrame(() => root.current?.querySelector(`[data-route="${routes[currentIndex].id}"]`)?.focus({ preventScroll: true }))
+    const frame = requestAnimationFrame(() => root.current?.querySelector(`[data-route="${sections[Math.max(0, currentIndex)].id}"]`)?.focus({ preventScroll: true }))
     return () => cancelAnimationFrame(frame)
   }, [open, currentIndex])
 
@@ -66,7 +67,7 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
     {/* The section under consideration, as a full-height picture. It takes
         about two thirds of wide screens; the compact list keeps the rest. */}
     <aside className="menu-fade pointer-events-none absolute inset-y-0 right-0 hidden w-(--menu-picture) overflow-hidden lg:block" aria-hidden="true">
-      {routes.map((route, index) => {
+      {sections.map((route, index) => {
         const fade = `absolute inset-0 size-full transition-opacity duration-700 ease-silk ${index === shown ? 'opacity-100' : 'opacity-0'}`
         // A logo sits a little above centre, clear of the caption below.
         return route.previewLogo
@@ -76,18 +77,26 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
           : <img key={route.id} src={route.preview} alt="" loading="lazy" className={`${fade} object-cover`} />
       })}
       <div className="absolute inset-0 bg-linear-to-r from-[#35252a] via-[#35252a]/25 to-transparent" />
+      {sections[shown].previewNote && <p key={`note-${shown}`} className="menu-caption absolute right-(--gutter) top-[calc(var(--header-h)+0.25rem)] z-10 text-[0.55rem] uppercase tracking-[0.22em] text-ivory/70">{sections[shown].previewNote}</p>}
       <div className="absolute inset-0 bg-linear-to-t from-ink/85 via-ink/5 to-ink/45" />
       <div className="absolute inset-x-[clamp(2rem,4vw,4.5rem)] bottom-[clamp(2.5rem,10vh,6rem)]">
-        <p className="num text-[0.8rem] tracking-[0.3em] text-gold-200">{pad(shown + 1)} / {pad(routes.length)}</p>
-        <p key={shown} className="menu-caption mt-3 font-display text-[clamp(2.2rem,3.6vw,4rem)] uppercase leading-none text-ivory">{routes[shown].label}</p>
-        <p key={`hint-${shown}`} className="menu-caption mt-3 text-[1rem] tracking-[0.04em] text-ivory/90">{routes[shown].hint}</p>
+        <p className="num text-[0.8rem] tracking-[0.3em] text-gold-200">{pad(shown + 1)} / {pad(sections.length)}</p>
+        <p key={shown} className="menu-caption mt-3 font-display text-[clamp(2.2rem,3.6vw,4rem)] uppercase leading-none text-ivory">{sections[shown].label}</p>
+        <p key={`hint-${shown}`} className="menu-caption mt-3 text-[1rem] tracking-[0.04em] text-ivory/90">{sections[shown].hint}</p>
       </div>
     </aside>
 
     <div className="absolute inset-0 grid grid-rows-[auto_1fr_auto] px-(--gutter)">
-      <div className="menu-fade flex h-(--header-h) items-center lg:justify-between">
-        <BrandLockup />
-        <button type="button" onClick={onClose} className="group ml-auto flex min-h-11 items-center gap-4 rounded-full py-2 pl-4 pr-1 text-ivory lg:ml-0">
+      <div className="menu-fade flex h-(--header-h) items-center gap-2">
+        {/* The logo and, at the top right of the list's column, the way home. */}
+        <div className="flex min-w-0 flex-1 items-center justify-between gap-4 lg:w-[calc(100%-var(--menu-picture)-var(--gutter)-3vw)] lg:flex-none">
+          <BrandLockup />
+          <button type="button" onClick={() => onNavigate('/')} aria-label="Home" aria-current={currentId === 'home' ? 'page' : undefined}
+            className="group grid size-11 shrink-0 place-items-center rounded-full border border-ivory/40 text-ivory transition-colors duration-500 hover:border-gold-400 hover:bg-gold-500 hover:text-espresso focus-visible:border-gold-400 focus-visible:bg-gold-500 focus-visible:text-espresso aria-[current=page]:border-gold-400 aria-[current=page]:text-gold-300">
+            <svg viewBox="0 0 24 24" className="size-[1.1rem] fill-none stroke-current" strokeWidth="1.3" strokeLinejoin="round" aria-hidden="true"><path d="M3.5 11 12 4l8.5 7M6 9v10.5h4.5V14h3v5.5H18V9" /></svg>
+          </button>
+        </div>
+        <button type="button" onClick={onClose} className="group ml-auto flex min-h-11 shrink-0 items-center gap-4 rounded-full py-2 pl-4 pr-1 text-ivory">
           <span className="text-[0.7rem] font-medium uppercase tracking-[0.3em] group-hover:text-gold-300 max-[23rem]:sr-only">Close</span>
           <span className="grid size-11 place-items-center rounded-full border border-ivory/50 bg-ink/30 transition-colors duration-500 group-hover:border-gold-400 group-hover:bg-gold-500 group-hover:text-espresso">
             <svg viewBox="0 0 24 24" className="size-3.5 fill-none stroke-current" strokeWidth="1.4" aria-hidden="true"><path d="m3 3 18 18M21 3 3 21" /></svg>
@@ -99,7 +108,7 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
         {/* Two columns only on landscape phones and short tablets; on laptops
             the compact rows fit one column even in short windows. */}
         <ol className="grid grid-cols-1 max-lg:short:grid-cols-2 max-lg:short:gap-x-8 max-lg:sm:compact-h:grid-cols-2 max-lg:sm:compact-h:gap-x-10">
-          {routes.map((route, index) => {
+          {sections.map((route, index) => {
             const current = index === currentIndex
             return <li key={route.id} className="relative">
               <button type="button" data-route={route.id} aria-current={current ? 'page' : undefined}

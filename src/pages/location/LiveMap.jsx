@@ -4,7 +4,6 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { gsap } from '../../app/reveal.js'
 import { prefersReducedMotion } from '../../hooks/useMediaQuery.js'
 import { buildingModel } from '../../content/template.js'
-import { ModelNote } from '../../components/PageKit.jsx'
 import { colourLockupMarkup } from '../../components/AscendLockup.jsx'
 import { clearSite } from './siteTiles.js'
 import { HERO, aerial, lens, lookOut, towerShot } from './shots.js'
@@ -237,8 +236,6 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
   const lastView = useRef(null)      // what was last framed: a journey's points, or the tower
   const tower = useRef(null)         // the tower layer, once added
   const arrived = useRef(false)      // the first framing is the arrival
-  const [towerOnScreen, setTowerOnScreen] = useState(false)
-  const [noteBox, setNoteBox] = useState(null)
   const quality = useRef(null)
   const daylight = useRef({ t: 0 })  // 0 day, 1 dusk
 
@@ -445,7 +442,6 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
           towerLabel.innerHTML = `<span class="map-logo">${colourLockupMarkup()}</span>`
           towerLabel.addEventListener('click', event => { event.stopPropagation(); frameTower() })
           instance.getCanvasContainer().append(towerLabel)
-          let onScreen = false
           const onFrame = ({ standing, label }) => {
             const canvas = instance.getCanvas(), width = canvas.clientWidth, height = canvas.clientHeight
             const raised = Boolean(label) && standing > 0.6 && label.x > 24 && label.x < width - 24 && label.y > 48 && label.y < height - 24
@@ -455,11 +451,6 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
               towerLabel.tabIndex = raised ? 0 : -1
               originPin.dataset.raised = String(raised)
             }
-            // The note stays with the plan too: it is drawn from the same model.
-            const base = instance.project(TOWER_CENTRE)
-            const planned = !tiltRef.current && instance.getZoom() >= TOWER_RAMP
-            const seen = (standing > 0.05 || planned) && (raised || (base.x > 0 && base.x < width && base.y > 0 && base.y < height))
-            if (seen !== onScreen) { onScreen = seen; setTowerOnScreen(seen) }
           }
           // Clicking or tapping the tower frames it; a pointer over it says so.
           instance.on('click', event => { if (tower.current?.hit(event.point)) frameTower() })
@@ -649,7 +640,7 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
   }, [ready, dusk])
 
   // 3D or plan view. In 2D the tower folds away and its plan shows instead.
-  const firstTilt = useRef(true)
+  const shownTilt = useRef(null)   // the view last flown to (StrictMode-safe)
   useEffect(() => {
     if (!ready) return
     const instance = map.current
@@ -657,32 +648,15 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
     instance.setPaintProperty('tower-plan-ground', 'fill-opacity', tilted ? 0 : 0.9)
     instance.setPaintProperty('tower-plan-wings', 'fill-opacity', tilted ? 0 : 1)
     instance.setPaintProperty('tower-plan-line', 'line-opacity', tilted ? 0 : 0.9)
-    if (firstTilt.current) { firstTilt.current = false; return }
+    if (shownTilt.current === null || shownTilt.current === tilted) { shownTilt.current = tilted; return }
+    shownTilt.current = tilted
     if (lastView.current) reframe()
     else fly({ center: [instance.getCenter().lng, instance.getCenter().lat], zoom: instance.getZoom(), ...(tilted ? HERO : FLAT) })
   }, [ready, tilted])
 
-  // The model note sits at the foot of the open part of the map.
-  useEffect(() => {
-    if (!ready) return
-    const place = () => {
-      const area = open(), width = box.current.clientWidth, height = box.current.clientHeight
-      setNoteBox({ left: area.left, right: width - area.left - area.width, bottom: height - area.top - area.height + 10, compact: area.width < 620 || area.height < 420 })
-    }
-    place()
-    map.current.on('resize', place)
-    const instance = map.current
-    return () => instance.off('resize', place)
-  }, [ready, inset.top, inset.right, inset.bottom, inset.left])
-
   return <div className="absolute inset-0">
     {/* Inline, because MapLibre's stylesheet makes its container relative. */}
     <div ref={box} style={{ position: 'absolute', inset: 0 }} />
-    {/* Wherever the tower model shows, so does the note on what it is. */}
-    {noteBox && <div aria-hidden={!towerOnScreen} className={`pointer-events-none absolute flex justify-center px-3 transition-opacity duration-700 ${towerOnScreen ? 'opacity-100' : 'opacity-0'}`}
-      style={{ left: noteBox.left, right: noteBox.right, bottom: noteBox.bottom }}>
-      <ModelNote compact={noteBox.compact} className="max-w-[36rem] rounded-2xl bg-cream-50/85 px-3.5 py-1.5 text-center shadow-[0_6px_18px_-12px_rgba(61,42,47,.5)] backdrop-blur-sm" />
-    </div>}
     <div className={`pointer-events-none absolute inset-0 grid place-items-center bg-cream-100 transition-opacity duration-700 ${ready ? 'opacity-0' : 'opacity-100'}`}>
       <span className="text-[0.6rem] uppercase tracking-[0.3em] text-plum-700/60">Loading map</span>
     </div>

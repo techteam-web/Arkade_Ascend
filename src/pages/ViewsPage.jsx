@@ -228,6 +228,7 @@ export default function ViewsPage() {
           </>}
         </div>
       </div>
+      <p className="pointer-events-none absolute bottom-1.5 right-(--gutter) text-[0.5rem] uppercase tracking-plus text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.6)] max-sm:bottom-6">Shot on location</p>
       <p className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.5rem] uppercase tracking-plus text-ivory/45">
         <span className="num">360</span>° aerial panorama<span className="max-sm:hidden"> · views from each residence vary</span>
       </p>

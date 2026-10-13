@@ -1,39 +1,53 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, countUp } from '../app/reveal.js'
 import { pad } from '../app/routes.js'
 import { ArkadeMark } from '../components/Brand.jsx'
 import { PageHeading } from '../components/PageKit.jsx'
 import { landmarks, legacy, portfolio } from '../content/arkadeFamily.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
+import { useShell } from '../app/ShellContext.js'
+import { setScenePreset } from '../scenes/sceneStore.js'
 
 // The developer's own story, from the first four pages of its customer
 // presentation: the legacy in figures, its projects across Mumbai (the
 // deck's title page leads that part) and its landmarks around Ascend.
 // Photographs and the map lead each part, framed like the other pages'
 // pictures, with the type set over their shaded foot.
+// The projects and landmarks parts sit on the gold silk of the Neu Gen
+// pages, with the type in the cream pages' dark tone (the header follows).
 const parts = [
   { id: 'legacy', label: 'Our legacy', hint: 'Figures & certifications', Panel: Legacy },
-  { id: 'projects', label: 'Our projects', hint: 'Across Mumbai', Panel: Projects },
-  { id: 'landmarks', label: 'Landmark projects', hint: 'Malad & Goregaon', Panel: Landmarks },
+  { id: 'projects', label: 'Our projects', hint: 'Across Mumbai', Panel: Projects, gold: true },
+  { id: 'landmarks', label: 'Landmark projects', hint: 'Malad & Goregaon', Panel: Landmarks, gold: true },
 ]
 
 export default function ArkadeFamilyPage() {
   const [index, setIndex] = useState(0)
   const panel = useRef(null)
   const tabs = useRef([])
-  const first = useRef(true)
-  const { Panel } = parts[index]
+  // The last value animated in (not a first-run flag, which StrictMode's
+  // double effects would use up and then replay the change over the entrance).
+  const animated = useRef(0)
+  const { Panel, gold } = parts[index]
+  const { setTone } = useShell()
+  useEffect(() => {
+    setScenePreset(gold ? 'aboutGold' : 'plum')
+    setTone(gold ? 'light' : null)
+  }, [gold, setTone])
+  useEffect(() => () => setTone(null), [setTone])
 
   // A new part arrives with its picture settling and its lines rising in
   // turn; the legacy figures count up again.
   useLayoutEffect(() => {
-    if (first.current) { first.current = false; return }
+    if (animated.current === index) return
+    animated.current = index
     if (prefersReducedMotion()) return
     const context = gsap.context(() => {
       const timeline = gsap.timeline({ defaults: { ease: 'silk' } })
         .from('[data-part-frame]', { autoAlpha: 0, duration: 0.7, ease: 'power2.out' }, 0)
-        .from('[data-part-image]', { scale: 1.04, duration: 1.2 }, 0)
         .from('[data-part]', { autoAlpha: 0, y: 10, duration: 0.8, stagger: 0.04 }, 0.15)
+      const images = panel.current.querySelectorAll('[data-part-image]')
+      if (images.length) timeline.from(images, { scale: 1.04, duration: 1.2 }, 0)
       countUp(panel.current, timeline, 0.3)
     }, panel)
     return () => context.revert()
@@ -51,14 +65,14 @@ export default function ArkadeFamilyPage() {
     tabs.current[next]?.focus()
   }
 
-  return <section className="page page-scroll flex flex-col gap-6 split:grid split:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] split:grid-rows-[minmax(0,1fr)] split:gap-x-[4vw] 3xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
+  return <section data-tone={gold ? 'light' : undefined} className="page page-scroll flex flex-col gap-6 split:grid split:grid-cols-[minmax(0,19rem)_minmax(0,1fr)] split:grid-rows-[minmax(0,1fr)] split:gap-x-[4vw] 3xl:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
     {/* The Arkade mark, still and faint, under the heading column. */}
     <ArkadeMark className="pointer-events-none absolute bottom-[-12vmin] left-[-9vmin] hidden h-[62vmin] w-auto text-gold-500/[0.05] split:block" />
 
     <div className="relative flex shrink-0 flex-col gap-6 split:min-h-0 split:justify-center-safe split:gap-[clamp(1.25rem,5vh,3rem)]">
-      <PageHeading id="arkade-family" title="Arkade Family" subtitle="The family behind Ascend" />
+      <PageHeading id="about" title="About Us" subtitle="The family behind Ascend" />
       {/* Side by side the parts read as an index; stacked, as pills. */}
-      <div role="tablist" aria-label="Arkade family" aria-orientation="vertical" onKeyDown={onKeyDown} data-reveal
+      <div role="tablist" aria-label="About Arkade" aria-orientation="vertical" onKeyDown={onKeyDown} data-reveal
         className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:none] split:flex-col split:gap-0 split:overflow-visible" data-own-gesture>
         {parts.map((part, i) => {
           const selected = index === i
@@ -97,8 +111,9 @@ function Frame({ image, focus, ratio, className = '', children }) {
   </figure>
 }
 
-function PartNumber({ number }) {
-  return <p data-part className="eyebrow num text-gold-300!">{pad(number)} / {pad(parts.length)}</p>
+// Over a photograph in gold; on the page in the page's own accent.
+function PartNumber({ number, onPhoto = true }) {
+  return <p data-part className={`eyebrow num ${onPhoto ? 'text-gold-300!' : ''}`}>{pad(number)} / {pad(parts.length)}</p>
 }
 
 function Legacy({ number }) {
@@ -133,22 +148,26 @@ const RULES = [0, 1, 2, 3, 4, 5, 6, 7].map(i => [
   i >= 4 ? 'border-t' : i >= 2 ? 'border-t @xl:border-t-0' : '',
 ].join(' '))
 
-// Status as the deck shows it, as a small mark beside each project.
+// Status as the deck shows it, as a small mark beside each project. The
+// projects list sits on gold, so its colours are the palette's darkest:
+// completed in deep plum, ongoing in a deep wine and medium weight (both
+// above 4.5:1 on the gold), coming soon in a mid plum with a hollow mark.
 const STATUS = {
-  completed: { label: 'Completed', mark: 'bg-fg/45', text: 'text-fg/85' },
-  ongoing: { label: 'Ongoing', mark: 'bg-gold-400', text: 'text-gold-200' },
-  soon: { label: 'Coming soon', mark: 'border border-gold-300/80', text: 'text-muted' },
+  completed: { label: 'Completed', mark: 'bg-plum-700', text: 'text-plum-900' },
+  ongoing: { label: 'Ongoing', mark: 'bg-[#5c1f2b]', text: 'text-[#5c1f2b] font-medium' },
+  soon: { label: 'Coming soon', mark: 'border border-plum-700', text: 'text-plum-700' },
 }
-const Mark = ({ status }) => <span className={`mt-[0.5em] size-1.5 shrink-0 rotate-45 ${STATUS[status].mark}`} aria-hidden="true" />
+const Mark = ({ status }) => <span className={`mt-[0.45em] size-[0.42em] min-h-1.5 min-w-1.5 shrink-0 rotate-45 ${STATUS[status].mark}`} aria-hidden="true" />
 
 function Projects({ number }) {
   const [regionId, setRegionId] = useState('western')
   const region = portfolio.regions.find(item => item.id === regionId)
   const list = useRef(null)
-  const firstList = useRef(true)
+  const listed = useRef('western')
   // A new region's localities fade up in place.
   useLayoutEffect(() => {
-    if (firstList.current) { firstList.current = false; return }
+    if (listed.current === regionId) return
+    listed.current = regionId
     if (prefersReducedMotion()) return
     const context = gsap.context(() => gsap.from('[data-locality]', { autoAlpha: 0, y: 8, duration: 0.6, stagger: 0.03, ease: 'silk' }), list)
     return () => context.revert()
@@ -157,7 +176,7 @@ function Projects({ number }) {
   return <div className="grid gap-[clamp(1.25rem,3vw,3rem)] @xl:grid-cols-[minmax(0,1fr)_minmax(13rem,0.78fr)] split:min-h-0 split:flex-1 split:@xl:grid-rows-[minmax(0,1fr)]">
     <div className="flex min-h-0 flex-col gap-[clamp(0.9rem,2.4vh,1.5rem)] @container">
       <div data-reveal data-part>
-        <PartNumber number={number} />
+        <PartNumber number={number} onPhoto={false} />
         <h2 className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5.6vh),3.2rem)] leading-[1.02] text-fg">{portfolio.title}</h2>
       </div>
       {/* The regions as an index; the chosen one opens its localities below. */}
@@ -166,16 +185,19 @@ function Projects({ number }) {
           const chosen = item.id === regionId
           return <button key={item.id} type="button" aria-pressed={chosen} onClick={() => setRegionId(item.id)}
             className="group relative flex min-h-11 flex-col justify-end border-b border-line pb-2 pt-2 text-left">
-            <span className={`num text-[0.6rem] tracking-[0.16em] transition-colors duration-500 ${chosen ? 'text-accent' : 'text-muted'}`}>{pad(item.localities.length)} <span className="font-sans uppercase tracking-[0.2em]">{item.localities.length === 1 ? 'locality' : 'localities'}</span></span>
-            <span className={`mt-1 font-display text-[clamp(0.95rem,min(1.35vw,2.8vh),1.35rem)] uppercase leading-tight transition-colors duration-500 ${chosen ? 'text-fg' : 'text-muted group-hover:text-fg'}`}>{item.name}</span>
-            <span className={`absolute inset-x-0 -bottom-px h-px origin-left bg-accent transition-[scale] duration-500 ease-silk ${chosen ? 'scale-x-100' : 'scale-x-0'}`} aria-hidden="true" />
+            <span className={`num text-[clamp(0.62rem,0.7vw,0.74rem)] tracking-[0.16em] transition-colors duration-500 ${chosen ? 'text-[#5c1f2b]' : 'text-plum-700'}`}>{pad(item.localities.length)} <span className="font-sans uppercase tracking-[0.2em]">{item.localities.length === 1 ? 'locality' : 'localities'}</span></span>
+            <span className={`mt-1 font-display text-[clamp(1.05rem,min(1.5vw,3vh),1.55rem)] uppercase leading-tight transition-colors duration-500 ${chosen ? 'text-espresso' : 'text-plum-700 group-hover:text-plum-900'}`}>{item.name}</span>
+            <span className={`absolute inset-x-0 -bottom-px h-[2px] origin-left bg-[#5c1f2b] transition-[scale] duration-500 ease-silk ${chosen ? 'scale-x-100' : 'scale-x-0'}`} aria-hidden="true" />
           </button>
         })}
       </div>
-      <div ref={list} data-reveal data-part className="-mx-1 min-h-0 columns-1 gap-8 px-1 @xs:columns-2 @lg:columns-3 split:flex-1 split:overflow-y-auto split:overscroll-contain">
-        {region.localities.map(place => <div key={place.name} data-locality className="mb-4 break-inside-avoid">
-          <h3 className="text-[0.64rem] font-medium uppercase tracking-[0.2em] text-fg">{place.name}</h3>
-          <ul className="mt-1.5 space-y-0.5 text-[clamp(0.74rem,0.82vw,0.84rem)] leading-relaxed">
+      {/* The columns sit inside the scroller, so a long region scrolls down
+          rather than spilling into hidden columns at the side. */}
+      <div ref={list} data-reveal data-part className="-mx-1 min-h-0 px-1 split:flex-1 split:overflow-y-auto split:overscroll-contain">
+      <div className="columns-1 gap-8 @min-[23.5rem]:columns-2 @2xl:columns-3">
+        {region.localities.map(place => <div key={place.name} data-locality className="mb-[clamp(0.9rem,2.2vh,1.4rem)] break-inside-avoid">
+          <h3 className="text-[clamp(0.7rem,0.78vw,0.84rem)] font-medium uppercase tracking-[0.18em] text-espresso">{place.name}</h3>
+          <ul className="mt-2 space-y-1 text-[clamp(0.88rem,min(1vw,2vh),1.06rem)] leading-snug">
             {place.projects.map(([name, status = 'completed']) => <li key={name} className={`flex gap-2.5 ${STATUS[status].text}`}>
               <Mark status={status} /><span>{name}{status === 'ongoing' && <span className="visually-hidden">, ongoing</span>}</span>
             </li>)}
@@ -183,7 +205,8 @@ function Projects({ number }) {
           </ul>
         </div>)}
       </div>
-      <ul data-reveal data-part className="flex shrink-0 flex-wrap gap-x-6 gap-y-2 border-t border-line pt-3 text-[0.58rem] uppercase tracking-[0.18em] text-muted" aria-label="Key">
+      </div>
+      <ul data-reveal data-part className="flex shrink-0 flex-wrap gap-x-6 gap-y-2 border-t border-line pt-3 text-[clamp(0.62rem,0.7vw,0.74rem)] uppercase tracking-[0.18em] text-plum-800" aria-label="Key">
         {['soon', 'ongoing', 'completed'].map(status => <li key={status} className="flex items-center gap-2.5"><Mark status={status} /><span>{STATUS[status].label}</span></li>)}
       </ul>
     </div>
@@ -197,7 +220,7 @@ function Projects({ number }) {
 function MumbaiMap({ region }) {
   const [x0, y0, width, height] = portfolio.map.box
   const places = portfolio.regions.flatMap(item => item.localities.map(place => ({ ...place, region: item.id })))
-  return <figure data-reveal="fade" data-part-frame className="relative m-0 min-h-[26rem] overflow-hidden rounded-sm border border-gold-500/25 bg-[radial-gradient(ellipse_80%_70%_at_60%_40%,#5a3f45,#2e1f23_75%)] @xl:min-h-0">
+  return <figure data-tone="dark" data-reveal="fade" data-part-frame className="relative m-0 min-h-[26rem] overflow-hidden rounded-sm border border-gold-500/25 bg-[radial-gradient(ellipse_80%_70%_at_60%_40%,#5a3f45,#2e1f23_75%)] @xl:min-h-0">
     <div className="absolute inset-[clamp(0.75rem,2.4vh,1.75rem)] @container-size">
       <div role="img" aria-label={`Map of Mumbai marking the localities with Arkade projects; shown: ${region.localities.map(place => place.name).join(', ')}`}
         className="absolute left-1/2 top-1/2 w-[min(100cqw,calc(100cqh*0.676))] -translate-x-1/2 -translate-y-1/2 [container-type:inline-size]" style={{ aspectRatio: `${width} / ${height}` }}>
@@ -237,7 +260,7 @@ function Landmarks({ number }) {
       {landmarks.projects.map((project, i) => <li key={project.name} data-reveal data-part
         className="flex min-h-11 items-center gap-4 border-b border-line py-[clamp(0.45rem,1.4vh,0.9rem)] first:border-t">
         <span className="num w-6 shrink-0 text-[0.66rem] text-muted">{pad(i + 1)}</span>
-        <ArkadeMark className="h-[clamp(1.1rem,1.6vw,1.6rem)] w-auto shrink-0 text-gold-400" />
+        <ArkadeMark className="h-[clamp(1.1rem,1.6vw,1.6rem)] w-auto shrink-0 text-accent" />
         <span className="min-w-0">
           <span className="block font-display text-[clamp(1.05rem,min(1.7vw,3.4vh),1.8rem)] uppercase leading-tight text-fg">Arkade <span className="text-accent">{project.name}</span></span>
           <span className="mt-0.5 block text-[0.56rem] uppercase tracking-[0.2em] text-muted">{project.locality}</span>

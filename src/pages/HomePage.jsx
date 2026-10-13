@@ -15,12 +15,19 @@ export default function HomePage() {
         viewport: the full column on phones, about 62vw on tablets and
         laptops, at most 60rem (which grows with the root size on large
         displays), and never taller than about 28vh on short screens. */}
-    <h1 tabIndex={-1} className="mt-[clamp(1rem,3.5vh,2.25rem)] w-[min(100%,clamp(min(100%,26rem),62vw,60rem),180vh)] outline-none short:mt-3">
-      <AscendLockup data-reveal="draw" className="block aspect-[1029/162] h-auto w-full text-white drop-shadow-[0_2px_18px_rgba(0,0,0,.28)]" />
+    <h1 tabIndex={-1} className="relative mt-[clamp(1.25rem,4vh,2.5rem)] w-[min(100%,clamp(min(100%,26rem),62vw,60rem),180vh)] outline-none short:mt-4">
+      {/* The lockup in its original colours (Arkade Ascend Logo-02), where its
+          greys read as designed: on a champagne satin plaque, its diagonal
+          sheen echoing the gold silk, softly rounded and edged in gold, a
+          little glassy over the silk behind. It fades in; the logo draws on it. */}
+      <span data-reveal="fade" aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[1.25rem] border border-gold-300/70 bg-[linear-gradient(115deg,rgba(255,250,240,.95)_0%,rgba(246,232,206,.93)_38%,rgba(255,248,236,.96)_52%,rgba(232,208,166,.92)_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,.8),inset_0_-12px_30px_-18px_rgba(150,105,55,.35),0_30px_60px_-32px_rgba(18,10,8,.7)] backdrop-blur-md" />
+      <span className="relative block px-[clamp(1.5rem,5vw,4.5rem)] py-[clamp(0.9rem,2.6vw,2.1rem)] short:py-3">
+        <AscendLockup colour data-reveal="draw" className="block aspect-[1029/162] h-auto w-full" />
+      </span>
       <span className="visually-hidden">Arkade Ascend, Malad West</span>
     </h1>
 
-    <div className="mt-[clamp(1.25rem,4.5vh,2.75rem)] flex flex-col items-center short:mt-3">
+    <div className="mt-[clamp(1.5rem,5vh,3rem)] flex flex-col items-center short:mt-4">
       <p data-reveal className="max-w-[46ch] text-[clamp(0.68rem,0.9vw,0.9rem)] font-medium uppercase leading-[2] tracking-[0.26em] text-ivory/85">The Neu Gen life has arrived</p>
     </div>
 

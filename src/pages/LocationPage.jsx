@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from '../app/reveal.js'
+import { pad, sectionIndex } from '../app/routes.js'
 import { locationGroups, nearby, origin, places, project } from '../content/project.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import BrochureMap from './location/BrochureMap.jsx'
@@ -40,9 +41,10 @@ export default function LocationPage() {
 
   // A new group's places rise into the list in turn (the page's own arrival
   // reveals the first group with the rest of the page).
-  const firstGroup = useRef(true)
+  const listed = useRef(null)
   useLayoutEffect(() => {
-    if (firstGroup.current) { firstGroup.current = false; return }
+    if (listed.current === null || listed.current === group) { listed.current = group; return }
+    listed.current = group
     if (prefersReducedMotion()) return
     const context = gsap.context(() => {
       gsap.from(list.current.children, { autoAlpha: 0, y: 8, duration: 0.55, stagger: 0.05, ease: 'silk' })
@@ -106,6 +108,14 @@ export default function LocationPage() {
       Live map unavailable offline · showing the brochure map
     </p>}
 
+    {/* The map's disclaimer, bottom right: below the panel on laptops; on
+        short screens, where the panel reaches the foot, beside it; on
+        portrait screens above the sheet and the map's attribution. */}
+    <p className="pointer-events-none absolute right-(--gutter) z-10 rounded-full bg-cream-50/85 px-3 py-1 text-[0.52rem] uppercase tracking-[0.16em] text-plum-700 backdrop-blur-sm max-sm:max-w-[calc(100%-2*var(--gutter))] max-sm:text-[0.48rem] bottom-(--note-bottom) short:right-(--beside-panel) short:bottom-[calc(var(--note-bottom)+1.75rem)]"
+      style={{ '--note-bottom': inset.bottom ? `${inset.bottom + 30}px` : 'clamp(0.3rem, 1.2vh, 0.75rem)', '--beside-panel': `${inset.right}px` }}>
+      Indicative map not to scale · distances as per Google Maps
+    </p>
+
     {/* The location panel floats over the map: on the right on laptops and
         landscape phones, as a sheet along the bottom on portrait screens. */}
     <aside ref={panel} data-tone="dark"
@@ -115,7 +125,7 @@ export default function LocationPage() {
       <div className="page-scroll min-h-0 flex-1 px-[clamp(1.25rem,2.2vw,2.25rem)] py-[clamp(1.1rem,3.5vh,2.5rem)] short:py-4">
         {/* The live map's light, day or dusk, beside the page's title. */}
         <div data-reveal className="flex min-h-11 items-center justify-between gap-3">
-          <p className="eyebrow flex items-center gap-4"><span className="num">09</span><span>Location</span></p>
+          <p className="eyebrow flex items-center gap-4"><span className="num">{pad(sectionIndex('location') + 1)}</span><span>Location</span></p>
           {live && <button type="button" aria-pressed={dusk} onClick={() => setDusk(value => !value)} aria-label="Dusk light"
             className={`flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-[0.6rem] font-medium uppercase tracking-[0.18em] transition-colors duration-500 ${dusk ? 'border-transparent bg-gold-400 text-espresso' : 'border-gold-500/35 text-ivory/80 hover:border-gold-400 hover:text-ivory'}`}>
             <svg viewBox="0 0 20 20" aria-hidden="true" className="size-3.5 fill-none stroke-current" strokeWidth="1.4"><path d="M4 13a6 6 0 0 1 12 0M2 13h16M10 3.5v2M4.2 6.2l1.4 1.4M15.8 6.2l-1.4 1.4M6 16h8" /></svg>
