@@ -255,16 +255,13 @@ function Landmarks({ number }) {
       <PartNumber number={number} />
       <h2 data-part className="display mt-3 max-w-[16ch] text-[clamp(1.6rem,min(3vw,6vh),3.6rem)] leading-[1.02]">{landmarks.title}</h2>
     </Frame>
-    {/* The eight landmarks as an index, each with the Arkade mark. */}
+    {/* The eight landmarks as an index, each by its own colour logo. */}
     <ol className="flex min-w-0 flex-col justify-center-safe" aria-label="Landmark projects">
       {landmarks.projects.map((project, i) => <li key={project.name} data-reveal data-part
         className="flex min-h-11 items-center gap-4 border-b border-line py-[clamp(0.45rem,1.4vh,0.9rem)] first:border-t">
         <span className="num w-6 shrink-0 text-[0.66rem] text-muted">{pad(i + 1)}</span>
-        <ArkadeMark className="h-[clamp(1.1rem,1.6vw,1.6rem)] w-auto shrink-0 text-accent" />
-        <span className="min-w-0">
-          <span className="block font-display text-[clamp(1.05rem,min(1.7vw,3.4vh),1.8rem)] uppercase leading-tight text-fg">Arkade <span className="text-accent">{project.name}</span></span>
-          <span className="mt-0.5 block text-[0.56rem] uppercase tracking-[0.2em] text-muted">{project.locality}</span>
-        </span>
+        <img src={landmarks.logo(project.name)} alt={`Arkade ${project.name}, ${project.locality}`} draggable="false" decoding="async"
+          className="block h-[clamp(2rem,min(3.3vw,5.6vh),3.4rem)] w-auto max-w-[calc(100%-2.5rem)] select-none object-contain object-left" />
       </li>)}
     </ol>
   </div>

@@ -241,6 +241,15 @@ pickleball, multipurpose-court, kids-play, creche, gym, kick-boxing,
 indoor-games, music-studio, private-screening, hobby-studio, banquet-hall,
 amphitheatre; specs: arrival-lobby, guest-suite) but nothing loads them.
 
+## Landmark project logos (`public/arkade-family/logos/`)
+
+The colour (orange and grey) lockups from `Arkade projects logo.pdf` (Illustrator,
+supplied 14 Oct 2026, one project a page with a white-on-dark version above),
+rendered with mutool at 300 dpi, cropped to the colour lockup, resized to 1000 px
+wide and saved as WebP (quality 90, lossless alpha). The PDF draws them on white:
+only near-white pixels were made transparent (and their edges un-mixed from the
+white), so the logos' own greys and orange stay exact on About Us's gold.
+
 ## Neu Gen (`public/neu-gen/`)
 
 `landmark-1600.webp`: page 5 of `Ascend_Customer PPT.pdf` (PRESENTING OUR

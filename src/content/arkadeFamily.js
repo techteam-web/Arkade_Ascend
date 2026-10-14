@@ -75,6 +75,9 @@ export const portfolio = {
 // Page 4.
 export const landmarks = {
   title: 'Landmark projects of Malad & Goregaon region',
+  // Each project's own colour logo (Arkade projects logo.pdf, supplied 14 Oct
+  // 2026), cut from the PDF at 300 dpi with its white panel made transparent.
+  logo: name => `/arkade-family/logos/${name.toLowerCase()}.webp`,
   projects: [
     { name: 'Aspire', locality: 'Goregaon East' },
     { name: 'Vistas', locality: 'Goregaon East' },
