@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from '../app/reveal.js'
 import { ImageSlot, PageHeading } from '../components/PageKit.jsx'
 import { ChevronIcon } from '../components/Brand.jsx'
@@ -6,11 +6,14 @@ import { amenityGroups, club } from '../content/project.js'
 import { pad } from '../app/routes.js'
 import useStepper from '../hooks/useStepper.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
+import { useShell } from '../app/ShellContext.js'
 
 // Club Ark from the brochure, as one sequence of photographs in its groups;
 // an amenity without a photograph yet shows the framed placeholder.
 const AMENITIES = amenityGroups.flatMap(group => group.items.map(item => ({ ...item, group })))
 const COUNT = AMENITIES.length
+const PHOTO_SIZES = '(min-width: 64rem) 60vw, 100vw'
+const SLIDE_MS = 4000   // an amenity with several pictures shows each for this long, in turn
 
 // One framed photograph at a time, the brochure's groups and the chosen
 // group's amenities beside it. Photographs cross-fade; the caption rises
@@ -20,6 +23,19 @@ export default function AmenitiesPage() {
   const root = useRef(null)
   const caption = useRef(null)
   const active = AMENITIES[index]
+  // Several pictures (the lap pool): the first, then the others, in turn,
+  // from the first again whenever the amenity is chosen; paused behind the menu.
+  const { menuOpen } = useShell()
+  const slides = active.images ?? null
+  const [run, setRun] = useState({ at: index, slide: 0 })
+  const slide = run.at === index ? run.slide : 0      // a new amenity starts at its first
+  useEffect(() => { setRun({ at: index, slide: 0 }) }, [index])   // and so does a return to it
+  useEffect(() => {
+    if (!slides || slides.length < 2 || menuOpen) return
+    const timer = setTimeout(() => setRun({ at: index, slide: (slide + 1) % slides.length }), SLIDE_MS)
+    return () => clearTimeout(timer)
+  }, [slides, slide, index, menuOpen])
+  const shownImage = slides ? slides[slide] ?? slides[0] : null
   const select = next => setIndex(((next % COUNT) + COUNT) % COUNT)
   const chooseGroup = group => select(AMENITIES.findIndex(item => item.group === group))
   useStepper(root, { onNext: () => select(index + 1), onPrev: () => select(index - 1), lock: 600 })
@@ -32,8 +48,12 @@ export default function AmenitiesPage() {
     return () => context.revert()
   }, [index])
 
-  return <section ref={root} className="page page-scroll grid grid-cols-[minmax(0,1fr)] content-start gap-[clamp(1rem,3vh,2rem)] split:grid-rows-[auto_minmax(0,1fr)_auto] split:content-stretch">
+  // The groups as one row of tabs: across the page above the photograph and
+  // the list where there is room (the list then starts level with the
+  // photograph's top), otherwise above the list.
+  return <section ref={root} className="page page-scroll grid grid-cols-[minmax(0,1fr)] content-start gap-[clamp(1rem,3vh,2rem)] split:grid-rows-[auto_minmax(0,1fr)_auto] split:content-stretch roomy:grid-rows-[auto_auto_minmax(0,1fr)_auto]">
     <PageHeading id="amenities" title="Amenities" subtitle={`Presenting ${club.name} · ${club.line.toLowerCase()}`} />
+    <div data-reveal className="hidden roomy:block"><GroupTabs active={active.group} onChoose={chooseGroup} /></div>
 
     <div className="grid gap-[clamp(1.25rem,3vw,3rem)] split:min-h-0 split:grid-rows-[minmax(0,1fr)] split:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] 3xl:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
       <figure data-reveal="fade" className="relative m-0 aspect-4/3 overflow-hidden rounded-sm border border-line bg-plum-950 split:aspect-auto split:h-full split:min-h-0" aria-live="polite">
@@ -42,7 +62,12 @@ export default function AmenitiesPage() {
           const near = Math.min(Math.abs(i - index), COUNT - Math.abs(i - index)) <= 1
           const fade = `absolute inset-0 size-full transition-opacity duration-700 ease-silk ${i === index ? 'opacity-100' : 'opacity-0'}`
           if (!amenity.image) return <div key={amenity.id} aria-hidden={i !== index} className={fade}><ImageSlot label="Image to follow" className="pb-[22%]" /></div>
-          return <img key={amenity.id} src={near ? amenity.image : undefined} alt={i === index ? amenity.name : ''} aria-hidden={i !== index} draggable="false" decoding="async"
+          if (amenity.images && i === index) return <div key={amenity.id} className="absolute inset-0">
+            {amenity.images.map((picture, k) => <img key={picture.src} src={picture.src} srcSet={picture.srcSet} sizes={PHOTO_SIZES} alt={k === 0 ? amenity.name : ''} aria-hidden={k !== slide} draggable="false" decoding="async"
+              className={`absolute inset-0 size-full select-none object-cover transition-opacity duration-700 ease-silk ${k === slide ? 'opacity-100' : 'opacity-0'}`}
+              style={{ objectPosition: picture.focus ?? amenity.focus }} />)}
+          </div>
+          return <img key={amenity.id} src={near ? amenity.image : undefined} srcSet={near ? amenity.srcSet : undefined} sizes={PHOTO_SIZES} alt={i === index ? amenity.name : ''} aria-hidden={i !== index} draggable="false" decoding="async"
             className={`${fade} select-none object-cover`} style={{ objectPosition: amenity.focus }} />
         })}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink/85 via-ink/35 to-transparent" />
@@ -51,18 +76,22 @@ export default function AmenitiesPage() {
           <h2 data-amenity-copy className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5vh),2.8rem)] leading-[1.04]">{active.name}</h2>
           {active.group.line && <p data-amenity-copy className="mt-2 max-w-[46ch] text-[0.62rem] uppercase leading-relaxed tracking-[0.2em] text-ivory/80 short:hidden">{active.group.line}</p>}
         </figcaption>
-        {active.image && <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/60 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Representational image</p>}
+        {active.image && <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/60 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">{shownImage?.note ?? active.note ?? 'Representational image'}</p>}
+        {/* One thin segment per picture: the shown one fills over its time,
+            those before it stay full. */}
+        {slides && slides.length > 1 && <div aria-hidden="true" className="pointer-events-none absolute left-[clamp(1.25rem,3vw,2.5rem)] top-[clamp(1rem,2.6vh,1.5rem)] flex w-[clamp(4.5rem,9vw,7rem)] gap-1.5">
+          {slides.map((picture, k) => <span key={picture.src} className="relative h-[2px] flex-1 overflow-hidden rounded-full bg-ivory/30 shadow-[0_1px_4px_rgba(0,0,0,.35)]">
+            {k < slide && <span className="absolute inset-0 bg-gold-300" />}
+            {/* restarts with its timer, also when the menu closes */}
+            {k === slide && <span key={`${index}-${slide}-${menuOpen}`} className="slide-fill absolute inset-0 bg-gold-300 motion-reduce:animate-none"
+              style={{ '--slide-time': `${SLIDE_MS}ms`, animationPlayState: menuOpen ? 'paused' : 'running' }} />}
+          </span>)}
+        </div>}
       </figure>
 
-      <div data-reveal className="flex min-w-0 flex-col gap-[clamp(0.75rem,2vh,1.25rem)] split:min-h-0 split:self-center">
-        {/* Phones keep the groups on one row that scrolls sideways. */}
-        <div role="group" aria-label={`${club.name} groups`} data-own-gesture
-          className="-mx-1 flex gap-1.5 overflow-x-auto px-1 py-0.5 [scrollbar-width:none] split:flex-wrap split:overflow-visible">
-          {amenityGroups.map(group => <button key={group.id} type="button" className="chip shrink-0" aria-pressed={active.group === group} onClick={() => chooseGroup(group)}>
-            {group.label}
-          </button>)}
-        </div>
-        <ol key={active.group.id} className="-mx-2 px-2 py-1 split:min-h-0 split:overflow-y-auto split:overscroll-contain" aria-label={`${active.group.label} amenities`}>
+      <div data-reveal className="flex min-w-0 flex-col gap-[clamp(0.75rem,2vh,1.25rem)] split:min-h-0">
+        <div className="shrink-0 roomy:hidden"><GroupTabs active={active.group} onChoose={chooseGroup} /></div>
+        <ol key={active.group.id} className="-mx-2 px-2 split:min-h-0 split:overflow-y-auto split:overscroll-contain roomy:[&>li:first-child>button]:pt-0" aria-label={`${active.group.label} amenities`}>
           {active.group.items.map(item => {
             const i = AMENITIES.findIndex(entry => entry.id === item.id)
             return <li key={item.id} className="finder-in">
@@ -84,4 +113,37 @@ export default function AmenitiesPage() {
       <button type="button" className="btn-icon" onClick={() => select(index + 1)} aria-label="Next amenity"><ChevronIcon /></button>
     </div>
   </section>
+}
+
+// Club Ark's groups as one row of text tabs over a hairline, a gold bar
+// sliding under the chosen one. Where they do not fit (phones, short
+// screens) the row scrolls sideways and keeps the chosen tab in view.
+function GroupTabs({ active, onChoose }) {
+  const bar = useRef(null)
+  const [mark, setMark] = useState(null)
+  useLayoutEffect(() => {
+    const row = bar.current, tab = row?.querySelector('[aria-pressed="true"]')
+    if (!tab) return
+    const place = () => setMark({ x: tab.offsetLeft, width: tab.offsetWidth, scrolls: row.scrollWidth > row.clientWidth + 1 })
+    place()
+    if (row.scrollWidth > row.clientWidth) {
+      row.scrollTo({ left: Math.max(0, tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2), behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+    }
+    const observer = new ResizeObserver(place)
+    observer.observe(row)
+    return () => observer.disconnect()
+  }, [active])
+  return <div ref={bar} role="group" aria-label={`${club.name} groups`} data-own-gesture
+    className={`relative flex gap-x-[clamp(1.1rem,2.4vw,3rem)] overflow-x-auto border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${mark?.scrolls ? '[mask-image:linear-gradient(90deg,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent)]' : ''}`}>
+    {amenityGroups.map(group => {
+      const chosen = group === active
+      return <button key={group.id} type="button" aria-pressed={chosen} onClick={() => onChoose(group)}
+        className={`group relative flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap text-[clamp(0.66rem,0.78vw,0.84rem)] font-medium uppercase tracking-[0.18em] transition-colors duration-500 ${chosen ? 'text-fg' : 'text-muted hover:text-fg focus-visible:text-fg'}`}>
+        {group.label}
+        <span aria-hidden="true" className={`num hidden text-[0.6rem] tracking-[0.08em] transition-colors duration-500 xl:inline ${chosen ? 'text-accent' : 'text-muted/70'}`}>{pad(group.items.length)}</span>
+      </button>
+    })}
+    {mark && <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-0 h-[2px] bg-accent transition-[translate,width] duration-500 ease-silk motion-reduce:transition-none"
+      style={{ translate: `${mark.x}px 0`, width: mark.width }} />}
+  </div>
 }

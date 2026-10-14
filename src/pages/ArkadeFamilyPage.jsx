@@ -106,7 +106,7 @@ function Frame({ image, focus, ratio, className = '', children }) {
       className="absolute inset-0 size-full select-none object-cover" style={{ objectPosition: focus }} />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/90 via-ink/35 via-45% to-transparent" />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-ink/45 to-transparent to-60%" />
-    <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Representative image</p>
+    <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Representational image</p>
     <figcaption className="absolute inset-x-0 bottom-0 px-[clamp(1.1rem,2.6vw,2.5rem)] pb-[clamp(1rem,3vh,2.25rem)] text-ivory">{children}</figcaption>
   </figure>
 }

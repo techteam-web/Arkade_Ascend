@@ -137,7 +137,7 @@ export default function ResidencesPage() {
           <div className="flex min-h-0 flex-1 flex-col gap-4 short:flex-row short:items-center">
             <div className="relative min-h-[40vh] flex-1 self-stretch split:min-h-0">
               <Suspense fallback={null}>
-                <OrbitView pickable sky={false} floor={chosen} onFloor={setChoice} onHover={setPreview} canPick={canPick} turn={turn} className={FADE}
+                <OrbitView pickable sky={false} floor={chosen} onFloor={setChoice} onHover={setPreview} canPick={canPick} turn={turn} zoom={1.22} className={FADE}
                   label="Rendered orbit of Wing A and Wing B. Point at a wing's floor to preview it, click or tap to select it; drag to turn the tower; use the up and down arrow keys to change floor within the chosen wing." />
               </Suspense>
             </div>
@@ -184,7 +184,7 @@ export default function ResidencesPage() {
           ? <UnitFinder ref={region} onClose={close} onOpenPlan={openPlan} onView={setViewing} />
           : <div ref={art} className="absolute inset-0 flex flex-col">
             <div data-reveal="fade" className="relative min-h-0 flex-1">
-              <Suspense fallback={null}><OrbitView sky={false} zoom={1.12} className={FADE} label="Rendered orbit of the Arkade Ascend tower. Drag to turn it." /></Suspense>
+              <Suspense fallback={null}><OrbitView sky={false} zoom={1.3} className={FADE} label="Rendered orbit of the Arkade Ascend tower. Drag to turn it." /></Suspense>
             </div>
             <RenderNote className="mx-auto max-w-xl text-center" />
           </div>}

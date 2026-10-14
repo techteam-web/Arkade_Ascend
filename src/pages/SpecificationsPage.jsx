@@ -12,7 +12,7 @@ import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 const firstPictured = spec => Math.max(0, spec.items.findIndex(item => item.image))
 const pictureOf = (spec, item) => item?.image
   ? { src: item.image, note: item.note ?? spec.note, focus: item.focus }
-  : { src: spec.image, note: spec.note, focus: spec.focus }
+  : { src: spec.image, srcSet: spec.srcSet, note: spec.note, focus: spec.focus }
 
 export default function SpecificationsPage() {
   const [index, setIndex] = useState(0)
@@ -27,7 +27,7 @@ export default function SpecificationsPage() {
   const current = pictureOf(spec, spec.items[shown])
 
   // Every photograph loads ahead, so each category and feature shows at once.
-  useEffect(() => prefetchImages(specifications.flatMap(item => [item.image, ...item.items.map(entry => entry.image)]).filter(Boolean).map(src => ({ src }))), [])
+  useEffect(() => prefetchImages(specifications.flatMap(item => [{ src: item.image, srcSet: item.srcSet }, ...item.items.map(entry => ({ src: entry.image }))]).filter(image => image.src), '(min-width: 48rem) 45vw, 100vw'), [])
 
   const chooseCategory = next => { setIndex(next); setShown(firstPictured(specifications[next])) }
 
@@ -85,7 +85,7 @@ export default function SpecificationsPage() {
     <div ref={panel} id="spec-panel" role="tabpanel" aria-labelledby={`spec-tab-${spec.id}`}
       className="grid shrink-0 items-center gap-8 split:min-h-0 split:shrink md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-[4vw]">
       <div ref={frame} data-reveal="mask" className="relative aspect-4/3 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 md:aspect-auto md:h-[min(64cqh,44rem)] md:min-h-72">
-        <img data-spec-image key={current.src} src={current.src} decoding="async" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} draggable="false"
+        <img data-spec-image key={current.src} src={current.src} srcSet={current.srcSet} sizes="(min-width: 48rem) 45vw, 100vw" decoding="async" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} draggable="false"
           className="absolute inset-0 size-full select-none object-cover" style={{ objectPosition: current.focus }} />
         <p className="pointer-events-none absolute bottom-2.5 left-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">{current.note ?? 'Representational image'}</p>
       </div>

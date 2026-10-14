@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ImageSlot, PageHeading } from '../components/PageKit.jsx'
 import { ChevronIcon } from '../components/Brand.jsx'
-import { gallery, galleryTabs, RENDER_NOTE } from '../content/template.js'
+import { gallery, galleryDisclaimer, galleryTabs, RENDER_NOTE } from '../content/template.js'
 import { pad } from '../app/routes.js'
 import useStepper from '../hooks/useStepper.js'
 
@@ -40,7 +40,7 @@ export default function GalleryPage() {
 
   const choose = value => { setCategory(value); setIndex(0) }
 
-  return <section ref={root} className="page page-scroll grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(14rem,1fr)_auto] gap-4">
+  return <section ref={root} className="page page-scroll grid grid-cols-[minmax(0,1fr)] grid-rows-[auto_minmax(14rem,1fr)_auto_auto] gap-4">
     <div className="flex flex-wrap items-end justify-between gap-4">
       <PageHeading id="gallery" title="Gallery" subtitle="Curated visions of Ascend" className="flex-1 basis-64" />
       <div data-reveal role="group" aria-label="Gallery" className="flex flex-wrap gap-2">
@@ -85,6 +85,11 @@ export default function GalleryPage() {
         <button type="button" className="btn-icon" onClick={() => step(1)} disabled={filtered.length < 2} aria-label="Next image"><ChevronIcon /></button>
       </div>
     </div>
+
+    {/* The client's disclaimer: small and quiet, but always on the page. */}
+    <p data-reveal className="border-t border-line pt-2.5 text-[clamp(0.58rem,0.66vw,0.72rem)] leading-relaxed tracking-[0.03em] text-muted/85 max-sm:text-[0.54rem] max-sm:leading-snug short:pt-1.5 short:leading-snug">
+      <span className="font-medium uppercase tracking-[0.16em] text-muted">Disclaimer: </span>{galleryDisclaimer}
+    </p>
 
     {/* Portalled into the frame: above the page, still beneath the full-screen gate. */}
     {lightbox && selected && createPortal(<div role="dialog" aria-modal="true" aria-label={`${selected.category} image, full screen`} onClick={() => setLightbox(false)}

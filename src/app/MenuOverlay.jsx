@@ -133,7 +133,7 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
       </nav>
 
 
-      <div className="menu-fade flex items-end justify-between gap-6 py-[clamp(0.75rem,3vh,2rem)] text-[0.62rem] uppercase tracking-[0.3em] text-gold-200/80">
+      <div className="menu-fade flex items-end justify-between gap-6 pt-[clamp(0.75rem,3vh,2rem)] pb-[max(clamp(0.75rem,3vh,2rem),var(--credit-space))] text-[0.62rem] uppercase tracking-[0.3em] text-gold-200/80">
         {/* The MahaRERA registration, bottom left. The QR code keeps a light
             tile and its quiet margin so phones can scan it off the screen. */}
         <div className="flex items-center gap-[clamp(0.75rem,1.2vw,1.25rem)]">

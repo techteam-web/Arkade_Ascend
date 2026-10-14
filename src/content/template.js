@@ -16,11 +16,22 @@ export const isTemplate = true
 // keeps the tower in the gallery's 16:10 frame, and the tall views are shown
 // whole (`fit: 'contain'`). Full screen always shows the whole render.
 export const galleryTabs = ['Elevation', 'Amenities']
+// Shown at the foot of the Gallery (client, 14 Oct 2026), as supplied.
+export const galleryDisclaimer = 'The images, layouts, and other details in this advertisement are indicative and for representational purposes only. The developers reserve the right to make changes or improvements as required. Actual project features may differ from those depicted. This advertisement does not constitute an offer or contract.'
 export const RENDER_NOTE = 'Architect’s impression'
 const render = (name, [width, height], alt, look = {}) => ({
   src: `/gallery/exterior/${name}-1600.webp`,
   srcSet: `/gallery/exterior/${name}-1600.webp ${Math.round(width * 1600 / Math.max(width, height))}w, /gallery/exterior/${name}-2880.webp ${Math.round(width * 2880 / Math.max(width, height))}w`,
   aspect: width / height, category: 'Elevation', alt, note: RENDER_NOTE, ...look,
+})
+
+// The Amenities tab: the project's interior and landscape renders (supplied
+// 14 Oct 2026, public/gallery/amenities/), the same files the Amenities and
+// Specifications pages show.
+const amenityRender = (name, [width, height], alt, look = {}) => ({
+  src: `/gallery/amenities/${name}-1600.webp`,
+  srcSet: `/gallery/amenities/${name}-1600.webp ${Math.round(width * 1600 / Math.max(width, height))}w, /gallery/amenities/${name}-2880.webp ${Math.round(width * 2880 / Math.max(width, height))}w`,
+  aspect: width / height, category: 'Amenities', alt, note: RENDER_NOTE, ...look,
 })
 
 export const gallery = [
@@ -32,6 +43,24 @@ export const gallery = [
   render('cam38-twilight', [1600, 889], 'Arkade Ascend at twilight above the trees, the city and the sunset beyond', { focus: '25% 50%' }),
   render('cam27-evening', [1600, 889], 'Aerial evening view of Arkade Ascend, lit from podium to crown above its pool'),
   render('cam06-evening', [1600, 640], 'The crown of Arkade Ascend at evening, its name on the facade and the city lights beyond', { focus: '15% 50%' }),
+  amenityRender('lap-pool-evening', [6000, 2727], 'The lap pool at evening beside the tower, a father and son walking along its edge', { focus: '30% 60%' }),
+  amenityRender('lap-pool-aerial', [6000, 2857], 'The lap pool seen from above, swimmers in its lanes and loungers on the deck'),
+  amenityRender('amphitheatre', [6000, 3333], 'The amphitheatre and its central lawn at sunset', { focus: '40% 55%' }),
+  amenityRender('kids-play', [6000, 2727], 'The podium playground with slides and play frames among the trees', { focus: '40% 55%' }),
+  amenityRender('pickleball', [5999, 2727], 'Players on the pickle ball court beside the tower', { focus: '58% 60%' }),
+  amenityRender('multipurpose-court', [5999, 2727], 'A game of basketball on the multipurpose court', { focus: '48% 60%' }),
+  amenityRender('gym', [6000, 3333], 'The gym, weights and machines along its windows', { focus: '60% 50%' }),
+  amenityRender('kick-boxing', [6000, 3375], 'The kick boxing studio with its bags and wall art', { focus: '38% 55%' }),
+  amenityRender('creche', [6000, 3000], 'The creche, children at play among shelves and a ball pool', { focus: '45% 55%' }),
+  amenityRender('indoor-games', [6000, 4000], 'The indoor games arena with table tennis and foosball'),
+  amenityRender('game-zone', [6000, 3000], 'The adult gaming lounge, friends at board games and on bean bags', { focus: '40% 55%' }),
+  amenityRender('golf-simulator', [6000, 3333], 'The golf simulator, a player mid-swing before the screen', { focus: '45% 50%' }),
+  amenityRender('hobby-studio', [6000, 3000], 'The hobby studio, a couple dancing across its floor', { focus: '42% 50%' }),
+  amenityRender('private-screening', [6000, 2724], 'The private screening room, its sofas facing the screen', { focus: '62% 55%' }),
+  amenityRender('cafe', [6000, 3333], 'The café, residents at its tables and counter', { focus: '50% 60%' }),
+  amenityRender('banquet-hall', [6000, 3000], 'The banquet hall laid for a reception, guests gathering', { focus: '42% 55%' }),
+  amenityRender('guest-suite', [6000, 4997], 'The guest suite, its lounge and bedroom beyond', { fit: 'contain' }),
+  amenityRender('lobby', [6000, 6000], 'The double-height arrival lobby with its reception and lounge', { fit: 'contain' }),
 ]
 
 // The architectural model of the tower (public/models, optimised from the

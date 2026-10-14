@@ -85,6 +85,12 @@ export default function App() {
         <MenuOverlay open={menuOpen} currentId={route.id} onClose={closeMenu} onNavigate={go} />
       </div>
       <div className="grain" aria-hidden="true" />
+      {/* The BrainWing credit: small, at the foot of every screen, above
+          everything (menu, overlays, the gate), in the tone of what is under
+          it so it always reads. The logo is a mask filled with that tone. */}
+      <div data-credit data-tone={gated || menuOpen ? 'dark' : tone || route.tone || 'dark'} className="credit pointer-events-none fixed z-[110]">
+        <div role="img" aria-label="Developed by BrainWing Innovations" className="credit-mark aspect-[800/214] bg-fg opacity-85" />
+      </div>
       <FullscreenGate open={gated} resumed={everStarted} supported={fullscreen.supported}
         keyboardLocked={fullscreen.keyboardLocked} onEnter={enter} />
     </main>

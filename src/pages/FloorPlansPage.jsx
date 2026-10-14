@@ -124,7 +124,10 @@ export default function FloorPlansPage() {
       </div>
     </div>
 
-    <div className="flex min-h-0 flex-col gap-[clamp(1rem,3vh,1.75rem)] split:col-start-1 split:row-start-2">
+    {/* When the floor's details outgrow the column (short laptop windows),
+        the column scrolls as a whole rather than spilling past the page's
+        foot or squeezing the homes list away. */}
+    <div className="flex min-h-0 shrink-0 flex-col gap-[clamp(1rem,3vh,1.75rem)] split:shrink split:col-start-1 split:row-start-2 split:-mx-2 split:overflow-y-auto split:overscroll-contain split:px-2">
       {type
         ? <UnitDetails key={type.id} type={type} floor={floor} onShow={unit => show({ unit })} />
         : <FloorOverview floor={floor} hovered={hovered} onHover={setHovered} onFloor={n => show({ floor: n, unit: null })} onOpen={unit => show({ unit })} onFinder={() => go('/residences?finder')} />}
@@ -203,7 +206,7 @@ function FloorOverview({ floor, hovered, onHover, onFloor, onOpen, onFinder }) {
       </div>
     </div>
 
-    <ul data-reveal className="page-scroll -mx-2 min-h-0 flex-1 px-2 py-1 [mask-image:linear-gradient(transparent,#000_0.6rem,#000_calc(100%-0.9rem),transparent)] stack:max-h-[40vh] stack:flex-none" onPointerLeave={() => onHover(null)}>
+    <ul data-reveal className="page-scroll -mx-2 min-h-[min(9.5rem,26vh)] flex-1 px-2 py-1 [mask-image:linear-gradient(transparent,#000_0.6rem,#000_calc(100%-0.9rem),transparent)] stack:max-h-[40vh] stack:flex-none" onPointerLeave={() => onHover(null)}>
       {sorted.map(({ id, type }) => <li key={id}>
         <button type="button" onClick={() => onOpen(id)}
           onPointerEnter={event => { if (event.pointerType === 'mouse') onHover(id) }} onFocus={() => onHover(id)} onBlur={() => onHover(null)}
@@ -466,7 +469,7 @@ function PlanFullscreen({ plan, zones, title, switcher, hovered, onHover, onPick
   }, [onClose])
 
   return createPortal(<div ref={root} role="dialog" aria-modal="true" aria-label={`${title} floor plan, full screen`} data-tone="light"
-    className="absolute inset-0 z-70 flex flex-col bg-cream-100 px-(--gutter) pb-[clamp(0.75rem,3vh,2rem)] text-fg">
+    className="absolute inset-0 z-70 flex flex-col bg-cream-100 px-(--gutter) pb-[max(clamp(0.75rem,3vh,2rem),var(--credit-space))] text-fg">
     <div className="flex min-h-(--header-h) shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2">
       <p className="eyebrow">{title}</p>
       <div className="ml-auto flex items-center gap-3">

@@ -214,7 +214,15 @@ export default function OrbitStage({ engine, controller, world, light, sky, pick
     if (relief.current) relief.current.visible = inRelief
     uniforms.uSkyOnly.value = inRelief ? 1 : 0
 
-    st.zoom += (live.current.zoom - st.zoom) * (reduced ? 1 : 1 - Math.exp(-dt * 8))
+    // The page's zoom in full where the view is wide; a tall, narrow view
+    // (a portrait phone) already crops the frame to the tower, so it takes
+    // about a third of it, keeping the tower clear of the sides.
+    // Short screens (landscape phones), where the header and controls take
+    // much of the height, ease it off too, so the crown and podium stay clear.
+    const wide = Math.min(1, Math.max(0, (size.width / Math.max(1, size.height) - 0.75) / 0.65))
+    const tall = Math.min(1, Math.max(0, (window.innerHeight - 380) / 260))
+    const zoomTo = 1 + (live.current.zoom - 1) * (0.35 + 0.65 * wide) * (0.2 + 0.8 * tall)
+    st.zoom += (zoomTo - st.zoom) * (reduced ? 1 : 1 - Math.exp(-dt * 8))
     // (the relief's overscan only; the flat styles never zoom)
     const push = inRelief ? 1 + TUNING.reliefMove.overscan * out : 1
     uniforms.uCover.value.copy(st.cover).divideScalar(st.zoom * push)
@@ -283,7 +291,7 @@ export default function OrbitStage({ engine, controller, world, light, sky, pick
     // Draw again while anything is still on its way.
     const settled = (a, b) => Math.abs(a - b) < 0.002
     const moving = controller.moving || st.transition || pending || frame !== target
-      || !settled(st.zoom, live.current.zoom) || st.hover.distanceTo(uniforms.uParallax.value) > 0.002
+      || !settled(st.zoom, zoomTo) || st.hover.distanceTo(uniforms.uParallax.value) > 0.002
       || uniforms.uSelIn.value < 1 || uniforms.uHovIn.value < 1 || !settled(uniforms.uFocus.value, focus)
       || !settled(uniforms.uWorldOn.value, worldOn) || draw.some(layer => st.uploaded[layer] !== frame)
     if (moving) invalidate()

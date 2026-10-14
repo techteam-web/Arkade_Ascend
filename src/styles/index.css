@@ -12,6 +12,8 @@
   @media (min-width: 64rem), (max-height: 34rem) { @slot; }
 }
 @custom-variant stack (@media (max-width: 63.999rem) and (min-height: 34.001rem));
+/* Two columns with height to spare: laptops and up, not short landscape phones. */
+@custom-variant roomy (@media (min-width: 64rem) and (min-height: 34.001rem));
 @custom-variant fold-h (@media (horizontal-viewport-segments: 2));
 @custom-variant fold-v (@media (vertical-viewport-segments: 2));
 @custom-variant tone-light (&:where([data-tone="light"], [data-tone="light"] *));
@@ -74,6 +76,11 @@
   --tone-accent: var(--color-gold-500);
   --tone-panel: color-mix(in oklab, var(--color-plum-950) 62%, transparent);
   --header-h: clamp(4rem, 9vh, 6.25rem);
+  /* The BrainWing credit at the foot of the screen, and the band it keeps
+     clear: pages, the menu's foot and the map's corner controls sit above it. */
+  --credit-w: clamp(4.25rem, 6.2vw, 7.5rem);
+  --credit-bottom: max(env(safe-area-inset-bottom), clamp(0.3rem, 1.1vh, 0.75rem));
+  --credit-space: calc(var(--credit-bottom) + var(--credit-w) * 0.2675 + 0.45rem);
   --gutter: clamp(1rem, 4.2vw, 4.5rem);
 }
 [data-tone="dark"] {
@@ -140,7 +147,7 @@ html { font-size: 100%; }
 
   .page {
     position: absolute; inset: 0;
-    padding: calc(var(--header-h) + 0.5rem) var(--gutter) clamp(1rem, 4vh, 3rem);
+    padding: calc(var(--header-h) + 0.5rem) var(--gutter) max(clamp(1rem, 4vh, 3rem), var(--credit-space));
     color: var(--tone-fg);
   }
   .page-scroll {
@@ -320,8 +327,27 @@ html { font-size: 100%; }
   .enter-lux:active { scale: .98; }
 
   .menu-caption { animation: caption-in 1s var(--ease-silk) both; }
+  /* A slideshow's progress: one thin segment filling over its slide's time. */
+  .slide-fill { transform-origin: 0 50%; animation: slide-fill var(--slide-time, 2s) linear both; }
+  @keyframes slide-fill { from { transform: scaleX(0); } }
   @keyframes caption-in { from { opacity: 0; transform: translateY(6px); } }
 
+  /* The BrainWing credit (App.jsx): the logo as a mask filled with the tone's
+     colour, in the bottom band every page keeps clear. */
+  /* A soft shadow in the opposite tone keeps it legible over gold, photographs
+     and anything between (on the wrapper: a filter on the masked element
+     itself would be masked away). */
+  .credit { filter: drop-shadow(0 1px 2.5px rgb(18 11 13 / .55)); }
+  .credit[data-tone="light"] { filter: drop-shadow(0 0 2px rgb(251 248 236 / .7)); }
+  .credit-mark {
+    -webkit-mask: url("/logo/brainwing.webp") center / contain no-repeat;
+    mask: url("/logo/brainwing.webp") center / contain no-repeat;
+  }
+  .credit {
+    width: var(--credit-w);
+    bottom: var(--credit-bottom);
+    left: max(env(safe-area-inset-left), var(--gutter));
+  }
   /* Still film grain over the whole presentation, very faint. */
   .grain {
     pointer-events: none; position: absolute; inset: 0; z-index: 60; opacity: .04; mix-blend-mode: overlay;
@@ -398,7 +424,7 @@ html { font-size: 100%; }
 .map-tower-label:hover > span.map-logo, .map-tower-label:focus-visible > span.map-logo { background: var(--color-cream-50); }
 /* Location: the full-screen map's controls sit on the page gutter, above
    the location sheet when it docks along the bottom (--map-inset-bottom). */
-.location-map .maplibregl-ctrl-bottom-left { left: calc(var(--gutter) - 10px); bottom: calc(var(--map-inset-bottom, 0px) + clamp(0.75rem, 3vh, 2rem) - 10px); }
+.location-map .maplibregl-ctrl-bottom-left { left: calc(var(--gutter) - 10px); bottom: calc(var(--map-inset-bottom, 0px) + max(clamp(0.75rem, 3vh, 2rem), var(--credit-space)) - 10px); }
 /* Phones zoom by pinching, so the zoom column gives the small map its room. */
 @media (max-width: 47.999rem) { .location-map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-group { display: none; } }
 .maplibregl-ctrl-group { border-radius: 999px !important; overflow: hidden; background: color-mix(in oklab, var(--color-cream-50) 92%, transparent) !important; box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-plum-700) 18%, transparent) !important; }

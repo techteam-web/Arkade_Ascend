@@ -214,6 +214,33 @@ WebGL. Replacement renders keep these names and the 1920 × 1080 frame; run
 the Orbit project's converters (`scripts/convert-frames.mjs`,
 `convert-worldpos-all.sh`) and copy their output here, then resize `960/`.
 
+## Amenity renders (`public/gallery/amenities/`)
+
+The project's interior and landscape final renders (`Ascend Arkade Render/Interior
+Final Renders` and `Landscape Final Renders`, supplied 14 Oct 2026; 6000 px JPEG
+and PNG, sRGB, 10 to 34 MB each), resized (sips) to 1600 and 2880 px on the long
+side and saved as WebP quality 80 without metadata, about 10 MB for all 36
+files. They serve the Gallery's Amenities tab, the Amenities page (`rendered()` in
+`src/content/project.js`) and Specifications' Arrival, each marked as the
+architect's impression. Originals map as follows:
+
+- `lobby`: Ascend Lobby_final; `banquet-hall`: Ascend_Banquet_Final; `cafe`:
+  Ascend_Cafe_Area_Final; `hobby-studio`: Ascend_DanceHobby_final; `game-zone`:
+  Ascend_Game_Area_Final (Amenities' Adult gaming); `golf-simulator`:
+  Ascend_Golf_Simulator_Final; `guest-suite`: Ascend_Guest_room_final; `gym`:
+  Ascend_Gym_final; `kick-boxing`: Ascend_kick_boxing_final; `creche`: Creche
+  area_final; `indoor-games`: Indoor Games_final; `private-screening`: Theater_final
+- `amphitheatre`: Amphitheatre_final; `multipurpose-court`:
+  Ascend_Multipurpose_Court_Final; `pickleball`: Ascend_PickleBall_Final;
+  `kids-play`: Podium_Cam_32_Final; `lap-pool-aerial`:
+  Swimming_Pool_view_Cam_08_final; `lap-pool-evening`:
+  Ascend_Swimming_Pool_Evening_final
+
+The brochure photographs these replace stay in `public/brochure/` (amenities:
+pickleball, multipurpose-court, kids-play, creche, gym, kick-boxing,
+indoor-games, music-studio, private-screening, hobby-studio, banquet-hall,
+amphitheatre; specs: arrival-lobby, guest-suite) but nothing loads them.
+
 ## Neu Gen (`public/neu-gen/`)
 
 `landmark-1600.webp`: page 5 of `Ascend_Customer PPT.pdf` (PRESENTING OUR

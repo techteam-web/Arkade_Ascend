@@ -71,20 +71,23 @@ export const locationGroups = [
   { id: 'upcoming', label: 'Upcoming' },
   { id: 'nearby', label: 'Nearby' },
 ]
+// Roads and upcoming links placed at the client's own coordinates (WhatsApp,
+// 14 Oct 2026): Link Road, S.V. Road, the Western Express Highway, GMLR, the
+// coastal road and the twin tunnel.
 export const connectivity = [
-  { id: 'link-road', name: 'Link Road', distance: '650 m', group: 'roads', point: [222 / 720, 352 / 840], lngLat: [72.8360, 19.1857] },
-  { id: 'sv-road', name: 'S.V. Road', distance: '950 m', group: 'roads', point: [393 / 720, 360 / 840], lngLat: [72.8467, 19.1858] },
-  { id: 'weh', name: 'Western Express Highway', distance: '3 km', group: 'roads', point: [611 / 720, 420 / 840], lngLat: [72.8585, 19.1877] },
+  { id: 'link-road', name: 'Link Road', distance: '650 m', group: 'roads', point: [222 / 720, 352 / 840], lngLat: [72.836018, 19.186780] },
+  { id: 'sv-road', name: 'S.V. Road', distance: '950 m', group: 'roads', point: [393 / 720, 360 / 840], lngLat: [72.846482, 19.188836] },
+  { id: 'weh', name: 'Western Express Highway', distance: '3 km', group: 'roads', point: [611 / 720, 420 / 840], lngLat: [72.858792, 19.191738] },
   { id: 'malad-station', name: 'Malad Railway Station', distance: '1.4 km', group: 'transit', point: [436 / 720, 212 / 840], lngLat: [72.8486, 19.1867] },
   { id: 'metro-2a', name: 'Malad West Metro Station (Line 2A)', distance: '1.8 km', group: 'transit', point: [204 / 720, 245 / 840], lngLat: [72.8354, 19.1851] },
   { id: 'intl-airport', name: 'International Airport', distance: '12.3 km', group: 'air', point: [404 / 720, 812 / 840], offMap: true, lngLat: [72.8739, 19.0970] },
   { id: 'dom-airport', name: 'Domestic Airport', distance: '12.8 km', group: 'air', point: [404 / 720, 812 / 840], offMap: true, lngLat: [72.8546, 19.0928] },
 ]
 export const upcoming = [
-  { id: 'gmlr', name: 'Goregaon–Mulund Link Road (GMLR)', group: 'upcoming', point: [505 / 720, 458 / 840], lngLat: [72.8522, 19.1728] },
-  { id: 'coastal', name: 'Versova–Dahisar Coastal Road', group: 'upcoming', point: [40 / 720, 470 / 840], offMap: true, lngLat: [72.8241, 19.1962] },
+  { id: 'gmlr', name: 'Goregaon–Mulund Link Road (GMLR)', group: 'upcoming', point: [505 / 720, 458 / 840], lngLat: [72.883897, 19.163945] },
+  { id: 'coastal', name: 'Versova–Dahisar Coastal Road', group: 'upcoming', point: [40 / 720, 470 / 840], offMap: true, lngLat: [72.831650, 19.178504] },
   // Its Borivali portal, from OpenStreetMap (the tunnel is under construction).
-  { id: 'twin-tunnel', name: 'Borivali–Thane Twin Tunnel', group: 'upcoming', point: [640 / 720, 40 / 840], offMap: true, lngLat: [72.8695, 19.2216] },
+  { id: 'twin-tunnel', name: 'Borivali–Thane Twin Tunnel', group: 'upcoming', point: [640 / 720, 40 / 840], offMap: true, lngLat: [72.868864, 19.221600] },
 ]
 
 // The rendered 360° orbit of the tower (Orbit project, supplied 10 Oct 2026):
@@ -148,15 +151,16 @@ export const nearbyPlaces = [
 ]
 export const places = [...connectivity, ...upcoming, ...nearbyPlaces]
 
-// Brochure pages 10, 12, 14 and 21. Photographs are the brochure's own,
-// marked there as representational (the tower as a dummy render, the
-// kitchen as an artist impression). `focus` keeps the subject in frame.
+// Brochure pages 10, 12, 14 and 21. Photographs are the brochure's own and
+// show "Representational image" (the page's default note); only the project's
+// own renders (the arrival lobby) are marked as the architect's impression.
+// `focus` keeps the subject in frame.
 // The tower and residences copy was revised by the client on 13 Oct 2026
 // (WhatsApp message), and is set here as sent.
 const spec = name => `/brochure/specs/${name}.webp`
 export const specifications = [
   {
-    id: 'tower', title: 'The tower', line: 'Rise to a life extraordinaire', image: spec('tower'), note: 'Architect’s impression',
+    id: 'tower', title: 'The tower', line: 'Rise to a life extraordinaire', image: spec('tower'),
     items: [
       { text: 'Contemporary 37 storey tower' },
       { text: 'A grand double-height arrival experience' },
@@ -168,7 +172,8 @@ export const specifications = [
     ],
   },
   {
-    id: 'arrival', title: 'Arrival', line: 'A grand arrival experience sets the tone from the very first step', image: spec('arrival-lobby'),
+    id: 'arrival', title: 'Arrival', line: 'A grand arrival experience sets the tone from the very first step',
+    image: '/gallery/amenities/lobby-1600.webp', srcSet: '/gallery/amenities/lobby-1600.webp 1600w, /gallery/amenities/lobby-2880.webp 2880w', note: 'Architect’s impression', focus: '50% 58%',
     items: [
       { text: 'Grand, double-height welcome lobby' },
       { text: 'Reception & waiting lounge' },
@@ -183,7 +188,7 @@ export const specifications = [
       { text: 'Exclusive sundeck apartments' },
       { text: 'Spacious, airy bedrooms', image: spec('bedroom') },
       { text: 'Abundant natural light & ventilation' },
-      { text: 'Thoughtfully planned kitchens with premium fittings', image: spec('kitchen'), note: 'Artist impression', focus: '50% 45%' },
+      { text: 'Thoughtfully planned kitchens with premium fittings', image: spec('kitchen'), focus: '50% 45%' },
       { text: 'Provisions for dishwasher & washing machine' },
     ],
   },
@@ -201,15 +206,34 @@ export const specifications = [
 // Brochure pages 15 to 20: Club Ark. Group names are short labels for the
 // page; each group's line is the brochure's own. Revised by the client on
 // 13 Oct 2026: Gatherings renamed Community living, the music studio
-// replaced by a golf simulator (no photograph yet), and a Guest suite group
-// added (the brochure's guest suite photograph, from its residences pages).
+// replaced by a golf simulator, a Guest suite group, a café and adult gaming added. The
+// project's renders replace the brochure photographs they cover (`rendered`);
+// the lap pool shows its brochure photograph and then two renders, in turn
+// (`images`).
 const amenity = name => `/brochure/amenities/${name}.webp`
+// The project's own renders (interior and landscape final renders, supplied
+// 14 Oct 2026, public/gallery/amenities/), which replace the brochure's photographs
+// where there is one (client, 14 Oct 2026); marked as the architect's impression.
+export const IMPRESSION = 'Architect’s impression'
+export const rendered = (name, focus) => ({
+  image: `/gallery/amenities/${name}-1600.webp`,
+  srcSet: `/gallery/amenities/${name}-1600.webp 1600w, /gallery/amenities/${name}-2880.webp 2880w`,
+  note: IMPRESSION, ...(focus && { focus }),
+})
+const slideOf = ({ image, srcSet, note, focus }) => ({ src: image, srcSet, note, focus })
 export const club = { name: 'Club Ark', line: 'Affluent club indulgences that rise to your standards' }
 export const amenityGroups = [
   {
     id: 'pools', label: 'Pools', line: 'Experiences curated for ultimate relaxation',
     items: [
-      { id: 'lap-pool', name: 'Lap pool', image: amenity('lap-pool') },
+      {
+        id: 'lap-pool', name: 'Lap pool', image: amenity('lap-pool'),
+        images: [
+          { src: amenity('lap-pool') },
+          slideOf(rendered('lap-pool-aerial', '50% 55%')),
+          slideOf(rendered('lap-pool-evening', '30% 62%')),
+        ],
+      },
       { id: 'jacuzzi', name: 'Jacuzzi', image: amenity('jacuzzi'), focus: '40% 50%' },
       { id: 'kids-pool', name: 'Kids pool', image: amenity('kids-pool') },
       { id: 'wet-lounger', name: 'Wet lounger', image: amenity('wet-lounger'), focus: '50% 68%' },
@@ -220,35 +244,37 @@ export const amenityGroups = [
     id: 'active', label: 'Active living', line: 'An ecosystem planned for active living',
     items: [
       { id: 'box-cricket', name: 'Box cricket', image: amenity('box-cricket') },
-      { id: 'pickleball', name: 'Pickle ball court', image: amenity('pickleball') },
-      { id: 'multipurpose-court', name: 'Multipurpose court', image: amenity('multipurpose-court') },
-      { id: 'kids-play', name: 'Kids play area', image: amenity('kids-play') },
-      { id: 'creche', name: 'Creche', image: amenity('creche') },
+      { id: 'pickleball', name: 'Pickle ball court', ...rendered('pickleball', '58% 62%') },
+      { id: 'multipurpose-court', name: 'Multipurpose court', ...rendered('multipurpose-court', '48% 62%') },
+      { id: 'kids-play', name: 'Kids play area', ...rendered('kids-play', '38% 55%') },
+      { id: 'creche', name: 'Creche', ...rendered('creche', '45% 58%') },
     ],
   },
   {
     id: 'fitness', label: 'Fitness', line: 'An ambience that brings out your strongest self',
     items: [
-      { id: 'gym', name: 'Gym', image: amenity('gym') },
+      { id: 'gym', name: 'Gym', ...rendered('gym', '62% 55%') },
       { id: 'yoga-deck', name: 'Yoga deck', image: amenity('yoga-deck') },
       { id: 'meditation-zone', name: 'Meditation zone', image: amenity('meditation-zone') },
-      { id: 'kick-boxing', name: 'Kick boxing studio', image: amenity('kick-boxing'), focus: '50% 45%' },
+      { id: 'kick-boxing', name: 'Kick boxing studio', ...rendered('kick-boxing', '38% 55%') },
     ],
   },
   {
     id: 'pursuits', label: 'Pursuits', line: 'A private escape for your favourite pursuits',
     items: [
-      { id: 'indoor-games', name: 'Indoor games arena', image: amenity('indoor-games'), focus: '30% 50%' },
-      { id: 'golf-simulator', name: 'Golf simulator' },
-      { id: 'private-screening', name: 'Private screening', image: amenity('private-screening'), focus: '50% 55%' },
-      { id: 'hobby-studio', name: 'Hobby studio', image: amenity('hobby-studio') },
+      { id: 'indoor-games', name: 'Indoor games arena', ...rendered('indoor-games', '55% 55%') },
+      { id: 'adult-gaming', name: 'Adult gaming', ...rendered('game-zone', '40% 55%') },
+      { id: 'golf-simulator', name: 'Golf simulator', ...rendered('golf-simulator', '45% 50%') },
+      { id: 'private-screening', name: 'Private screening', ...rendered('private-screening', '62% 55%') },
+      { id: 'hobby-studio', name: 'Hobby studio', ...rendered('hobby-studio', '42% 50%') },
+      { id: 'cafe', name: 'Café', ...rendered('cafe', '50% 60%') },
     ],
   },
   {
     id: 'community', label: 'Community living', line: 'Where good company meets the perfect setting',
     items: [
-      { id: 'banquet-hall', name: 'Banquet hall', image: amenity('banquet-hall'), focus: '50% 55%' },
-      { id: 'amphitheatre', name: 'Amphitheatre with central lawn', image: amenity('amphitheatre') },
+      { id: 'banquet-hall', name: 'Banquet hall', ...rendered('banquet-hall', '42% 55%') },
+      { id: 'amphitheatre', name: 'Amphitheatre with central lawn', ...rendered('amphitheatre', '40% 58%') },
       { id: 'party-hall', name: 'Party hall', image: amenity('party-hall'), focus: '50% 55%' },
       { id: 'senior-seating', name: 'Senior citizen seating area', image: amenity('senior-seating'), focus: '50% 62%' },
     ],
@@ -256,7 +282,7 @@ export const amenityGroups = [
   {
     id: 'guest-suite', label: 'Guest suite',
     items: [
-      { id: 'guest-suite', name: 'Guest suite', image: spec('guest-suite') },
+      { id: 'guest-suite', name: 'Guest suite', ...rendered('guest-suite', '50% 55%') },
     ],
   },
 ]

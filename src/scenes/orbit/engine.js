@@ -44,7 +44,8 @@ const pad = i => String(i).padStart(3, '0')
 // frame's height as much as a wide screen needs its width.
 const frameWidth = () => {
   const w = window.screen?.width ?? window.innerWidth, h = window.screen?.height ?? window.innerHeight
-  const needed = Math.max(w, h * 16 / 9) * Math.min(window.devicePixelRatio || 1, 2)
+  // (with room for the pages' zoom, up to about 1.3)
+  const needed = Math.max(w, h * 16 / 9) * Math.min(window.devicePixelRatio || 1, 2) * 1.3
   return needed <= 1500 ? orbit.widths[0] : orbit.widths[1]
 }
 const lowMemory = () => (navigator.deviceMemory ?? 8) <= 4

@@ -20,7 +20,8 @@ export default function TowerPage() {
   return <section className="absolute inset-0 overflow-hidden" aria-label="The Tower">
     <div data-reveal="fade" className="absolute inset-0">
       <Suspense fallback={<img src={orbit.poster.day} alt="" className="absolute inset-0 size-full object-cover" />}>
-        <OrbitView light={light} keys turn={turn} onFirstMove={() => setMoved(true)}
+        {/* Zoomed in, so the tower reads larger (client, 14 Oct 2026). */}
+        <OrbitView light={light} keys turn={turn} zoom={1.32} onFirstMove={() => setMoved(true)}
           label="Rendered 360 degree orbit of Arkade Ascend in its neighbourhood. Drag, swipe or use the left and right arrow keys to turn it." />
       </Suspense>
     </div>

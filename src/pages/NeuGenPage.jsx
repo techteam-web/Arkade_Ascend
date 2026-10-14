@@ -127,7 +127,7 @@ export default function NeuGenPage() {
       </button>)}
     </nav>
 
-    <div data-reveal="fade" className="absolute inset-x-(--gutter) bottom-[clamp(1rem,4vh,2.5rem)] z-10 flex items-center justify-between gap-4 text-ivory">
+    <div data-reveal="fade" className="absolute inset-x-(--gutter) bottom-[max(clamp(1rem,4vh,2.5rem),var(--credit-space))] z-10 flex items-center justify-between gap-4 text-ivory">
       <p className="num text-[0.72rem]" aria-live="polite">
         <span className="text-gold-200">{pad(chapter + 1)}</span> / {pad(chapters.length)}<span className="visually-hidden">, {chapters[chapter].label}</span>
       </p>
@@ -281,6 +281,6 @@ function Together({ active }) {
         <p data-ch className="mt-[clamp(0.8rem,2.4vh,1.4rem)] text-[clamp(0.92rem,min(1.25vw,2.5vh),1.3rem)] leading-[1.7] text-ivory/92 short:mt-1.5 short:text-[0.78rem]">{close[0]}<br />{close[1]}</p>
       </div>
     </div>
-    <p className="absolute bottom-3 left-(--gutter) text-[0.5rem] uppercase tracking-[0.2em] text-ivory/55">Representative image</p>
+    <p className="absolute bottom-3 left-(--gutter) text-[0.5rem] uppercase tracking-[0.2em] text-ivory/55">Representational image</p>
   </Chapter>
 }
