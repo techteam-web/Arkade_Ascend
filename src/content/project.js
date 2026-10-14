@@ -160,7 +160,9 @@ export const places = [...connectivity, ...upcoming, ...nearbyPlaces]
 const spec = name => `/brochure/specs/${name}.webp`
 export const specifications = [
   {
-    id: 'tower', title: 'The tower', line: 'Rise to a life extraordinaire', image: spec('tower'),
+    // The tower: the final exterior render cam02-day (as in the Gallery), not the brochure's stock image.
+    id: 'tower', title: 'The tower', line: 'Rise to a life extraordinaire',
+    image: '/gallery/exterior/cam02-day-1600.webp', srcSet: '/gallery/exterior/cam02-day-1600.webp 1280w, /gallery/exterior/cam02-day-2880.webp 2304w', note: 'Architect’s impression', focus: '50% 42%',
     items: [
       { text: 'Contemporary 37 storey tower' },
       { text: 'A grand double-height arrival experience' },
