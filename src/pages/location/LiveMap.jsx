@@ -60,7 +60,8 @@ const TOWER_PLAN = {
 // The ground, as the brochure's map page: cream land, sage parks, water a
 // cool grey-green that gives the creeks some depth, white streets, the
 // expressways in pale gold, and plum labels (water's in its own tone). Each
-// colour has a dusk twin, warmer and softer, blended in by the Dusk switch:
+// colour has a dusk twin, warmer and softer, once blended in by a Dusk switch (removed from the page, 14 Oct 2026; the
+// map now stays in daylight, t = 0):
 // peach land, lilac water, rose-brown buildings.
 const PALETTE = {
   ground: ['#f6efd6', '#efd8c4'],
@@ -217,7 +218,7 @@ function pin(className, label, onClick) {
   return element
 }
 
-export default function LiveMap({ origin, places, group, active, hovered, tilted, dusk = false, inset, onSelect, onFail }) {
+export default function LiveMap({ origin, places, group, active, hovered, tilted, inset, onSelect, onFail }) {
   const box = useRef(null)
   const map = useRef(null)
   const pins = useRef(new Map())
@@ -620,24 +621,6 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
     const timer = setTimeout(reframe, 250)
     return () => clearTimeout(timer)
   }, [ready, inset.top, inset.right, inset.bottom, inset.left])
-
-  // Day or dusk: the ground's colours, the sun and the tower's weather blend
-  // together, from wherever they are (reduced motion: at once).
-  useEffect(() => {
-    if (!ready) return
-    const instance = map.current
-    const light = () => {
-      const t = daylight.current.t
-      tinted.forEach(([id, property, name]) => { if (instance.getLayer(id)) instance.setPaintProperty(id, property, mixed(PALETTE[name], t)) })
-      instance.setLight(sunAt(t))
-      tower.current?.setDusk(t)
-    }
-    const target = dusk ? 1 : 0
-    if (daylight.current.t === target) return
-    if (prefersReducedMotion()) { daylight.current.t = target; light(); return }
-    const tween = gsap.to(daylight.current, { t: target, duration: 1.4, ease: 'power1.inOut', overwrite: true, onUpdate: light })
-    return () => tween.kill()
-  }, [ready, dusk])
 
   // 3D or plan view. In 2D the tower folds away and its plan shows instead.
   const shownTilt = useRef(null)   // the view last flown to (StrictMode-safe)
