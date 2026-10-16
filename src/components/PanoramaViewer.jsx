@@ -33,13 +33,16 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
 // Vertical field of view whose horizontal field is `hfov` on a width x height screen.
 const vfovFor = (hfov, width, height) => 2 * Math.atan(Math.tan(hfov / 2) * height / width)
 const hfovFor = (vfov, width, height) => 2 * Math.atan(Math.tan(vfov / 2) * width / height)
+// A sector can be no wider than this (a screen cannot show 180 degrees flat).
+const MAX_SPAN = 2.9
 function applyLock(params, lock) {
   if (!lock || !params.width || !params.height) return params
   const { width, height } = params
-  params.fov = Math.min(params.fov, vfovFor(lock.span, width, height), lock.pitch[1] - lock.pitch[0])
+  const span = Math.min(lock.span, MAX_SPAN)
+  params.fov = Math.min(params.fov, vfovFor(span, width, height), lock.pitch[1] - lock.pitch[0])
   const halfH = hfovFor(params.fov, width, height) / 2
   const halfV = params.fov / 2
-  params.yaw = lock.yaw + clamp(wrap(params.yaw - lock.yaw), -(lock.span / 2 - halfH), lock.span / 2 - halfH)
+  params.yaw = lock.yaw + clamp(wrap(params.yaw - lock.yaw), -(span / 2 - halfH), span / 2 - halfH)
   params.pitch = clamp(params.pitch, lock.pitch[0] + halfV, lock.pitch[1] - halfV)
   return params
 }
@@ -98,12 +101,12 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
     },
     // Fly to a view (yaw and pitch in radians, by the shortest way round), then
     // keep it inside `lock` ({ yaw, span, pitch: [min, max] }); null frees it at once.
-    focus({ yaw, pitch }, lock = null) {
+    focus({ yaw, pitch, fov: zoom }, lock = null) {
       const view = pano.current?.view
       if (!view) return
       lockRef.current = null
       hold()
-      const fov = lock ? Math.min(view.fov(), vfovFor(lock.span * 0.98, view.width(), view.height())) : view.fov()
+      const fov = lock ? Math.min(zoom ?? view.fov(), vfovFor(Math.min(lock.span, MAX_SPAN) * 0.98, view.width(), view.height())) : zoom ?? view.fov()
       const to = { yaw: view.yaw() + wrap(yaw - view.yaw()), pitch, fov }
       pending.current = lock
       const done = () => { pending.current = undefined; lockRef.current = lock; if (!lock) release() }
