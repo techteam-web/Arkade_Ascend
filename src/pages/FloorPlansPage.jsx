@@ -10,7 +10,7 @@ import SheetSwitch from '../components/SheetSwitch.jsx'
 import ViewOverlay from '../components/ViewOverlay.jsx'
 import { floorExceptions, positions, typicalPlan, wing } from '../content/floorPlans.js'
 import {
-  area, featureLabel, features, floorRuns, floors, homeById, homeId, homes, homesOfType, ordinal, planById, planTypes, typeAt,
+  area, featureLabel, features, floorRuns, floors, homeById, homeId, homes, homesOfType, isOpen, openFloors, openRange, ordinal, planById, planTypes, typeAt,
 } from '../content/inventory.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
@@ -28,13 +28,15 @@ const floorNotes = {
 // none for the typical floor), and on it a unit (?unit=05). The unit finder
 // links a home (?home=A-1205) or a plan (?plan=05-7); the visual selection
 // links a wing and floor (?wing=A&floor=12). Wing B has no plans yet.
+// Blocked floors (outside the wing's `open` range) and their plans fall back to the typical floor.
 const resolve = params => {
   const otherWing = (params.get('wing') ?? params.get('tower'))?.toUpperCase()
   if (otherWing && otherWing !== wing) return { pending: otherWing }
   const home = homeById(params.get('home'))
   const asked = Number(params.get('floor'))
-  const plan = planById(params.get('plan'))
-  const floor = home?.floor ?? (floors.includes(asked) ? asked : plan?.floor ?? null)
+  const named = planById(params.get('plan'))
+  const plan = named && (!named.floor || isOpen(named.floor)) ? named : null
+  const floor = home?.floor ?? (isOpen(asked) ? asked : plan?.floor ?? null)
   const unit = home?.position ?? params.get('unit') ?? plan?.unit ?? null
   const type = home?.type ?? (unit && positions.includes(unit) ? (floor ? typeAt(floor, unit) : plan ?? planById(unit)) : null)
   return { floor, type, home: home ?? (floor && type ? homeById(homeId(floor, type.unit)) : null) }
@@ -176,7 +178,7 @@ function FloorOverview({ floor, hovered, onHover, onFloor, onOpen, onFinder }) {
       <FloorRail floor={floor} onFloor={onFloor} />
       <p className="min-h-[2lh] text-[0.62rem] uppercase leading-relaxed tracking-[0.16em] text-muted" aria-live="polite">
         {floor ? floorNotes[floor] ?? <>Floor <span className="num">{floor}</span> follows the typical plan · homes <span className="num">{homeId(floor, '01')}</span> to <span className="num">{homeId(floor, '06')}</span></>
-          : <>One plan serves floors <span className="num">{floors[0]}–{floors.at(-1)}</span> · Unit 05 differs on floors <span className="num">7</span> and <span className="num">36</span></>}
+          : <>Floors <span className="num">{openRange[0]}–{openRange[1]}</span> open · higher floors to follow · Unit 05 differs on floor <span className="num">7</span></>}
       </p>
     </div>
 
@@ -236,11 +238,13 @@ function FloorOverview({ floor, hovered, onHover, onFloor, onOpen, onFinder }) {
 
 // Floors as a lift panel: one row of floor numbers that scrolls sideways,
 // with the chosen floor kept in view. A gold dot marks the floors that differ
-// from the typical plan. Left and right arrow keys step through the floors.
+// from the typical plan. Left and right arrow keys step through the open
+// floors; the floors above them show, disabled, until further update.
 function FloorRail({ floor, onFloor }) {
   const rail = useRef(null)
-  const step = direction => onFloor(floor ? clamp(floor + direction, floors[0], floors.at(-1)) : direction > 0 ? floors[0] : floors.at(-1))
-  const differs = Object.keys(floorExceptions).map(Number)
+  const [first, last] = [openFloors[0], openFloors.at(-1)]
+  const step = direction => onFloor(floor ? clamp(floor + direction, first, last) : direction > 0 ? first : last)
+  const differs = Object.keys(floorExceptions).map(Number).filter(isOpen)
 
   // Bring the chosen floor to the middle of the rail (only the rail scrolls).
   useEffect(() => {
@@ -265,8 +269,8 @@ function FloorRail({ floor, onFloor }) {
         <p className="num text-[clamp(1.6rem,2.4vw,2.6rem)] leading-none text-fg" aria-hidden="true">{floor ? String(floor).padStart(2, '0') : 'All'}</p>
       </div>
       <div className="flex gap-2">
-        <button type="button" className="btn-icon" aria-label="Floor down" disabled={floor === floors[0]} onClick={() => step(-1)}><Icon d="m15 6-6 6 6 6" /></button>
-        <button type="button" className="btn-icon" aria-label="Floor up" disabled={floor === floors.at(-1)} onClick={() => step(1)}><Icon d="m9 6 6 6-6 6" /></button>
+        <button type="button" className="btn-icon" aria-label="Floor down" disabled={floor === first} onClick={() => step(-1)}><Icon d="m15 6-6 6 6 6" /></button>
+        <button type="button" className="btn-icon" aria-label="Floor up" disabled={floor === last} onClick={() => step(1)}><Icon d="m9 6 6 6-6 6" /></button>
       </div>
     </div>
     <div ref={rail} role="group" aria-label="Choose a floor" onKeyDown={onKey} data-own-gesture
@@ -274,8 +278,9 @@ function FloorRail({ floor, onFloor }) {
       <span aria-hidden="true" className="w-3 shrink-0" />
       <button type="button" data-floor="typical" aria-pressed={!floor} onClick={() => onFloor(null)}
         className="floor-key snap-center px-4! text-[0.6rem]! uppercase tracking-[0.2em]">Typical</button>
-      {floors.map(n => <button key={n} type="button" data-floor={n} aria-pressed={floor === n} onClick={() => onFloor(n)}
-        aria-label={`Floor ${n}${differs.includes(n) ? ', Unit 05 differs' : ''}`} className="floor-key num snap-center">
+      {floors.map(n => <button key={n} type="button" data-floor={n} aria-pressed={floor === n} onClick={() => onFloor(n)} disabled={!isOpen(n)}
+        title={isOpen(n) ? undefined : 'Until further update'}
+        aria-label={`Floor ${n}${differs.includes(n) ? ', Unit 05 differs' : ''}${isOpen(n) ? '' : ', not open until further update'}`} className="floor-key num snap-center">
         {n}{differs.includes(n) && <span aria-hidden="true" className="absolute bottom-1.5 left-1/2 size-1 -translate-x-1/2 rounded-full bg-gold-500" />}
       </button>)}
       <span aria-hidden="true" className="w-3 shrink-0" />

@@ -16,6 +16,8 @@ const POSES = {
   right: 'translate3d(56%, -50%, 0) scale(.9)',
   back: 'translate3d(-50%, -50%, 0) scale(.94)',
 }
+// An amenity render's name, shown on the picture (template.js).
+const describe = image => image.description ?? null
 
 export default function GalleryPage() {
   const [category, setCategory] = useState(galleryTabs[0])
@@ -64,8 +66,11 @@ export default function GalleryPage() {
             ? <button type="button" className="absolute inset-0 cursor-zoom-in" onClick={() => setLightbox(true)} aria-label={`View ${image.category} image full screen`} />
             : pose !== 'back' && <button type="button" tabIndex={-1} className="absolute inset-0" onClick={() => step(pose === 'left' ? -1 : 1)} aria-label={pose === 'left' ? 'Previous image' : 'Next image'} />}
           {pose === 'center' && <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/75 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">{image.note ?? RENDER_NOTE}</p>}
-          {pose === 'center' && <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between bg-linear-to-t from-espresso/85 to-transparent px-5 pb-4 pt-14">
-            <span className="text-[0.6rem] uppercase tracking-[0.34em] text-gold-200">{image.category}</span>
+          {pose === 'center' && <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-linear-to-t from-espresso/85 to-transparent px-5 pb-4 pt-14">
+            <span className="min-w-0">
+              <span className="block text-[0.6rem] uppercase tracking-[0.34em] text-gold-200">{image.category}</span>
+              {describe(image) && <span className="mt-1.5 block font-display text-[clamp(1rem,min(1.8vw,3.4vh),1.6rem)] leading-tight text-ivory">{describe(image)}</span>}
+            </span>
             <span className="num text-[0.7rem] text-ivory/80">{pad(i + 1)} / {pad(filtered.length)}</span>
           </figcaption>}
         </figure>
@@ -74,7 +79,7 @@ export default function GalleryPage() {
       {!selected && <div className="absolute left-1/2 top-1/2 aspect-16/10 w-[min(64cqw,calc(100cqh*1.45))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-sm border border-gold-500/30 max-md:w-[min(94cqw,calc(100cqh*1.45))]">
         <ImageSlot label="Renders to follow" />
       </div>}
-      <span className="visually-hidden" aria-live="polite">{selected ? `${selected.category}, image ${index + 1} of ${filtered.length}` : `${category}: renders to follow`}</span>
+      <span className="visually-hidden" aria-live="polite">{selected ? `${selected.category}, image ${index + 1} of ${filtered.length}${describe(selected) ? `: ${describe(selected)}` : ''}` : `${category}: renders to follow`}</span>
     </div>
 
     <div data-reveal className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
@@ -103,7 +108,10 @@ export default function GalleryPage() {
       </button>
       <button type="button" className="btn-icon absolute left-(--gutter) top-1/2" onClick={event => { event.stopPropagation(); step(-1) }} aria-label="Previous image"><ChevronIcon direction="left" /></button>
       <button type="button" className="btn-icon absolute right-(--gutter) top-1/2" onClick={event => { event.stopPropagation(); step(1) }} aria-label="Next image"><ChevronIcon /></button>
-      <p className="absolute bottom-5 left-1/2 -translate-x-1/2 text-[0.6rem] uppercase tracking-[0.3em] text-gold-200">{selected.category} · {pad(index + 1)} / {pad(filtered.length)}</p>
+      <div className="absolute bottom-5 left-1/2 w-max max-w-[min(70vw,40rem)] -translate-x-1/2 text-center max-sm:bottom-12">
+        {describe(selected) && <p className="mb-1.5 font-display text-[clamp(1rem,1.6vw,1.5rem)] leading-tight text-ivory">{describe(selected)}</p>}
+        <p className="text-[0.6rem] uppercase tracking-[0.3em] text-gold-200">{selected.category} · {pad(index + 1)} / {pad(filtered.length)}</p>
+      </div>
       <p className="absolute bottom-5 right-(--gutter) text-[0.55rem] uppercase tracking-[0.22em] text-ivory/70 max-sm:bottom-12">{selected.note ?? RENDER_NOTE}</p>
     </div>, document.querySelector('.page-frame') || document.body)}
   </section>

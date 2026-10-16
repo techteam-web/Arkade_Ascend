@@ -14,10 +14,17 @@ const podiumHeight = model.towerY / model.towerFloor
 export const floorBase = n => n <= model.towerFloor ? n * podiumHeight : model.towerY + (n - model.towerFloor) * model.floorHeight
 export const floorAt = y => y < model.towerY ? Math.floor(y / podiumHeight) : model.towerFloor + Math.floor((y - model.towerY) / model.floorHeight)
 
-// Floors with homes only: within the wing's floors and not a refuge floor.
+// The floors open for selection, [first, last]: the wing's `open` range
+// where some floors are blocked for now, else all its floors.
+export const openFloors = id => {
+  const { floors: [first, last], open = [first, last] } = towerById(id)
+  return [Math.max(first, open[0]), Math.min(last, open[1])]
+}
+
+// Floors with homes only: within the wing's open floors and not a refuge floor.
 export const selectable = (id, n) => {
-  const { floors: [first, last], refuge } = towerById(id)
-  return n >= first && n <= last && !refuge.includes(n)
+  const [first, last] = openFloors(id)
+  return n >= first && n <= last && !towerById(id).refuge.includes(n)
 }
 
 // The next floor with homes of a wing above or below n.

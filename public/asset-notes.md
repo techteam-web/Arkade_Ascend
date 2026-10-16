@@ -198,6 +198,14 @@ page), recoloured to the plum and gold palette and cut to viewBox
 `src/content/arkadeFamily.js` use the same coordinates, read from the deck's
 pin positions.
 
+`timely-delivery-400.webp` and `-800.webp` are the client's "Trusted for
+timely delivery" seal (`Trusted Timely delivery.pdf`, supplied 16 Oct 2026;
+vector, text in outlines), rendered with pdf.js in headless Chrome on a
+transparent ground, cropped to the seal and saved as WebP (quality 92). The
+PDF leaves the shield's lower half open on the white page, so that half is
+filled with the presentation's ivory (#fbf8ec) behind the artwork, keeping
+"For timely delivery" legible over the photograph.
+
 ## Orbit (`public/orbit/`)
 
 The tower's rendered 360° orbit, from the Orbit project (supplied 10 Oct
@@ -265,3 +273,13 @@ deck marks it "Representative Image". It replaces the brochure's cropped
 ## Wing and top-view panoramas (`public/assets/`)
 
 Marzipano Tool cube-map exports (4 levels, 512 px tiles, faces up to 4096 px), as supplied: `Tower A` and `Tower B` (11 flights each, at the height of floors 5, 6, 8, 12, 16, 20, 24, 28, 32, 36 and 37; the folder name carries the drone height in metres, e.g. `8845m` is 88.45 m) and `Top View` (day, evening and night at 120 m). About 580 MB in all. They have not been re-projected onto one frame (unlike `public/views/`), so a crossfade between two floors is in register only as far as the drone kept its heading. `src/content/panoramas.js` lists them.
+
+## Replaced amenity renders (16 Oct 2026)
+
+The client supplied new renders of the amphitheatre lawn (`amphitheatre.jpg`,
+6000 x 3333) and the kids play zone (`kidsplayroom.png`, 6000 x 2727). They
+were resized (Lanczos) to 1600 and 2880 px wide and saved as WebP (quality
+82) as `gallery/amenities/amphitheatre-lawn-*` and `kids-play-evening-*`,
+replacing `amphitheatre-*` and `kids-play-*`; the new names keep visitors'
+cached copies of the old renders from showing. The originals were moved out
+of `public/` to `source-renders/amenities/` (not deployed, not in git).

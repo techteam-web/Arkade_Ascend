@@ -51,7 +51,8 @@ export default function TowerPage() {
         </div>
         <button type="button" className="btn-icon border-transparent! max-sm:hidden" aria-label="Turn the tower right" onClick={() => rotate(1)}><ChevronIcon /></button>
       </div>
-      <p className="text-[0.52rem] uppercase tracking-[0.26em] text-ivory/75 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Representational</p>
     </div>
+    {/* Bottom right (client, 16 Oct 2026): the BrainWing credit holds the bottom left. */}
+    <p className="pointer-events-none absolute bottom-(--credit-bottom) right-(--gutter) text-[0.52rem] uppercase tracking-[0.22em] text-ivory/75 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Architect’s impression</p>
   </section>
 }

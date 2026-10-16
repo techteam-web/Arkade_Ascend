@@ -22,11 +22,17 @@ function streamTexture() {
   return t
 }
 
+// The crown's height in the renders (image v, v up): 0.725 to 0.73 across
+// all 100 frames (the manifest's cameras, the top floor plus 6 m). The margin
+// above it, as a share of the view's height, clears the page's top fade.
+const CROWN_V = 0.73
+const CROWN_MARGIN = 0.12
+
 // The orbit, drawn on demand: a frame is rendered only while the view moves,
 // a frame arrives, the light changes or the pointer moves over the depth
 // parallax; still, it draws nothing. All passes of a frame land together, so
 // depth, matte and colour always line up.
-export default function OrbitStage({ engine, controller, world, light, sky, pickable, floor, zoom, onFloor, onHover, onReady }) {
+export default function OrbitStage({ engine, controller, world, light, sky, pickable, floor, zoom, fit = 'cover', onFloor, onHover, onReady }) {
   const { frames, source } = engine
   const { count } = source
   const size = useThree(state => state.size)
@@ -67,7 +73,7 @@ export default function OrbitStage({ engine, controller, world, light, sky, pick
   }).current
   // The latest props, for the frame loop and the pointer callbacks.
   const live = useRef({})
-  live.current = { light: LIGHT[light], pickable, onFloor, onHover, onReady, zoom, sky }
+  live.current = { light: LIGHT[light], pickable, onFloor, onHover, onReady, zoom, sky, fit }
 
   useEffect(() => frames.onDecoded(invalidate), [frames, invalidate])
   useEffect(() => world?.onLoaded(invalidate), [world, invalidate])
@@ -87,7 +93,9 @@ export default function OrbitStage({ engine, controller, world, light, sky, pick
     invalidate()
   }, [floor, world, uniforms, invalidate])
 
-  // "Cover" fit: fill the view, crop the overflow.
+  // "Cover" fit: fill the view, crop the overflow (never the sides on a wide
+  // view). With fit 'crown' the crop moves down where it must, so the
+  // tower's crown and terrace stay clear of the top edge (see the frame loop).
   useEffect(() => {
     const view = size.width / Math.max(1, size.height)
     const image = source.width / source.height
@@ -226,6 +234,13 @@ export default function OrbitStage({ engine, controller, world, light, sky, pick
     // (the relief's overscan only; the flat styles never zoom)
     const push = inRelief ? 1 + TUNING.reliefMove.overscan * out : 1
     uniforms.uCover.value.copy(st.cover).divideScalar(st.zoom * push)
+    // Keep the crown (the same height in every frame, CROWN_V) a margin
+    // below the view's top, the page's top fade included: shift the crop
+    // down, never past the render's own top.
+    if (live.current.fit === 'crown') {
+      const half = uniforms.uCover.value.y / 2
+      uniforms.uShift.value.y = Math.min(Math.max(0, CROWN_V + half * 2 * CROWN_MARGIN - (0.5 + half)), 0.5 - half)
+    } else uniforms.uShift.value.y = 0
     // depth parallax follows the mouse, never a drag or reduced motion
     const h = controller.dragging || reduced ? { x: 0, y: 0 } : controller.hover
     uniforms.uParallax.value.lerp(st.hover.set(h.x, h.y), 1 - Math.exp(-dt * 3))

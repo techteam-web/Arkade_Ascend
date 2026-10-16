@@ -70,7 +70,7 @@ export default function ArkadeFamilyPage() {
     <ArkadeMark className="pointer-events-none absolute bottom-[-12vmin] left-[-9vmin] hidden h-[62vmin] w-auto text-gold-500/[0.05] split:block" />
 
     <div className="relative flex shrink-0 flex-col gap-6 split:min-h-0 split:justify-center-safe split:gap-[clamp(1.25rem,5vh,3rem)]">
-      <PageHeading id="about" title="About Us" subtitle="The family behind Ascend" />
+      <PageHeading id="about" title="About Us" />
       {/* Side by side the parts read as an index; stacked, as pills. */}
       <div role="tablist" aria-label="About Arkade" aria-orientation="vertical" onKeyDown={onKeyDown} data-reveal
         className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1 [scrollbar-width:none] split:flex-col split:gap-0 split:overflow-visible" data-own-gesture>
@@ -99,15 +99,20 @@ export default function ArkadeFamilyPage() {
 
 // A framed photograph that takes whatever height its part leaves it beside
 // the viewport (stacked, it keeps its own proportion). Its foot is shaded
-// so the type laid over it always reads.
-function Frame({ image, focus, ratio, className = '', children }) {
+// so the type laid over it always reads. A `badge` (a seal) sits at its top
+// right; a missing file just leaves the corner empty.
+function Frame({ image, focus, ratio, badge, className = '', children }) {
+  const [badgeShown, setBadgeShown] = useState(true)
   return <figure data-reveal="mask" data-part-frame className={`relative m-0 shrink-0 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 ${ratio} split:aspect-auto split:min-h-52 split:flex-1 split:shrink ${className}`}>
     <img data-part-image src={image.src} srcSet={image.srcSet} sizes="(min-width: 64rem) 62vw, 100vw" alt={image.alt} draggable="false"
       className="absolute inset-0 size-full select-none object-cover" style={{ objectPosition: focus }} />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/90 via-ink/35 via-45% to-transparent" />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-ink/45 to-transparent to-60%" />
-    <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Representational image</p>
+    {badge && badgeShown && <img src={badge.src} srcSet={badge.srcSet} sizes="6rem" alt={badge.alt} draggable="false" onError={() => setBadgeShown(false)}
+      className="pointer-events-none absolute right-[clamp(0.75rem,1.6vw,1.5rem)] top-[clamp(0.75rem,1.6vw,1.5rem)] h-auto w-[clamp(3rem,5.5vw,5.5rem)] select-none drop-shadow-[0_2px_10px_rgba(18,11,13,.45)]" />}
     <figcaption className="absolute inset-x-0 bottom-0 px-[clamp(1.1rem,2.6vw,2.5rem)] pb-[clamp(1rem,3vh,2.25rem)] text-ivory">{children}</figcaption>
+    {/* Small, in the photograph's bottom right corner (client, 16 Oct 2026). */}
+    <p className="pointer-events-none absolute bottom-2 right-3 text-[0.5rem] uppercase leading-none tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">Representational image</p>
   </figure>
 }
 
@@ -118,7 +123,7 @@ function PartNumber({ number, onPhoto = true }) {
 
 function Legacy({ number }) {
   return <>
-    <Frame image={legacy.image} focus="50% 40%" ratio="aspect-[4/3] @lg:aspect-[16/9]">
+    <Frame image={legacy.image} badge={legacy.badge} focus="50% 40%" ratio="aspect-[4/3] @lg:aspect-[16/9]">
       <PartNumber number={number} />
       <h2 data-part className="display mt-3 max-w-[18ch] text-[clamp(1.6rem,min(3.4vw,6.4vh),3.8rem)] leading-[1.02]">{legacy.title}</h2>
       <ul data-part className="mt-[clamp(0.8rem,2.4vh,1.4rem)] flex flex-wrap gap-x-8 gap-y-2">
@@ -255,14 +260,18 @@ function Landmarks({ number }) {
       <PartNumber number={number} />
       <h2 data-part className="display mt-3 max-w-[16ch] text-[clamp(1.6rem,min(3vw,6vh),3.6rem)] leading-[1.02]">{landmarks.title}</h2>
     </Frame>
-    {/* The eight landmarks as an index, each by its own colour logo. */}
-    <ol className="flex min-w-0 flex-col justify-center-safe" aria-label="Landmark projects">
-      {landmarks.projects.map((project, i) => <li key={project.name} data-reveal data-part
-        className="flex min-h-11 items-center gap-4 border-b border-line py-[clamp(0.45rem,1.4vh,0.9rem)] first:border-t">
-        <span className="num w-6 shrink-0 text-[0.66rem] text-muted">{pad(i + 1)}</span>
-        <img src={landmarks.logo(project.name)} alt={`Arkade ${project.name}, ${project.locality}`} draggable="false" decoding="async"
-          className="block h-[clamp(2rem,min(3.3vw,5.6vh),3.4rem)] w-auto max-w-[calc(100%-2.5rem)] select-none object-contain object-left" />
-      </li>)}
-    </ol>
+    {/* The eight landmarks as an index, each by its own colour logo, and
+        the registration note after them (client, 16 Oct 2026). */}
+    <div className="flex min-w-0 flex-col justify-center-safe">
+      <ol aria-label="Landmark projects">
+        {landmarks.projects.map((project, i) => <li key={project.name} data-reveal data-part
+          className="flex min-h-11 items-center gap-4 border-b border-line py-[clamp(0.45rem,1.4vh,0.9rem)] first:border-t">
+          <span className="num w-6 shrink-0 text-[0.66rem] text-muted">{pad(i + 1)}</span>
+          <img src={landmarks.logo(project.name)} alt={`Arkade ${project.name}, ${project.locality}`} draggable="false" decoding="async"
+            className="block h-[clamp(2rem,min(3.3vw,5.6vh),3.4rem)] w-auto max-w-[calc(100%-2.5rem)] select-none object-contain object-left" />
+        </li>)}
+      </ol>
+      <p data-reveal data-part className="mt-[clamp(0.6rem,1.8vh,1rem)] text-[0.6rem] uppercase tracking-[0.2em] text-plum-800">{landmarks.disclaimer}</p>
+    </div>
   </div>
 }

@@ -112,7 +112,7 @@ export default function LocationPage() {
         portrait screens above the sheet and the map's attribution. */}
     <p className="pointer-events-none absolute right-(--gutter) z-10 rounded-full bg-cream-50/85 px-3 py-1 text-[0.52rem] uppercase tracking-[0.16em] text-plum-700 backdrop-blur-sm max-sm:max-w-[calc(100%-2*var(--gutter))] max-sm:text-[0.48rem] bottom-(--note-bottom) short:right-(--beside-panel) short:bottom-[calc(var(--note-bottom)+1.75rem)]"
       style={{ '--note-bottom': inset.bottom ? `${inset.bottom + 30}px` : 'clamp(0.3rem, 1.2vh, 0.75rem)', '--beside-panel': `${inset.right}px` }}>
-      Indicative map not to scale · distances as per Google Maps
+      Indicative map not to scale · walking distances
     </p>
 
     {/* The location panel floats over the map: on the right on laptops and
@@ -143,7 +143,7 @@ export default function LocationPage() {
             </li>)}
           </ul>}
         <p data-reveal="fade" className="mt-3 text-[0.52rem] uppercase leading-relaxed tracking-[0.16em] text-ivory/50">
-          {group === 'nearby' ? 'Places as listed in the brochure. Indicative locations from OpenStreetMap and published addresses; distances by road, approximate.' : 'Indicative locations. Routes by road from OpenStreetMap; distances as per Google Maps.'}
+          {group === 'nearby' ? 'Places as listed in the brochure. Indicative locations from OpenStreetMap and published addresses; walking routes and distances, approximate.' : 'Indicative locations. Walking routes and distances from OpenStreetMap, approximate.'}
         </p>
       </div>
     </aside>
