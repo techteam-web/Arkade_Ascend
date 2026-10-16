@@ -12,8 +12,10 @@ const coarse = () => window.matchMedia?.('(pointer: coarse)').matches
 // to choose it (`floor`, `onFloor`, `onHover` carry { tower, n }; `canPick`
 // says which floors have homes). `light` is day, evening or night; `sky`
 // paints a sky behind the matte, otherwise the page shows through it.
-// `turn` is a counter the page bumps to step the view round.
-export default function OrbitView({ light = 'day', sky = true, pickable = false, floor = null, onFloor, onHover, canPick, turn, zoom = 1, keys = false, onFirstMove, label, className = '' }) {
+// `turn` is a counter the page bumps to step the view round. `fit` is
+// 'cover' (fill the view) or 'crown' (fill the view, the crop moved down
+// where needed so the crown and terrace stay in view).
+export default function OrbitView({ light = 'day', sky = true, pickable = false, floor = null, onFloor, onHover, canPick, turn, zoom = 1, fit = 'cover', keys = false, onFirstMove, label, className = '' }) {
   const box = useRef(null)
   const engine = useMemo(orbitEngine, [])
   const controller = useMemo(() => new OrbitController(engine.source.count, engine.frame), [engine])
@@ -60,7 +62,7 @@ export default function OrbitView({ light = 'day', sky = true, pickable = false,
         gl={{ antialias: false, alpha: !sky, premultipliedAlpha: true, powerPreference: 'high-performance' }}
         onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0, 0, 0), 0)}>
         <OrbitStage engine={engine} controller={controller} world={world} light={light} sky={sky} pickable={pickable && !!world}
-          floor={floor} zoom={zoom} onFloor={choose} onHover={hover} onReady={() => setReady(true)} />
+          floor={floor} zoom={zoom} fit={fit} onFloor={choose} onHover={hover} onReady={() => setReady(true)} />
       </Canvas>
     </WithoutWebGL>
     {!ready && <p aria-live="polite" className="pointer-events-none absolute inset-x-0 bottom-[18%] text-center text-[0.58rem] uppercase tracking-[0.3em] text-ivory/80 [text-shadow:0_1px_8px_rgba(0,0,0,.5)]">

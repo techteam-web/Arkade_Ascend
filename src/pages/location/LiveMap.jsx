@@ -10,7 +10,7 @@ import { HERO, aerial, lens, lookOut, towerShot } from './shots.js'
 
 // OpenFreeMap's Positron (free, no key, OpenStreetMap data), recoloured to the
 // brochure's cream map page, with extruded 3D buildings and a tilted camera,
-// as on our other location maps. Routes follow the roads (OSRM).
+// as on our other location maps. Routes follow the streets on foot (OSRM).
 const STYLE_URL = 'https://tiles.openfreemap.org/styles/positron'
 const PLUM = '#4e373c'
 const HALO = '#fbf8ec'
@@ -181,7 +181,8 @@ function arc([x1, y1], [x2, y2], steps = 72) {
   })
 }
 
-// A driving route from the public OSRM server, cached per place.
+// A walking route (client, 16 Oct 2026) from the FOSSGIS OSRM server that
+// openstreetmap.org uses (the public OSRM demo only drives), cached per place.
 const routeCache = new Map()
 async function routeTo(origin, place, signal) {
   if (routeCache.has(place.id)) return routeCache.get(place.id)
@@ -190,7 +191,7 @@ async function routeTo(origin, place, signal) {
   signal.addEventListener('abort', stop)
   const timer = setTimeout(stop, ROUTE_TIMEOUT)
   try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${origin.join(',')};${place.lngLat.join(',')}?overview=full&geometries=geojson`
+    const url = `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${origin.join(',')};${place.lngLat.join(',')}?overview=full&geometries=geojson`
     const json = await (await fetch(url, { signal: request.signal })).json()
     if (json.code !== 'Ok' || !json.routes?.length) throw new Error('no route')
     const coordinates = [origin, ...json.routes[0].geometry.coordinates, place.lngLat]

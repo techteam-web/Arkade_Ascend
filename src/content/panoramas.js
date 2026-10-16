@@ -65,3 +65,18 @@ export const topView = {
 // straight ahead (yaw 0) faces. INDICATIVE until measured against the site:
 // the radar on the mini plan turns by this much more than the view does.
 export const planHeading = { A: 0, B: 0 }
+
+// Each home's two outlooks, front and back, set by eye in the view's setup
+// panel: open any page with ?setup in the address (?setup=off ends it), open
+// a view, choose a home on the mini plan, set its edges, then "Copy all rooms"
+// and paste the result over this. In degrees, as the panel shows them: `yaw`
+// is [left, right], clockwise; `pitch` is [up, down] (positive looks down).
+// Each is the edge of the screen at its limit. `start` is [yaw, pitch, zoom]
+// (zoom the vertical field of view), where the side opens; without it, it
+// opens centred between its edges. A side left out faces away from the core
+// (the back the other way), 110° wide.
+export const outlooks = {
+  A: {
+    '01': { front: { yaw: [331.9, 23] } },
+  },
+}

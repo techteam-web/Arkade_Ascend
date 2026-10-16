@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
 import { ImageSlot, PageHeading } from '../components/PageKit.jsx'
 import { ChevronIcon } from '../components/Brand.jsx'
@@ -26,19 +27,36 @@ export default function AmenitiesPage() {
   // Several pictures (the lap pool): the first, then the others, in turn,
   // from the first again whenever the amenity is chosen; paused behind the menu.
   const { menuOpen } = useShell()
+  const [lightbox, setLightbox] = useState(false)
+  const opener = useRef(null)
+  const paused = menuOpen || lightbox   // the pictures hold still behind the menu and while full screen
   const slides = active.images ?? null
   const [run, setRun] = useState({ at: index, slide: 0 })
   const slide = run.at === index ? run.slide : 0      // a new amenity starts at its first
   useEffect(() => { setRun({ at: index, slide: 0 }) }, [index])   // and so does a return to it
   useEffect(() => {
-    if (!slides || slides.length < 2 || menuOpen) return
+    if (!slides || slides.length < 2 || paused) return
     const timer = setTimeout(() => setRun({ at: index, slide: (slide + 1) % slides.length }), SLIDE_MS)
     return () => clearTimeout(timer)
-  }, [slides, slide, index, menuOpen])
+  }, [slides, slide, index, paused])
   const shownImage = slides ? slides[slide] ?? slides[0] : null
   const select = next => setIndex(((next % COUNT) + COUNT) % COUNT)
   const chooseGroup = group => select(AMENITIES.findIndex(item => item.group === group))
-  useStepper(root, { onNext: () => select(index + 1), onPrev: () => select(index - 1), lock: 600 })
+  useStepper(root, { onNext: () => select(index + 1), onPrev: () => select(index - 1), lock: 600, keys: !lightbox })
+  const picture = shownImage ? { src: shownImage.src, srcSet: shownImage.srcSet, note: shownImage.note ?? active.note }
+    : active.image && { src: active.image, srcSet: active.srcSet, note: active.note }
+  const closeLightbox = () => { setLightbox(false); requestAnimationFrame(() => opener.current?.focus({ preventScroll: true })) }
+  // Full screen: Escape closes it, the arrow keys step through the amenities.
+  useEffect(() => {
+    if (!lightbox) return
+    const onKey = event => {
+      if (event.key === 'Escape') { event.preventDefault(); closeLightbox() }
+      if (event.key === 'ArrowLeft') { event.preventDefault(); select(index - 1) }
+      if (event.key === 'ArrowRight') { event.preventDefault(); select(index + 1) }
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [lightbox, index])
 
   useLayoutEffect(() => {
     if (prefersReducedMotion()) return
@@ -73,32 +91,37 @@ export default function AmenitiesPage() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink/85 via-ink/35 to-transparent" />
         <figcaption ref={caption} className="absolute inset-x-0 bottom-0 px-[clamp(1.25rem,3vw,2.5rem)] pb-[clamp(1.1rem,3vh,2.25rem)] text-ivory">
           <p data-amenity-copy className="eyebrow text-gold-300!">{active.group.label} · <span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
-          <h2 data-amenity-copy className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5vh),2.8rem)] leading-[1.04]">{active.name}</h2>
-          {active.group.line && <p data-amenity-copy className="mt-2 max-w-[46ch] text-[0.62rem] uppercase leading-relaxed tracking-[0.2em] text-ivory/80 short:hidden">{active.group.line}</p>}
+          <h2 data-amenity-copy className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5vh),2.8rem)] normal-case leading-[1.1]">{active.name}</h2>
         </figcaption>
-        {active.image && <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/60 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">{shownImage?.note ?? active.note ?? 'Representational image'}</p>}
+        {active.image && <div className="absolute right-3 top-3 flex items-center gap-3">
+          <p className="pointer-events-none text-[0.5rem] uppercase tracking-[0.2em] text-ivory/60 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">{shownImage?.note ?? active.note ?? 'Representational image'}</p>
+          <button ref={opener} type="button" className="btn-icon" onClick={() => setLightbox(true)} aria-label={`View ${active.name} full screen`}>
+            <svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></svg>
+          </button>
+        </div>}
         {/* One thin segment per picture: the shown one fills over its time,
             those before it stay full. */}
         {slides && slides.length > 1 && <div aria-hidden="true" className="pointer-events-none absolute left-[clamp(1.25rem,3vw,2.5rem)] top-[clamp(1rem,2.6vh,1.5rem)] flex w-[clamp(4.5rem,9vw,7rem)] gap-1.5">
           {slides.map((picture, k) => <span key={picture.src} className="relative h-[2px] flex-1 overflow-hidden rounded-full bg-ivory/30 shadow-[0_1px_4px_rgba(0,0,0,.35)]">
             {k < slide && <span className="absolute inset-0 bg-gold-300" />}
             {/* restarts with its timer, also when the menu closes */}
-            {k === slide && <span key={`${index}-${slide}-${menuOpen}`} className="slide-fill absolute inset-0 bg-gold-300 motion-reduce:animate-none"
-              style={{ '--slide-time': `${SLIDE_MS}ms`, animationPlayState: menuOpen ? 'paused' : 'running' }} />}
+            {k === slide && <span key={`${index}-${slide}-${paused}`} className="slide-fill absolute inset-0 bg-gold-300 motion-reduce:animate-none"
+              style={{ '--slide-time': `${SLIDE_MS}ms`, animationPlayState: paused ? 'paused' : 'running' }} />}
           </span>)}
         </div>}
       </figure>
 
       <div data-reveal className="flex min-w-0 flex-col gap-[clamp(0.75rem,2vh,1.25rem)] split:min-h-0">
         <div className="shrink-0 roomy:hidden"><GroupTabs active={active.group} onChoose={chooseGroup} /></div>
-        <ol key={active.group.id} className="-mx-2 px-2 split:min-h-0 split:overflow-y-auto split:overscroll-contain roomy:[&>li:first-child>button]:pt-0" aria-label={`${active.group.label} amenities`}>
+        {active.group.line && <p key={`line-${active.group.id}`} className="finder-in shrink-0 text-right font-display text-[clamp(0.95rem,min(1.3vw,2.6vh),1.35rem)] leading-tight text-accent">{active.group.line}</p>}
+        <ol key={active.group.id} className="-mx-2 px-2 split:min-h-0 split:overflow-y-auto split:overscroll-contain" aria-label={`${active.group.label} amenities`}>
           {active.group.items.map(item => {
             const i = AMENITIES.findIndex(entry => entry.id === item.id)
             return <li key={item.id} className="finder-in">
               <button type="button" onClick={() => select(i)} aria-current={i === index ? 'true' : undefined}
                 className="group flex min-h-11 w-full items-baseline gap-4 border-b border-line py-[clamp(0.35rem,1.1vh,0.8rem)] text-left outline-offset-[-2px]">
                 <span className={`num w-6 shrink-0 text-[0.66rem] transition-colors duration-500 ${i === index ? 'text-accent' : 'text-muted'}`}>{pad(i + 1)}</span>
-                <span className={`min-w-0 font-display text-[clamp(1rem,min(1.6vw,3vh),1.6rem)] uppercase leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 ${i === index ? 'text-fg' : 'text-muted'}`}>{item.name}</span>
+                <span className={`min-w-0 font-display text-[clamp(1rem,min(1.6vw,3vh),1.6rem)] leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 ${i === index ? 'text-fg' : 'text-muted'}`}>{item.name}</span>
                 <span className={`ml-auto h-px shrink-0 self-center bg-accent transition-[width] duration-500 ease-silk ${i === index ? 'w-8' : 'w-0'}`} aria-hidden="true" />
               </button>
             </li>
@@ -112,6 +135,20 @@ export default function AmenitiesPage() {
       <p className="num w-16 text-center text-base text-fg">{pad(index + 1)}<span className="text-muted"> / {pad(COUNT)}</span></p>
       <button type="button" className="btn-icon" onClick={() => select(index + 1)} aria-label="Next amenity"><ChevronIcon /></button>
     </div>
+
+    {/* Portalled into the frame: above the page, still beneath the full-screen gate. */}
+    {lightbox && picture && createPortal(<div role="dialog" aria-modal="true" aria-label={`${active.name}, full screen`} onClick={closeLightbox}
+      className="absolute inset-0 z-70 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)] place-items-center bg-ink/95 p-[clamp(1rem,4vw,4rem)] backdrop-blur-md">
+      <img key={picture.src} src={picture.src} srcSet={picture.srcSet} sizes="100vw" alt={active.name} draggable="false"
+        onClick={event => event.stopPropagation()} className="finder-in max-h-full max-w-full select-none rounded-sm object-contain shadow-2xl" />
+      <button type="button" autoFocus className="btn-icon absolute right-(--gutter) top-5" onClick={closeLightbox} aria-label="Close full screen">
+        <svg viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19" /></svg>
+      </button>
+      <button type="button" className="btn-icon absolute left-(--gutter) top-1/2" onClick={event => { event.stopPropagation(); select(index - 1) }} aria-label="Previous amenity"><ChevronIcon direction="left" /></button>
+      <button type="button" className="btn-icon absolute right-(--gutter) top-1/2" onClick={event => { event.stopPropagation(); select(index + 1) }} aria-label="Next amenity"><ChevronIcon /></button>
+      <p className="absolute bottom-5 left-1/2 max-w-[70vw] -translate-x-1/2 text-center text-[0.6rem] uppercase tracking-[0.3em] text-gold-200 max-sm:bottom-12">{active.group.label} · <span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
+      <p className="absolute bottom-5 right-(--gutter) text-[0.55rem] uppercase tracking-[0.22em] text-ivory/70 max-sm:hidden">{picture.note ?? 'Representational image'}</p>
+    </div>, document.querySelector('.page-frame') || document.body)}
   </section>
 }
 

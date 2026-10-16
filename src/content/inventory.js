@@ -1,4 +1,5 @@
 import { floorExceptions, floorRange, planTypes as plans, positions, wing } from './floorPlans.js'
+import { buildingModel } from './template.js'
 
 // The unit finder's inventory: every home in Wing A, built from its plan
 // sheets (floorPlans.js). Each floor repeats the typical floor's six homes,
@@ -13,6 +14,14 @@ export const planTypes = plans.map(type => ({
 export const planById = id => planTypes.find(type => type.id === id)
 
 export const floors = Array.from({ length: floorRange[1] - floorRange[0] + 1 }, (_, i) => floorRange[0] + i)
+// Only the wing's `open` floors can be chosen; the rest are blocked until
+// further update (client, 16 Oct 2026): Floor Plans shows them disabled,
+// and their homes are left out of the inventory, so the unit finder never
+// offers them.
+const open = buildingModel.wings.find(item => item.id === wing)?.open ?? floorRange
+export const openRange = [Math.max(floorRange[0], open[0]), Math.min(floorRange[1], open[1])]
+export const isOpen = floor => floor >= openRange[0] && floor <= openRange[1]
+export const openFloors = floors.filter(isOpen)
 
 // The plan type at a position on a floor, or null where the floor has no such home.
 export const typeAt = (floor, position) => {
@@ -24,7 +33,7 @@ export const typeAt = (floor, position) => {
 // the first with homes, so it is level 1 (client, 13 Oct 2026): A-105 is
 // Wing A, floor 6, Unit 05, and A-3205 is floor 37.
 export const homeId = (floor, position) => `${wing}-${floor - floorRange[0] + 1}${position}`
-export const homes = floors.flatMap(floor => positions.flatMap(position => {
+export const homes = openFloors.flatMap(floor => positions.flatMap(position => {
   const type = typeAt(floor, position)
   return type ? [{ id: homeId(floor, position), wing, floor, position, type, features: type.features }] : []
 }))
@@ -52,14 +61,16 @@ export const facets = [
 
 const round = (value, to, method) => Math[method](value / to) * to
 export const bounds = {
-  floor: [...floorRange],
+  floor: [...openRange],
   area: [round(Math.min(...planTypes.map(type => type.reraArea)), 50, 'floor'), round(Math.max(...planTypes.map(type => type.reraArea)), 50, 'ceil')],
 }
+// Bands outside the open floors drop out; one cut short keeps its open part.
 export const floorBands = [
   { id: 'lower', label: 'Lower', range: [floorRange[0], 12] },
   { id: 'middle', label: 'Middle', range: [13, 25] },
   { id: 'upper', label: 'Upper', range: [26, floorRange[1]] },
-]
+].filter(band => band.range[1] >= openRange[0] && band.range[0] <= openRange[1])
+  .map(band => ({ ...band, range: [Math.max(band.range[0], openRange[0]), Math.min(band.range[1], openRange[1])] }))
 
 export const emptyFilters = () => ({
   ...Object.fromEntries(facets.map(facet => [facet.key, []])),

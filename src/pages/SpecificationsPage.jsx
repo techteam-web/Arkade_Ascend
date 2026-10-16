@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
 import { prefetchImages } from '../app/prefetch.js'
 import { PageHeading } from '../components/PageKit.jsx'
@@ -17,6 +18,8 @@ const pictureOf = (spec, item) => item?.image
 export default function SpecificationsPage() {
   const [index, setIndex] = useState(0)
   const [shown, setShown] = useState(firstPictured(specifications[0]))
+  const [lightbox, setLightbox] = useState(false)
+  const opener = useRef(null)
   const panel = useRef(null)
   const frame = useRef(null)
   // The last value animated in (not a first-run flag, which StrictMode's
@@ -30,6 +33,14 @@ export default function SpecificationsPage() {
   useEffect(() => prefetchImages(specifications.flatMap(item => [{ src: item.image, srcSet: item.srcSet }, ...item.items.map(entry => ({ src: entry.image }))]).filter(image => image.src), '(min-width: 48rem) 45vw, 100vw'), [])
 
   const chooseCategory = next => { setIndex(next); setShown(firstPictured(specifications[next])) }
+  const closeLightbox = () => { setLightbox(false); requestAnimationFrame(() => opener.current?.focus({ preventScroll: true })) }
+  // Escape closes the full-screen picture only.
+  useEffect(() => {
+    if (!lightbox) return
+    const onKey = event => { if (event.key === 'Escape') { event.preventDefault(); closeLightbox() } }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [lightbox])
 
   // Each category arrives with an image wipe and its lines drawn in.
   useLayoutEffect(() => {
@@ -87,6 +98,9 @@ export default function SpecificationsPage() {
       <div ref={frame} data-reveal="mask" className="relative aspect-4/3 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 md:aspect-auto md:h-[min(64cqh,44rem)] md:min-h-72">
         <img data-spec-image key={current.src} src={current.src} srcSet={current.srcSet} sizes="(min-width: 48rem) 45vw, 100vw" decoding="async" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} draggable="false"
           className="absolute inset-0 size-full select-none object-cover" style={{ objectPosition: current.focus }} />
+        <button ref={opener} type="button" className="btn-icon absolute right-3 top-3 z-1" onClick={() => setLightbox(true)} aria-label={`View ${spec.title} image full screen`}>
+          <svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></svg>
+        </button>
         <p className="pointer-events-none absolute bottom-2.5 left-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">{current.note ?? 'Representational image'}</p>
       </div>
       <div data-reveal>
@@ -110,5 +124,16 @@ export default function SpecificationsPage() {
         </ul>
       </div>
     </div>
+
+    {/* Portalled into the frame: above the page, still beneath the full-screen gate. */}
+    {lightbox && createPortal(<div role="dialog" aria-modal="true" aria-label={`${spec.title} image, full screen`} onClick={closeLightbox}
+      className="absolute inset-0 z-70 grid grid-cols-[minmax(0,1fr)] grid-rows-[minmax(0,1fr)] place-items-center bg-ink/95 p-[clamp(1rem,4vw,4rem)] backdrop-blur-md">
+      <img src={current.src} srcSet={current.srcSet} sizes="100vw" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} draggable="false"
+        onClick={event => event.stopPropagation()} className="max-h-full max-w-full select-none rounded-sm object-contain shadow-2xl" />
+      <button type="button" autoFocus className="btn-icon absolute right-(--gutter) top-5" onClick={closeLightbox} aria-label="Close full screen">
+        <svg viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19" /></svg>
+      </button>
+      <p className="absolute bottom-5 right-(--gutter) text-[0.55rem] uppercase tracking-[0.22em] text-ivory/70 max-sm:bottom-12">{current.note ?? 'Representational image'}</p>
+    </div>, document.querySelector('.page-frame') || document.body)}
   </section>
 }

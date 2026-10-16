@@ -264,10 +264,49 @@ function HomeList({ homes, onOpen, onView }) {
   </div>
 }
 
+// The comparison's room dimensions tab: every room by its printed name,
+// grouped, in the sheets' order. A combined living & dining room answers
+// the Living row and is noted on the Dining row. Rooms not listed here
+// still show, at the end of the last group.
+const roomGroups = [
+  ['Living spaces', ['Living', 'Dining', 'Kitchen', 'Foyer', 'Deck', 'Utility']],
+  ['Bedrooms', ['M. bedroom', 'C. bedroom', 'A. bedroom', 'Study room', 'Walk-in wardrobe']],
+  ['Toilets', ['M. toilet', 'C. toilet', 'A. toilet', 'Toilet', 'Powder toilet']],
+]
+const COMBINED = 'Living & dining'
+// Width × depth as printed (12′0″ × 23′6″), worked out to whole square feet.
+const feet = size => [...size.matchAll(/(\d+)′(\d+)″/g)].map(([, ft, inch]) => Number(ft) + Number(inch) / 12)
+const roomArea = size => { const [width, depth] = feet(size); return width && depth ? Math.round(width * depth) : null }
+
+function roomRows(types) {
+  const listed = new Set([COMBINED, ...roomGroups.flatMap(([, names]) => names)])
+  const extra = [...new Set(types.flatMap(type => type.rooms.map(room => room.name)))].filter(name => !listed.has(name))
+  const groups = roomGroups.map(([label, names], i) => [label, i === roomGroups.length - 1 ? [...names, ...extra] : names])
+  const cell = (type, name) => {
+    const room = type.rooms.find(item => item.name === name)
+    if (room) return { size: room.size, area: roomArea(room.size) }
+    const combined = (name === 'Living' || name === 'Dining') && type.rooms.find(item => item.name === COMBINED)
+    if (!combined) return null
+    return name === 'Living' ? { size: combined.size, area: roomArea(combined.size), note: 'Living & dining', shared: true } : { note: 'With living', shared: true }
+  }
+  return groups.map(([label, names]) => [label, names.map(name => {
+    const cells = types.map(type => cell(type, name))
+    if (!cells.some(item => item && !(item.shared && !item.size))) return null
+    // The largest of a room, when at least two plans have it on its own.
+    const own = cells.filter(item => item?.area && !item.shared).map(item => item.area)
+    const largest = own.length > 1 && Math.max(...own) > Math.min(...own) ? Math.max(...own) : null
+    return { name, cells: cells.map(item => item && { ...item, largest: !item.shared && item.area === largest }) }
+  }).filter(Boolean)]).filter(([, rows]) => rows.length)
+}
+
 // Up to three plan types side by side, over the whole presentation. It is
 // portalled into the page frame, so the full-screen gate still covers it.
+// It opens on the plans alone (client, 16 Oct 2026); "Full detail plan"
+// swaps them for the details alone: areas, features and every room's size.
 function CompareDialog({ ids, results, look, onLook, onClose, onOpen }) {
   const root = useRef(null)
+  const sheet = useRef(null)
+  const [view, setView] = useState('plans')
   const types = ids.map(planById)
   const matching = Object.fromEntries(groupByType(results).map(group => [group.type.id, group]))
   // Opacity only: a hidden ancestor would take focus away from the close button.
@@ -288,6 +327,8 @@ function CompareDialog({ ids, results, look, onLook, onClose, onOpen }) {
     window.addEventListener('keydown', onKey, true)
     return () => window.removeEventListener('keydown', onKey, true)
   }, [onClose])
+  // Each view starts at its top.
+  const show = next => { setView(next); if (sheet.current) sheet.current.scrollTop = 0 }
   const rows = [
     ['Configuration', type => type.configuration],
     ['RERA carpet area', type => `${area(type.reraArea)} sq.ft`],
@@ -299,42 +340,87 @@ function CompareDialog({ ids, results, look, onLook, onClose, onOpen }) {
     ['Homes matching your filters', type => matching[type.id]?.homes.length ?? 0],
     ['Floors', type => matching[type.id] ? floorRuns(matching[type.id].floors) : '—'],
   ]
+  const rooms = roomRows(types)
+  const columns = types.length + 1
+  const drawing = type => type[look === 'sheet' ? 'sheet' : 'image']
+  const heading = type => <div className="flex items-baseline justify-between gap-2">
+    <span className="font-display text-[1.5rem] uppercase leading-none">Unit <span className="num">{type.unit}</span>{type.floor && <span className="ml-2 align-middle font-sans text-[0.55rem] tracking-[0.16em] text-muted"><span className="num">{ordinal(type.floor)}</span> floor</span>}</span>
+    <span className="text-[0.6rem] font-medium uppercase tracking-[0.18em] text-accent">{type.configuration}</span>
+  </div>
+  const groupRow = label => <tr className="border-t border-line">
+    <th scope="colgroup" colSpan={columns} className="pt-4 pb-1.5 text-[0.58rem] font-medium uppercase tracking-[0.28em] text-accent">{label}</th>
+  </tr>
 
   return createPortal(<div ref={root} role="dialog" aria-modal="true" aria-label="Compare plan types" data-tone="light"
-    className="absolute inset-0 z-70 flex flex-col bg-cream-100 px-(--gutter) pb-[clamp(0.75rem,3vh,2rem)] text-fg">
+    className="absolute inset-0 z-70 flex flex-col bg-cream-100 px-(--gutter) pb-[max(clamp(0.75rem,3vh,2rem),var(--credit-space))] text-fg">
     <div className="flex min-h-(--header-h) shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2">
-      <p className="eyebrow">Compare · {types.map(type => type.label).join(' · ')}</p>
-      <div className="ml-auto flex items-center gap-3">
-        <SheetSwitch value={look} onChange={onLook} />
+      <p className="eyebrow">Compare · {types.map(type => type.label).join(' · ')}{view === 'details' && ' · Full details'}</p>
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
+        {view === 'plans'
+          ? <>
+            <SheetSwitch value={look} onChange={onLook} />
+            <button type="button" className="btn-lux whitespace-nowrap" onClick={() => show('details')}>Full detail plan<ArrowIcon className="shrink-0" /></button>
+          </>
+          : <button type="button" className="chip" onClick={() => show('plans')}>Back to unit plans</button>}
         <button type="button" data-close className="btn-icon" onClick={onClose} aria-label="Close comparison"><Icon d="m5 5 14 14M19 5 5 19" /></button>
       </div>
     </div>
-    <div data-compare-sheet className="page-scroll min-h-0 flex-1">
-      <div className="overflow-x-auto pb-2" data-own-gesture>
-        <table className="w-full min-w-[36rem] border-collapse text-left">
-          <thead>
-            <tr>
-              <th scope="col" className="w-[24%]"><span className="sr-only">Detail</span></th>
-              {types.map(type => <th key={type.id} scope="col" className="px-3 pb-4 align-bottom font-normal">
-                <div className="overflow-hidden rounded-sm border border-line bg-cream-50">
-                  <img src={type[look === 'sheet' ? 'sheet' : 'image'].src} alt="" className="aspect-[3/2] w-full object-contain p-2" draggable="false" />
-                </div>
-                <div className="mt-3 flex items-baseline justify-between gap-2">
-                  <span className="font-display text-[1.5rem] uppercase leading-none">Unit <span className="num">{type.unit}</span>{type.floor && <span className="ml-2 align-middle font-sans text-[0.55rem] tracking-[0.16em] text-muted"><span className="num">{ordinal(type.floor)}</span> floor</span>}</span>
-                  <span className="text-[0.6rem] font-medium uppercase tracking-[0.18em] text-accent">{type.configuration}</span>
-                </div>
-                <button type="button" className="btn-lux mt-3 w-full bg-transparent!" onClick={() => onOpen(type.id)}>View plan<ArrowIcon /></button>
-              </th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map(([label, value]) => <tr key={label} className="border-t border-line">
-              <th scope="row" className="py-2.5 pr-4 align-top text-[0.6rem] font-medium uppercase leading-relaxed tracking-[0.2em] text-muted">{label}</th>
-              {types.map(type => <td key={type.id} className="num px-3 py-2.5 align-top text-[0.82rem] text-fg">{value(type)}</td>)}
-            </tr>)}
-          </tbody>
-        </table>
-      </div>
+
+    <div ref={sheet} data-compare-sheet className="page-scroll min-h-0 flex-1">
+      {view === 'plans'
+        // The plans alone, in modest cards centred on the screen (client,
+        // 16 Oct 2026): side by side on laptops, one under another on phones.
+        ? <ul key="plans" className="finder-in grid min-h-full grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),26rem))] content-center-safe justify-center gap-[clamp(1rem,2vw,2rem)] 3xl:grid-cols-[repeat(auto-fit,minmax(16rem,32rem))]">
+          {types.map(type => <li key={type.id} className="flex flex-col gap-2.5">
+            <button type="button" onClick={() => onOpen(type.id)} aria-label={`Open the ${type.label} plan`}
+              className="relative aspect-[4/3] max-h-[52vh] w-full overflow-hidden rounded-sm border border-line bg-cream-50 outline-offset-[-3px]">
+              <img src={drawing(type).src} srcSet={drawing(type).srcSet} sizes="(min-width: 48rem) 33vw, 100vw"
+                alt={`${type.label} ${look === 'sheet' ? 'plan sheet' : 'plan'}`} className="absolute inset-0 size-full object-contain p-3" draggable="false" />
+            </button>
+            {heading(type)}
+            <button type="button" className="btn-lux w-full bg-transparent!" onClick={() => onOpen(type.id)}>View plan<ArrowIcon /></button>
+          </li>)}
+        </ul>
+        // The details alone: areas and features, then every room's size.
+        : <div key="details" className="finder-in mx-auto w-full max-w-[64rem] 3xl:max-w-[76rem]">
+          <div className="overflow-x-auto pb-2" data-own-gesture>
+            <table className="w-full min-w-[32rem] table-fixed border-collapse text-left">
+              <thead>
+                <tr>
+                  <th scope="col" className="w-[22%]"><span className="sr-only">Detail</span></th>
+                  {types.map(type => <th key={type.id} scope="col" className="px-3 pb-2 align-bottom font-normal [&_.font-display]:text-[1.2rem]">{heading(type)}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {groupRow('Areas & features')}
+                {rows.map(([label, value]) => <tr key={label} className="border-t border-line">
+                  <th scope="row" className="py-1.5 pr-3 align-top text-[0.55rem] font-medium uppercase leading-relaxed tracking-[0.18em] text-muted">{label}</th>
+                  {types.map(type => <td key={type.id} className="num px-3 py-1.5 align-top text-[0.74rem] text-fg">{value(type)}</td>)}
+                </tr>)}
+              </tbody>
+              {rooms.map(([group, list]) => <tbody key={group}>
+                {groupRow(`${group} · room dimensions`)}
+                {list.map(row => <tr key={row.name} className="border-t border-line">
+                  <th scope="row" className="py-1.5 pr-3 align-top text-[0.55rem] font-medium uppercase leading-relaxed tracking-[0.18em] text-muted">{row.name}</th>
+                  {row.cells.map((cell, i) => <td key={types[i].id} className="px-3 py-1.5 align-top text-[0.74rem] text-fg">
+                    {!cell ? <span className="text-muted">—</span>
+                      : <>
+                        {cell.size
+                          ? <span className={`num ${cell.largest ? 'font-medium text-accent' : ''}`}>{cell.size}</span>
+                          : <span className="text-[0.72rem] text-muted">{cell.note}</span>}
+                        {cell.size && <span className="block text-[0.6rem] text-muted">
+                          {cell.area && <><span className="num">≈ {area(cell.area)}</span> sq.ft</>}{cell.note && <> · {cell.note}</>}
+                        </span>}
+                      </>}
+                  </td>)}
+                </tr>)}
+              </tbody>)}
+            </table>
+          </div>
+          <p className="mt-2 text-[0.56rem] leading-relaxed tracking-[0.06em] text-muted">
+            Room sizes as printed on the plan sheets, width × depth. Room areas are worked out from those sizes and are indicative. Gold marks the largest of a room where two or more plans have it.
+          </p>
+        </div>}
     </div>
   </div>, document.querySelector('.page-frame') || document.body)
 }

@@ -67,21 +67,21 @@ export const neuGen = {
 export const locationGroups = [
   { id: 'roads', label: 'Roads' },
   { id: 'transit', label: 'Rail & metro' },
-  { id: 'air', label: 'Airports' },
+  { id: 'air', label: 'Airport' },
   { id: 'upcoming', label: 'Upcoming' },
   { id: 'nearby', label: 'Nearby' },
 ]
 // Roads and upcoming links placed at the client's own coordinates (WhatsApp,
 // 14 Oct 2026): Link Road, S.V. Road, the Western Express Highway, GMLR, the
-// coastal road and the twin tunnel.
+// coastal road and the twin tunnel. Distances are on foot from the project
+// (client, 16 Oct 2026), by the FOSSGIS walking router over OpenStreetMap, rounded.
 export const connectivity = [
-  { id: 'link-road', name: 'Link Road', distance: '650 m', group: 'roads', point: [222 / 720, 352 / 840], lngLat: [72.836018, 19.186780] },
-  { id: 'sv-road', name: 'S.V. Road', distance: '950 m', group: 'roads', point: [393 / 720, 360 / 840], lngLat: [72.846482, 19.188836] },
-  { id: 'weh', name: 'Western Express Highway', distance: '3 km', group: 'roads', point: [611 / 720, 420 / 840], lngLat: [72.858792, 19.191738] },
-  { id: 'malad-station', name: 'Malad Railway Station', distance: '1.4 km', group: 'transit', point: [436 / 720, 212 / 840], lngLat: [72.8486, 19.1867] },
-  { id: 'metro-2a', name: 'Malad West Metro Station (Line 2A)', distance: '1.8 km', group: 'transit', point: [204 / 720, 245 / 840], lngLat: [72.8354, 19.1851] },
-  { id: 'intl-airport', name: 'International Airport', distance: '12.3 km', group: 'air', point: [404 / 720, 812 / 840], offMap: true, lngLat: [72.8739, 19.0970] },
-  { id: 'dom-airport', name: 'Domestic Airport', distance: '12.8 km', group: 'air', point: [404 / 720, 812 / 840], offMap: true, lngLat: [72.8546, 19.0928] },
+  { id: 'link-road', name: 'Link Road', distance: '700 m', group: 'roads', point: [222 / 720, 352 / 840], lngLat: [72.836018, 19.186780] },
+  { id: 'sv-road', name: 'S.V. Road', distance: '900 m', group: 'roads', point: [393 / 720, 360 / 840], lngLat: [72.846482, 19.188836] },
+  { id: 'weh', name: 'Western Express Highway', distance: '2.6 km', group: 'roads', point: [611 / 720, 420 / 840], lngLat: [72.858792, 19.191738] },
+  { id: 'malad-station', name: 'Malad Railway Station', distance: '1.3 km', group: 'transit', point: [436 / 720, 212 / 840], lngLat: [72.8486, 19.1867] },
+  { id: 'metro-2a', name: 'Malad West Metro Station (Line 2A)', distance: '1.1 km', group: 'transit', point: [204 / 720, 245 / 840], lngLat: [72.8354, 19.1851] },
+  { id: 'intl-airport', name: 'International Airport', distance: '13.4 km', group: 'air', point: [404 / 720, 812 / 840], offMap: true, lngLat: [72.8739, 19.0970] },
 ]
 export const upcoming = [
   { id: 'gmlr', name: 'Goregaon–Mulund Link Road (GMLR)', group: 'upcoming', point: [505 / 720, 458 / 840], lngLat: [72.883897, 19.163945] },
@@ -103,8 +103,8 @@ export const orbit = {
 // Brochure page 9: everyday places close by, in the brochure's own groups.
 // Positions are indicative, found Oct 2026 from OpenStreetMap and the places'
 // published map pins and addresses; `approx` marks those placed from a street
-// address alone. Distances are by road from the project (OSRM routing over
-// OpenStreetMap), rounded. They have no place on the brochure's own map.
+// address alone. Distances are on foot from the project (the FOSSGIS walking
+// router over OpenStreetMap, 16 Oct 2026), rounded. They have no place on the brochure's own map.
 export const nearby = {
   headline: 'Here every comfort is exceptionally close',
   groups: [
@@ -118,36 +118,36 @@ export const nearby = {
   ],
 }
 export const nearbyPlaces = [
-  { id: 'mindspace', name: 'Mindspace Business Park', distance: '1.2 km', group: 'nearby-business', lngLat: [72.83279, 19.18031] },
-  { id: 'nesco', name: 'NESCO IT Park', distance: '5.7 km', group: 'nearby-business', lngLat: [72.85491, 19.15224] },
-  { id: 'nirlon', name: 'Nirlon Knowledge Park', distance: '5.8 km', group: 'nearby-business', lngLat: [72.85405, 19.15502] },
-  { id: 'infinity-it', name: 'Infinity IT Park', distance: '6.1 km', group: 'nearby-business', lngLat: [72.88118, 19.17624] },
-  { id: 'lotus', name: 'Lotus Corporate Park', distance: '7.1 km', group: 'nearby-business', lngLat: [72.85319, 19.14501] },
+  { id: 'mindspace', name: 'Mindspace Business Park', distance: '1.1 km', group: 'nearby-business', lngLat: [72.83279, 19.18031] },
+  { id: 'nesco', name: 'NESCO IT Park', distance: '4.8 km', group: 'nearby-business', lngLat: [72.85491, 19.15224] },
+  { id: 'nirlon', name: 'Nirlon Knowledge Park', distance: '4.7 km', group: 'nearby-business', lngLat: [72.85405, 19.15502] },
+  { id: 'infinity-it', name: 'Infinity IT Park', distance: '4.9 km', group: 'nearby-business', lngLat: [72.88118, 19.17624] },
+  { id: 'lotus', name: 'Lotus Corporate Park', distance: '5.5 km', group: 'nearby-business', lngLat: [72.85319, 19.14501] },
   { id: 'flags', name: 'Flag’s Restaurant Liberty Garden', distance: '800 m', group: 'nearby-dining', lngLat: [72.84170, 19.18960] },
   { id: 'liberty-restaurant', name: 'Liberty Restaurant', distance: '1.3 km', group: 'nearby-dining', lngLat: [72.83850, 19.19400], approx: true },
-  { id: 'kake-da', name: 'Kake Da Hotel', distance: '1.7 km', group: 'nearby-dining', lngLat: [72.83560, 19.18920], approx: true },
-  { id: 'food-studio', name: 'The Food Studio', distance: '1.1 km', group: 'nearby-dining', lngLat: [72.83600, 19.18330] },
-  { id: 'sozo', name: 'Sozo Izakaya', distance: '1.8 km', group: 'nearby-dining', lngLat: [72.83417, 19.19466] },
-  { id: 'the-resort', name: 'The Resort', distance: '7.8 km', group: 'nearby-leisure', lngLat: [72.79633, 19.17437] },
-  { id: 'lemon-tree', name: 'Lemon Tree Premier', distance: '1.2 km', group: 'nearby-leisure', lngLat: [72.83520, 19.17900], approx: true },
-  { id: 'radisson', name: 'Radisson Hotel', distance: '1.9 km', group: 'nearby-leisure', lngLat: [72.84600, 19.17450], approx: true },
-  { id: 'goregaon-sports', name: 'Goregaon Sports Club', distance: '1.6 km', group: 'nearby-leisure', lngLat: [72.83355, 19.18563] },
-  { id: 'mca-gymkhana', name: 'MCA Sachin Tendulkar Gymkhana', distance: '4.4 km', group: 'nearby-leisure', lngLat: [72.84228, 19.21382] },
-  { id: 'vibgyor', name: 'Vibgyor Rise', distance: '1.5 km', group: 'nearby-schools', lngLat: [72.83398, 19.17635] },
-  { id: 'billabong', name: 'Billabong High International School', distance: '3.5 km', group: 'nearby-schools', lngLat: [72.82125, 19.20244] },
-  { id: 'orchids', name: 'Orchids The International School', distance: '1.4 km', group: 'nearby-schools', lngLat: [72.84092, 19.19384] },
+  { id: 'kake-da', name: 'Kake Da Hotel', distance: '850 m', group: 'nearby-dining', lngLat: [72.83560, 19.18920], approx: true },
+  { id: 'food-studio', name: 'The Food Studio', distance: '950 m', group: 'nearby-dining', lngLat: [72.83600, 19.18330] },
+  { id: 'sozo', name: 'Sozo Izakaya', distance: '1.4 km', group: 'nearby-dining', lngLat: [72.83417, 19.19466] },
+  { id: 'the-resort', name: 'The Resort', distance: '7.6 km', group: 'nearby-leisure', lngLat: [72.79633, 19.17437] },
+  { id: 'lemon-tree', name: 'Lemon Tree Premier', distance: '1.1 km', group: 'nearby-leisure', lngLat: [72.83520, 19.17900], approx: true },
+  { id: 'radisson', name: 'Radisson Hotel', distance: '1.8 km', group: 'nearby-leisure', lngLat: [72.84600, 19.17450], approx: true },
+  { id: 'goregaon-sports', name: 'Goregaon Sports Club', distance: '1.5 km', group: 'nearby-leisure', lngLat: [72.83355, 19.18563] },
+  { id: 'mca-gymkhana', name: 'MCA Sachin Tendulkar Gymkhana', distance: '3.8 km', group: 'nearby-leisure', lngLat: [72.84228, 19.21382] },
+  { id: 'vibgyor', name: 'Vibgyor Rise', distance: '1.4 km', group: 'nearby-schools', lngLat: [72.83398, 19.17635] },
+  { id: 'billabong', name: 'Billabong High International School', distance: '3.4 km', group: 'nearby-schools', lngLat: [72.82125, 19.20244] },
+  { id: 'orchids', name: 'Orchids The International School', distance: '1.3 km', group: 'nearby-schools', lngLat: [72.84092, 19.19384] },
   { id: 'witty', name: 'Witty International School', distance: '1.7 km', group: 'nearby-schools', lngLat: [72.84780, 19.17650], approx: true },
   { id: 'ryan', name: 'Ryan International School', distance: '1.3 km', group: 'nearby-schools', lngLat: [72.83324, 19.19102] },
   { id: 'kg-mittal', name: 'Smt. K. G. Mittal College', distance: '400 m', group: 'nearby-colleges', lngLat: [72.83782, 19.18479] },
-  { id: 'atharva', name: 'Atharva College of Engineering & Management Studies', distance: '2.5 km', group: 'nearby-colleges', lngLat: [72.82706, 19.19772] },
-  { id: 'gs-saraf', name: 'Ghanshyamdas Saraf College of Arts & Commerce', distance: '1.2 km', group: 'nearby-colleges', lngLat: [72.84238, 19.17737] },
+  { id: 'atharva', name: 'Atharva College of Engineering & Management Studies', distance: '2.4 km', group: 'nearby-colleges', lngLat: [72.82706, 19.19772] },
+  { id: 'gs-saraf', name: 'Ghanshyamdas Saraf College of Arts & Commerce', distance: '1.1 km', group: 'nearby-colleges', lngLat: [72.84238, 19.17737] },
   { id: 'dsims', name: 'Durgadevi Saraf Institute of Management Studies', distance: '1.1 km', group: 'nearby-colleges', lngLat: [72.84205, 19.17760] },
   { id: 'sun-hospital', name: 'Sun Multispeciality Hospital', distance: '700 m', group: 'nearby-health', lngLat: [72.84180, 19.19023] },
   { id: 'criticare', name: 'CritiCare Asia Multispeciality Hospital', distance: '1.1 km', group: 'nearby-health', lngLat: [72.83500, 19.18400], approx: true },
   { id: 'cloudnine', name: 'Cloudnine Hospital', distance: '1.5 km', group: 'nearby-health', lngLat: [72.83746, 19.17563] },
-  { id: 'zenith', name: 'Zenith Multispeciality Hospital', distance: '2.0 km', group: 'nearby-health', lngLat: [72.83427, 19.19507] },
-  { id: 'inorbit', name: 'Inorbit Mall, Malad', distance: '2.3 km', group: 'nearby-shopping', lngLat: [72.83515, 19.17311] },
-  { id: 'infiniti', name: 'Infiniti Mall, Malad West', distance: '1.5 km', group: 'nearby-shopping', lngLat: [72.83537, 19.18513] },
+  { id: 'zenith', name: 'Zenith Multispeciality Hospital', distance: '1.5 km', group: 'nearby-health', lngLat: [72.83427, 19.19507] },
+  { id: 'inorbit', name: 'Inorbit Mall, Malad', distance: '1.7 km', group: 'nearby-shopping', lngLat: [72.83515, 19.17311] },
+  { id: 'infiniti', name: 'Infiniti Mall, Malad West', distance: '1.1 km', group: 'nearby-shopping', lngLat: [72.83537, 19.18513] },
 ]
 export const places = [...connectivity, ...upcoming, ...nearbyPlaces]
 
@@ -167,7 +167,7 @@ export const specifications = [
       { text: 'Contemporary 37 storey tower' },
       { text: 'A grand double-height arrival experience' },
       { text: 'First habitable floor starts at Level 6, ~63 feet of elevation from ground level' },
-      { text: 'Leisure’s of Club Ark at Eco Deck – Level 5' },
+      { text: 'Club Ark Leisure Experiences Across Ground, Level 5 & Level 6' },
       { text: '100% surface car parking' },
       { text: 'Hi-tech security system' },
       { text: 'Centrally nestled. Seamlessly connected. Elevated living.' },
@@ -188,6 +188,7 @@ export const specifications = [
       { text: 'Elite 2 & 3 bed residences' },
       { text: 'Expansive living & dining spaces', image: spec('living-dining') },
       { text: 'Exclusive sundeck apartments' },
+      { text: 'Jodi apartment option available' },
       { text: 'Spacious, airy bedrooms', image: spec('bedroom') },
       { text: 'Abundant natural light & ventilation' },
       { text: 'Thoughtfully planned kitchens with premium fittings', image: spec('kitchen'), focus: '50% 45%' },
@@ -198,7 +199,9 @@ export const specifications = [
     id: 'safety', title: 'Safety & convenience', line: 'Exceptional convenience with absolute security',
     items: [
       { text: '100% surface car parking, designed for ease', image: spec('parking') },
-      { text: 'Advance high-tech security system' },
+      { text: 'Seamless circular ramp access for effortless parking' },
+      { text: 'EV charging provisions for future ready living' },
+      { text: 'High-tech security system' },
       { text: '24x7 manned security and CCTV surveillance', image: spec('cctv'), focus: '50% 45%' },
       { text: 'Fire-fighting system', image: spec('fire-safety'), focus: '50% 42%' },
     ],
@@ -229,62 +232,62 @@ export const amenityGroups = [
     id: 'pools', label: 'Pools', line: 'Experiences curated for ultimate relaxation',
     items: [
       {
-        id: 'lap-pool', name: 'Lap pool', image: amenity('lap-pool'),
+        id: 'lap-pool', name: 'Lap Pool – Swim. Stretch. Unwind.', image: amenity('lap-pool'),
         images: [
           { src: amenity('lap-pool') },
           slideOf(rendered('lap-pool-aerial', '50% 55%')),
           slideOf(rendered('lap-pool-evening', '30% 62%')),
         ],
       },
-      { id: 'jacuzzi', name: 'Jacuzzi', image: amenity('jacuzzi'), focus: '40% 50%' },
-      { id: 'kids-pool', name: 'Kids pool', image: amenity('kids-pool') },
-      { id: 'wet-lounger', name: 'Wet lounger', image: amenity('wet-lounger'), focus: '50% 68%' },
-      { id: 'bubble-pool', name: 'Bubble pool', image: amenity('bubble-pool'), focus: '50% 38%' },
+      { id: 'jacuzzi', name: 'Jacuzzi – Immerse in Relaxation.', image: amenity('jacuzzi'), focus: '40% 50%' },
+      { id: 'kids-pool', name: 'Kids’ Pool – Little Splashes, Big Smiles.', image: amenity('kids-pool') },
+      { id: 'wet-lounger', name: 'Wet Lounger – Lounge in Unhurried Luxury.', image: amenity('wet-lounger'), focus: '50% 68%' },
+      { id: 'bubble-pool', name: 'Bubble pool - A Soothing Escape', image: amenity('bubble-pool'), focus: '50% 38%' },
     ],
   },
   {
-    id: 'active', label: 'Active living', line: 'An ecosystem planned for active living',
+    id: 'active', label: 'Active living', line: 'An Ecosystem Planned for Active Living',
     items: [
-      { id: 'box-cricket', name: 'Box cricket', image: amenity('box-cricket') },
-      { id: 'pickleball', name: 'Pickle ball court', ...rendered('pickleball', '58% 62%') },
-      { id: 'multipurpose-court', name: 'Multipurpose court', ...rendered('multipurpose-court', '48% 62%') },
-      { id: 'kids-play', name: 'Kids play area', ...rendered('kids-play', '38% 55%') },
-      { id: 'creche', name: 'Creche', ...rendered('creche', '45% 58%') },
+      { id: 'box-cricket', name: 'Net Cricket – Where Every Shot Counts.', image: amenity('box-cricket') },
+      { id: 'multipurpose-court', name: 'Multipurpose Court – One Court. Endless Possibilities.', ...rendered('multipurpose-court', '48% 62%') },
+      { id: 'pickleball', name: 'Pickleball Court – Serve Up the Fun.', ...rendered('pickleball', '58% 62%') },
+      { id: 'kids-play', name: 'Kids’ Play Zone – Little Adventures, Endless Smiles.', ...rendered('kids-play-evening', '40% 52%') },
+      { id: 'creche', name: 'Creche – Nurturing Little Minds with Loving Care.', ...rendered('creche', '45% 58%') },
     ],
   },
   {
     id: 'fitness', label: 'Fitness', line: 'An ambience that brings out your strongest self',
     items: [
-      { id: 'gym', name: 'Gym', ...rendered('gym', '62% 55%') },
-      { id: 'yoga-deck', name: 'Yoga deck', image: amenity('yoga-deck') },
-      { id: 'meditation-zone', name: 'Meditation zone', image: amenity('meditation-zone') },
-      { id: 'kick-boxing', name: 'Kick boxing studio', ...rendered('kick-boxing', '38% 55%') },
+      { id: 'gym', name: 'Gym – Strengthen Your Best Self.', ...rendered('gym', '62% 55%') },
+      { id: 'yoga-deck', name: 'Yoga Deck – Find Your Inner Balance.', image: amenity('yoga-deck') },
+      { id: 'meditation-zone', name: 'Meditation Zone – Pause. Breathe. Reconnect.', image: amenity('meditation-zone') },
+      { id: 'kick-boxing', name: 'Kickboxing Studio – Unleash Your Inner Power.', ...rendered('kick-boxing', '38% 55%') },
     ],
   },
   {
     id: 'pursuits', label: 'Pursuits', line: 'A private escape for your favourite pursuits',
     items: [
-      { id: 'indoor-games', name: 'Indoor games arena', ...rendered('indoor-games', '55% 55%') },
-      { id: 'adult-gaming', name: 'Adult gaming', ...rendered('game-zone', '40% 55%') },
-      { id: 'golf-simulator', name: 'Golf simulator', ...rendered('golf-simulator', '45% 50%') },
-      { id: 'private-screening', name: 'Private screening', ...rendered('private-screening', '62% 55%') },
-      { id: 'hobby-studio', name: 'Hobby studio', ...rendered('hobby-studio', '42% 50%') },
-      { id: 'cafe', name: 'Café', ...rendered('cafe', '50% 60%') },
+      { id: 'indoor-games', name: 'Indoor Games Arena – Play Beyond the Ordinary.', ...rendered('indoor-games', '55% 55%') },
+      { id: 'adult-gaming', name: 'The Game Lounge – Let the Fun Begin.', ...rendered('game-zone', '40% 55%') },
+      { id: 'golf-simulator', name: 'Golf Simulator – Perfect Your Swing.', ...rendered('golf-simulator', '45% 50%') },
+      { id: 'private-screening', name: 'Private Screening Theatre – Your Own Private Movie Escape.', ...rendered('private-screening', '62% 55%') },
+      { id: 'hobby-studio', name: 'Hobby Studio – Discover. Create. Express.', ...rendered('hobby-studio', '42% 50%') },
+      { id: 'cafe', name: 'Café – Sip, Savour, Socialise.', ...rendered('cafe', '50% 60%') },
     ],
   },
   {
     id: 'community', label: 'Community living', line: 'Where good company meets the perfect setting',
     items: [
-      { id: 'banquet-hall', name: 'Banquet hall', ...rendered('banquet-hall', '42% 55%') },
-      { id: 'amphitheatre', name: 'Amphitheatre with central lawn', ...rendered('amphitheatre', '40% 58%') },
-      { id: 'party-hall', name: 'Party hall', image: amenity('party-hall'), focus: '50% 55%' },
-      { id: 'senior-seating', name: 'Senior citizen seating area', image: amenity('senior-seating'), focus: '50% 62%' },
+      { id: 'banquet-hall', name: 'Banquet Hall with Outdoor Deck – Celebrations That Flow Beyond Walls.', ...rendered('banquet-hall', '42% 55%') },
+      { id: 'amphitheatre', name: 'Amphitheatre with Central Lawn – Where Moments Take Centre Stage.', ...rendered('amphitheatre-lawn', '45% 62%') },
+      { id: 'party-hall', name: 'Party Hall – Make Every Celebration Memorable.', image: amenity('party-hall'), focus: '50% 55%' },
+      { id: 'senior-seating', name: 'Senior Citizens’ Social Corner – Connect, Converse & Cherish.', image: amenity('senior-seating'), focus: '50% 62%' },
     ],
   },
   {
-    id: 'guest-suite', label: 'Guest suite',
+    id: 'guest-suite', label: 'Guest suite', line: 'A thoughtful stay for those you welcome',
     items: [
-      { id: 'guest-suite', name: 'Guest suite', ...rendered('guest-suite', '50% 55%') },
+      { id: 'guest-suite', name: 'Guest Suite', ...rendered('guest-suite', '50% 55%') },
     ],
   },
 ]

@@ -96,14 +96,15 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
       const view = pano.current?.view
       return view ? { yaw: view.yaw(), pitch: view.pitch(), fov: view.fov() } : null
     },
-    // Fly to a view (yaw and pitch in radians, by the shortest way round), then
-    // keep it inside `lock` ({ yaw, span, pitch: [min, max] }); null frees it at once.
-    focus({ yaw, pitch }, lock = null) {
+    // Fly to a view (yaw, pitch and, if given, fov in radians, by the shortest
+    // way round), then keep it inside `lock` ({ yaw, span, pitch: [min, max] });
+    // null frees it at once.
+    focus({ yaw, pitch, fov: wanted }, lock = null) {
       const view = pano.current?.view
       if (!view) return
       lockRef.current = null
       hold()
-      const fov = lock ? Math.min(view.fov(), vfovFor(lock.span * 0.98, view.width(), view.height())) : view.fov()
+      const fov = lock ? Math.min(wanted ?? view.fov(), vfovFor(lock.span * 0.98, view.width(), view.height())) : wanted ?? view.fov()
       const to = { yaw: view.yaw() + wrap(yaw - view.yaw()), pitch, fov }
       pending.current = lock
       const done = () => { pending.current = undefined; lockRef.current = lock; if (!lock) release() }
@@ -161,7 +162,7 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
       scene.switchTo({ transitionDuration: 0, transitionUpdate: () => {} })
       const loop = instance.renderLoop()
       pano.current = { view, layers, loop }
-      const report = () => view.width() && view.height() && watcher.current?.({ yaw: view.yaw(), hfov: 2 * Math.atan(Math.tan(view.fov() / 2) * view.width() / view.height()) })
+      const report = () => view.width() && view.height() && watcher.current?.({ yaw: view.yaw(), pitch: view.pitch(), fov: view.fov(), hfov: 2 * Math.atan(Math.tan(view.fov() / 2) * view.width() / view.height()) })
       view.addEventListener('change', report)
       report()
       blend()

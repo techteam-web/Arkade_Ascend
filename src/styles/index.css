@@ -291,6 +291,8 @@ html { font-size: 100%; }
   .floor-key:where(:hover, :focus-visible) { color: var(--tone-fg); border-color: var(--tone-accent); }
   .floor-key[aria-pressed="true"] { color: var(--color-espresso); background: var(--color-gold-500); border-color: var(--color-gold-500); }
   .floor-key[aria-pressed="true"] > span { background: var(--color-espresso); }
+  /* Floors not open yet: shown faint, with a dashed ring, and never chosen. */
+  .floor-key:disabled { cursor: not-allowed; opacity: .35; border-style: dashed; color: var(--tone-muted); border-color: var(--tone-line); }
 
   /* Native select in the chip style, with its own chevron. */
   .select-lux {

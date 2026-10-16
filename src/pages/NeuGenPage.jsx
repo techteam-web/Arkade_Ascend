@@ -281,6 +281,7 @@ function Together({ active }) {
         <p data-ch className="mt-[clamp(0.8rem,2.4vh,1.4rem)] text-[clamp(0.92rem,min(1.25vw,2.5vh),1.3rem)] leading-[1.7] text-ivory/92 short:mt-1.5 short:text-[0.78rem]">{close[0]}<br />{close[1]}</p>
       </div>
     </div>
-    <p className="absolute bottom-3 left-(--gutter) text-[0.5rem] uppercase tracking-[0.2em] text-ivory/55">Representational image</p>
+    {/* Bottom right, under the chapter controls: the BrainWing credit holds the bottom left. */}
+    <p className="pointer-events-none absolute bottom-(--credit-bottom) right-(--gutter) text-[0.52rem] uppercase tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Representational image</p>
   </Chapter>
 }

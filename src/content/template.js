@@ -27,11 +27,12 @@ const render = (name, [width, height], alt, look = {}) => ({
 
 // The Amenities tab: the project's interior and landscape renders (supplied
 // 14 Oct 2026, public/gallery/amenities/), the same files the Amenities and
-// Specifications pages show.
-const amenityRender = (name, [width, height], alt, look = {}) => ({
+// Specifications pages show. `description` is the name shown on the picture
+// (client's list, 16 Oct 2026); edit it here.
+const amenityRender = (name, [width, height], description, alt, look = {}) => ({
   src: `/gallery/amenities/${name}-1600.webp`,
   srcSet: `/gallery/amenities/${name}-1600.webp ${Math.round(width * 1600 / Math.max(width, height))}w, /gallery/amenities/${name}-2880.webp ${Math.round(width * 2880 / Math.max(width, height))}w`,
-  aspect: width / height, category: 'Amenities', alt, note: RENDER_NOTE, ...look,
+  aspect: width / height, category: 'Amenities', description, alt, note: RENDER_NOTE, ...look,
 })
 
 export const gallery = [
@@ -43,24 +44,24 @@ export const gallery = [
   render('cam38-twilight', [1600, 889], 'Arkade Ascend at twilight above the trees, the city and the sunset beyond', { focus: '25% 50%' }),
   render('cam27-evening', [1600, 889], 'Aerial evening view of Arkade Ascend, lit from podium to crown above its pool'),
   render('cam06-evening', [1600, 640], 'The crown of Arkade Ascend at evening, its name on the facade and the city lights beyond', { focus: '15% 50%' }),
-  amenityRender('lap-pool-evening', [6000, 2727], 'The lap pool at evening beside the tower, a father and son walking along its edge', { focus: '30% 60%' }),
-  amenityRender('lap-pool-aerial', [6000, 2857], 'The lap pool seen from above, swimmers in its lanes and loungers on the deck'),
-  amenityRender('amphitheatre', [6000, 3333], 'The amphitheatre and its central lawn at sunset', { focus: '40% 55%' }),
-  amenityRender('kids-play', [6000, 2727], 'The podium playground with slides and play frames among the trees', { focus: '40% 55%' }),
-  amenityRender('pickleball', [5999, 2727], 'Players on the pickle ball court beside the tower', { focus: '58% 60%' }),
-  amenityRender('multipurpose-court', [5999, 2727], 'A game of basketball on the multipurpose court', { focus: '48% 60%' }),
-  amenityRender('gym', [6000, 3333], 'The gym, weights and machines along its windows', { focus: '60% 50%' }),
-  amenityRender('kick-boxing', [6000, 3375], 'The kick boxing studio with its bags and wall art', { focus: '38% 55%' }),
-  amenityRender('creche', [6000, 3000], 'The creche, children at play among shelves and a ball pool', { focus: '45% 55%' }),
-  amenityRender('indoor-games', [6000, 4000], 'The indoor games arena with table tennis and foosball'),
-  amenityRender('game-zone', [6000, 3000], 'The adult gaming lounge, friends at board games and on bean bags', { focus: '40% 55%' }),
-  amenityRender('golf-simulator', [6000, 3333], 'The golf simulator, a player mid-swing before the screen', { focus: '45% 50%' }),
-  amenityRender('hobby-studio', [6000, 3000], 'The hobby studio, a couple dancing across its floor', { focus: '42% 50%' }),
-  amenityRender('private-screening', [6000, 2724], 'The private screening room, its sofas facing the screen', { focus: '62% 55%' }),
-  amenityRender('cafe', [6000, 3333], 'The café, residents at its tables and counter', { focus: '50% 60%' }),
-  amenityRender('banquet-hall', [6000, 3000], 'The banquet hall laid for a reception, guests gathering', { focus: '42% 55%' }),
-  amenityRender('guest-suite', [6000, 4997], 'The guest suite, its lounge and bedroom beyond', { fit: 'contain' }),
-  amenityRender('lobby', [6000, 6000], 'The double-height arrival lobby with its reception and lounge', { fit: 'contain' }),
+  amenityRender('lobby', [6000, 6000], 'Grand Arrival Lobby', 'The double-height arrival lobby with its reception and lounge', { fit: 'contain' }),
+  amenityRender('banquet-hall', [6000, 3000], 'Banquet Hall with Outdoor Deck', 'The banquet hall laid for a reception, guests gathering', { focus: '42% 55%' }),
+  amenityRender('cafe', [6000, 3333], 'Café', 'The café, residents at its tables and counter', { focus: '50% 60%' }),
+  amenityRender('hobby-studio', [6000, 3000], 'Hobby Studio', 'The hobby studio, a couple dancing across its floor', { focus: '42% 50%' }),
+  amenityRender('game-zone', [6000, 3000], 'The Game Lounge', 'The adult gaming lounge, friends at board games and on bean bags', { focus: '40% 55%' }),
+  amenityRender('indoor-games', [6000, 4000], 'Indoor Games Arena', 'The indoor games arena with table tennis and foosball'),
+  amenityRender('golf-simulator', [6000, 3333], 'Golf Simulator', 'The golf simulator, a player mid-swing before the screen', { focus: '45% 50%' }),
+  amenityRender('guest-suite', [6000, 4997], 'Guest Suite', 'The guest suite, its lounge and bedroom beyond', { fit: 'contain' }),
+  amenityRender('gym', [6000, 3333], 'Gym', 'The gym, weights and machines along its windows', { focus: '60% 50%' }),
+  amenityRender('kick-boxing', [6000, 3375], 'Kickboxing Studio', 'The kick boxing studio with its bags and wall art', { focus: '38% 55%' }),
+  amenityRender('creche', [6000, 3000], 'Creche', 'The creche, children at play among shelves and a ball pool', { focus: '45% 55%' }),
+  amenityRender('private-screening', [6000, 2724], 'Private Screening Theatre', 'The private screening room, its sofas facing the screen', { focus: '62% 55%' }),
+  amenityRender('amphitheatre-lawn', [6000, 3333], 'Amphitheatre with Central Lawn', 'The central lawn at sunset, a family at play on the grass beside the tower', { focus: '45% 60%' }),
+  amenityRender('multipurpose-court', [5999, 2727], 'Multipurpose Court', 'A game of basketball on the multipurpose court', { focus: '48% 60%' }),
+  amenityRender('pickleball', [5999, 2727], 'Pickleball Court', 'Players on the pickle ball court beside the tower', { focus: '58% 60%' }),
+  amenityRender('lap-pool-aerial', [6000, 2857], 'Lap Pool', 'The lap pool seen from above, swimmers in its lanes and loungers on the deck'),
+  amenityRender('lap-pool-evening', [6000, 2727], 'Aqua Retreats', 'The lap pool at evening beside the tower, a father and son walking along its edge', { focus: '30% 60%' }),
+  amenityRender('kids-play-evening', [6000, 2727], 'Kids Play Zone', 'The kids play zone at evening, children on its slides, swings and climbing frame', { focus: '40% 52%' }),
 ]
 
 // The architectural model of the tower (public/models, optimised from the
@@ -79,7 +80,9 @@ export const buildingModel = {
   floorHeight: 3.15,
   top: 131.25,
   wings: [
-    { id: 'A', floors: [6, 37], refuge: [], outline: [[-49.8, 15.5], [-49.4, 14.1], [-32.7, 9.7], [-23, 9.1], [-10, 9.2], [-6.4, 9.6], [6.9, 11.9], [9.8, 14.1], [9.8, 21], [8.6, 23.4], [-1.8, 33.2], [-29.4, 33.2], [-49.4, 23.9], [-49.8, 21.8]] },
+    // `open`: the floors open for selection, [first, last]; the floors above
+    // the 25th are blocked until further update (client, 16 Oct 2026).
+    { id: 'A', floors: [6, 37], open: [6, 25], refuge: [], outline: [[-49.8, 15.5], [-49.4, 14.1], [-32.7, 9.7], [-23, 9.1], [-10, 9.2], [-6.4, 9.6], [6.9, 11.9], [9.8, 14.1], [9.8, 21], [8.6, 23.4], [-1.8, 33.2], [-29.4, 33.2], [-49.4, 23.9], [-49.8, 21.8]] },
     // Not on sale for now (client, 13 Oct 2026): its floors are not offered in Visual selection.
     { id: 'B', floors: [6, 37], refuge: [8], onSale: false, outline: [[7, 11.5], [9.5, -2.5], [22, -18.3], [36.9, -23.6], [42.9, -19.4], [47.3, -16], [49.1, -14], [39.3, 1.6], [32.8, 10.5], [29.2, 15.1], [19.3, 21.1], [16.6, 19]] },
   ],

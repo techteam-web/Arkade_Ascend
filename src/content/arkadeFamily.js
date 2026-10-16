@@ -25,6 +25,9 @@ export const legacy = {
     { name: 'ISO 45001:2018', scope: 'Occupational health & safety management systems' },
   ],
   image: { src: '/arkade-family/legacy-skyline-1600.webp', srcSet: '/arkade-family/legacy-skyline-1600.webp 1600w, /arkade-family/legacy-skyline-2880.webp 2880w', alt: 'A city of residential towers among trees at sunset, a rainbow over the skyline' },
+  // The client's "Trusted for timely delivery" seal, at the photograph's top
+  // right (client, 16 Oct 2026; public/asset-notes.md).
+  badge: { src: '/arkade-family/timely-delivery-400.webp', srcSet: '/arkade-family/timely-delivery-400.webp 400w, /arkade-family/timely-delivery-800.webp 800w', alt: 'Trusted for timely delivery' },
 }
 
 // Pages 2 and 3. Status as the deck colours it: completed (grey), ongoing
@@ -75,6 +78,8 @@ export const portfolio = {
 // Page 4.
 export const landmarks = {
   title: 'Landmark projects of Malad & Goregaon region',
+  // Shown after the logos (client, 16 Oct 2026).
+  disclaimer: 'All projects MahaRERA registered',
   // Each project's own colour logo (Arkade projects logo.pdf, supplied 14 Oct
   // 2026), cut from the PDF at 300 dpi with its white panel made transparent.
   logo: name => `/arkade-family/logos/${name.toLowerCase()}.webp`,

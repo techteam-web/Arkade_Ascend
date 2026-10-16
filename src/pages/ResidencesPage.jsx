@@ -7,16 +7,21 @@ import { PageHeading } from '../components/PageKit.jsx'
 import UnitFinder from '../components/UnitFinder.jsx'
 import ViewOverlay from '../components/ViewOverlay.jsx'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
-import { onSale, selectable, stepFloor, towers } from '../scenes/building/floors.js'
+import { onSale, openFloors as floorsOpen, selectable, stepFloor, towers } from '../scenes/building/floors.js'
 
-// Only floors with homes, in a wing on sale, light up and can be chosen.
+// Only floors with homes, open for selection, in a wing on sale, light up and can be chosen.
 const canPick = (tower, n) => onSale(tower) && selectable(tower, n)
+const openFloors = floorsOpen(towers.find(tower => onSale(tower.id))?.id ?? towers[0].id).join('–')
 
 const OrbitView = lazy(() => import('../scenes/orbit/OrbitView.jsx'))
 
 // The rendered orbit, on the page's own plum: the city fades out at the edges.
 const FADE = '[mask-image:linear-gradient(90deg,transparent,#000_16%,#000_84%,transparent),linear-gradient(transparent,#000_10%,#000_78%,transparent)] [mask-composite:intersect]'
-const RenderNote = ({ className = '' }) => <p className={`text-[0.58rem] uppercase leading-relaxed tracking-[0.22em] text-muted/90 ${className}`}>Representational</p>
+// Visual selection keeps the city to its sides, only softening the edges.
+const FADE_SELECT = '[mask-image:linear-gradient(90deg,transparent,#000_5%,#000_95%,transparent),linear-gradient(transparent,#000_5%,#000_88%,transparent)] [mask-composite:intersect]'
+// The orbit's note, small at the render's bottom right (client, 16 Oct 2026);
+// in Visual selection, at the selection's bottom right corner, below the panel.
+const RenderNote = () => <p className="pointer-events-none absolute bottom-0 right-0 text-[0.52rem] uppercase tracking-[0.22em] text-muted/90">Architect’s impression</p>
 
 export default function ResidencesPage() {
   const { go, menuOpen } = useShell()
@@ -125,7 +130,7 @@ export default function ResidencesPage() {
             <div>
               <p className="eyebrow">01 · Visual selection</p>
               <h2 tabIndex={-1} className="display mt-2 text-[clamp(1.5rem,2.4vw,2.4rem)] text-fg outline-none">Select a floor</h2>
-              <RenderNote className="mt-2 max-w-xl" />
+              <p className="mt-2 max-w-xl text-[0.58rem] uppercase leading-relaxed tracking-[0.22em] text-muted/90">Floors <span className="num">{openFloors}</span> open · higher floors to follow</p>
             </div>
             <button type="button" className="btn-icon" onClick={close} aria-label="Close visual selection">
               <svg viewBox="0 0 24 24"><path d="m5 5 14 14M19 5 5 19" /></svg>
@@ -137,7 +142,10 @@ export default function ResidencesPage() {
           <div className="flex min-h-0 flex-1 flex-col gap-4 short:flex-row short:items-center">
             <div className="relative min-h-[40vh] flex-1 self-stretch split:min-h-0">
               <Suspense fallback={null}>
-                <OrbitView pickable sky={false} floor={chosen} onFloor={setChoice} onHover={setPreview} canPick={canPick} turn={turn} zoom={1.22} className={FADE}
+                {/* The whole tower up to its terrace, and the city across the full
+                    width: no zoom, a lighter fade, the crop moved down where the
+                    crown needs it (client, 16 Oct 2026). */}
+                <OrbitView pickable sky={false} fit="crown" floor={chosen} onFloor={setChoice} onHover={setPreview} canPick={canPick} turn={turn} className={FADE_SELECT}
                   label="Rendered orbit of Wing A and Wing B. Point at a wing's floor to preview it, click or tap to select it; drag to turn the tower; use the up and down arrow keys to change floor within the chosen wing." />
               </Suspense>
             </div>
@@ -173,20 +181,18 @@ export default function ResidencesPage() {
                   <button type="button" className="btn-icon max-sm:hidden short:hidden" aria-label="Turn the building right" onClick={() => rotate(1)}><ChevronIcon /></button>
                 </div>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
               <button type="button" className="btn-lux whitespace-nowrap" disabled={!chosen} onClick={() => go(`/floor-plans?wing=${choice.tower}&floor=${choice.n}`)}>Floor plans<ArrowIcon className="shrink-0" /></button>
-              <button type="button" className="btn-lux whitespace-nowrap" disabled={!chosen} onClick={() => setViewing({ wing: choice.tower, floor: choice.n })}>See view<ArrowIcon className="shrink-0" /></button>
-            </div>
             </div>
           </div>
+          <p className="-mt-2 text-right text-[0.52rem] uppercase tracking-[0.22em] text-muted/90">Architect’s impression</p>
         </div>
         : finder
           ? <UnitFinder ref={region} onClose={close} onOpenPlan={openPlan} onView={setViewing} />
           : <div ref={art} className="absolute inset-0 flex flex-col">
             <div data-reveal="fade" className="relative min-h-0 flex-1">
               <Suspense fallback={null}><OrbitView sky={false} zoom={1.3} className={FADE} label="Rendered orbit of the Arkade Ascend tower. Drag to turn it." /></Suspense>
+              <RenderNote />
             </div>
-            <RenderNote className="mx-auto max-w-xl text-center" />
           </div>}
     </div>
     {viewing && <ViewOverlay wing={viewing.wing} floor={viewing.floor} unit={viewing.unit} onClose={() => setViewing(null)} />}
