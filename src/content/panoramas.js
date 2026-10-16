@@ -66,17 +66,31 @@ export const topView = {
 // the radar on the mini plan turns by this much more than the view does.
 export const planHeading = { A: 0, B: 0 }
 
-// Each home's two outlooks, front and back, set by eye in the view's setup
-// panel: open any page with ?setup in the address (?setup=off ends it), open
-// a view, choose a home on the mini plan, set its edges, then "Copy all rooms"
-// and paste the result over this. In degrees, as the panel shows them: `yaw`
-// is [left, right], clockwise; `pitch` is [up, down] (positive looks down).
-// Each is the edge of the screen at its limit. `start` is [yaw, pitch, zoom]
-// (zoom the vertical field of view), where the side opens; without it, it
-// opens centred between its edges. A side left out faces away from the core
-// (the back the other way), 110° wide.
-export const outlooks = {
+// Each home's view, set by hand, per wing (the same on every floor), in degrees:
+//   start    where the view opens when the home is chosen: { yaw, pitch, fov }
+//            (yaw 0 is the panorama's front, positive turns right; pitch
+//            positive looks down; fov is the zoom, smaller is closer)
+//   outlook  [left, right]: the yaw of the outlook's left and right edges; the
+//            picture is kept between them (at most 165 degrees apart).
+//            false: the home's view is not locked.
+//   tilt     [top, bottom]: the pitch of the picture's top and bottom edges
+//            (negative is above the horizon, positive below); the view is kept
+//            between them. Left out: -30 to 60.
+//   back     every home also looks out at the back (client, 16 Oct 2026):
+//            the same { start, outlook, tilt } for that view, chosen with Back view.
+// A home left out, or a part left out, uses the estimate from its place on the
+// plan (labelled "angle indicative" on screen). Set them with `?calibrate` in
+// the address: press a home on the mini plan, use the Setup panel, then
+// "Copy this room" or "Copy all rooms" and paste here. For example:
+//   A: { '01': { start: { yaw: 99.8, pitch: -7.5, fov: 55 }, outlook: [57.2, 159.9] } },
+export const roomViews = {
   A: {
-    '01': { front: { yaw: [331.9, 23] } },
+    '01': { start: { yaw: 1, pitch: 10.4, fov: 82.4 }, outlook: [-56.4, 58.2], tilt: [-29.6, 44.3], back: { start: { yaw: 180, pitch: 21.1, fov: 88.5 }, outlook: [125.7, -125.2], tilt: [-25.7, 46.1] } },
+    '02': { start: { yaw: -2.9, pitch: 5, fov: 72.4 }, outlook: [-55.4, 49.6], tilt: [-30.2, 40.4] },
+    '03': { start: { yaw: 6.3, pitch: 10, fov: 60 }, outlook: [-44.6, 52.1], tilt: [-27.4, null] },
+    '04': { start: { yaw: -4.8, pitch: 10, fov: 88.5 }, outlook: [-56.7, 40.1], tilt: [-29.4, 41.5], back: { start: { yaw: 174.9, pitch: 2.9, fov: 64.7 }, outlook: [126.5, -136.7], tilt: [-28.6, 34.4] } },
+    '05': { start: { yaw: 177.9, pitch: 10, fov: 60 }, outlook: [125.8, -136.4], tilt: [-22.2, 40] },
+    '06': { start: { yaw: -177.3, pitch: 7, fov: 60 }, outlook: [140.6, -135.1], tilt: [-19.3, 34] },
   },
+  B: {},
 }
