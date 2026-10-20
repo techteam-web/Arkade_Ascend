@@ -49,7 +49,8 @@ export const presets = {
   residences: still('#2a1a1e', '#110a0c', '#553a3a', [0.62, 0.45], 0.6, 0.5),
   // Pages 5 and 6: cream paper.
   cream: still('#f8f3de', '#ebe0bb', '#fffaf0', [0.25, 0.8], 0.45, 0.14),
-  amenities: still('#2b1b1f', '#100a0b', '#523838', [0.5, 0.5], 0.6, 0.55),
+  // Amenities is full bleed: its photograph covers the ground.
+  amenities: { ...still('#2b1b1f', '#100a0b', '#523838', [0.5, 0.5], 0.6, 0.55), covered: true },
   views: { ...still('#1a1012', '#0b0607', '#3a2427', [0.5, 0.5], 0.4, 0.6), covered: true },
   // The Location map covers the whole page.
   map: { ...still('#f8f3de', '#ebe0bb', '#fffaf0', [0.25, 0.8], 0.45, 0.14), covered: true },

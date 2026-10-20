@@ -32,8 +32,9 @@ export function revealIn(root) {
     if (kind === 'chars') {
       // Each letter rises out of its line's mask, a breath after the last,
       // turning upright as it comes, like a lift display rolling over.
-      const split = SplitText.create(item, { type: 'chars,lines', mask: 'lines', linesClass: 'split-line', charsClass: 'split-char' })
-      timeline.from(split.chars, { yPercent: 115, rotate: 7, duration: 1.05, stagger: { each: 0.028, from: 'start' }, ease: 'rise' }, at)
+      // Each letter flips up out of its line in 3D, a breath after the last.
+      const split = SplitText.create(item, { type: 'chars,lines', mask: 'lines', linesClass: 'split-line split-3d', charsClass: 'split-char' })
+      timeline.from(split.chars, { yPercent: 70, rotationX: -95, z: -40, autoAlpha: 0, duration: 1.25, stagger: { each: 0.035, from: 'start' }, ease: 'expo.out' }, at)
     } else if (kind === 'lines') {
       const split = SplitText.create(item, { type: 'lines', mask: 'lines', linesClass: 'split-line' })
       timeline.from(split.lines, { yPercent: 105, duration: 1.05, stagger: 0.085, ease: 'rise' }, at)

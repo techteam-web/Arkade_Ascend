@@ -13,7 +13,7 @@ export function PageHeading({ id, title, subtitle, className = '', titleClass = 
   // Long titles shrink to fit their column (about 0.74em per capital).
   const fit = `min(clamp(2.6rem, min(7vw, 10.5vh), 8rem), ${(130 / title.length).toFixed(2)}cqi)`
   // Inline-size containment: in a flex row, give the heading flex-1 so it has a width.
-  return <div className={`min-w-0 [container-type:inline-size] ${className}`}>
+  return <div className={`depth-1 min-w-0 [container-type:inline-size] ${className}`}>
     <p data-reveal className="eyebrow flex items-center gap-3">
       <span className="visually-hidden">Section {index + 1} of {sections.length}</span>
       <span className="num tracking-[0.12em] text-fg" aria-hidden="true">{pad(index + 1)}</span>

@@ -550,7 +550,13 @@ html { font-size: 100%; }
 
   /* SplitText line masks; letters turn about their foot as they rise. */
   .split-line { overflow: clip; padding-bottom: .08em; margin-bottom: -.08em; }
-  .split-char { transform-origin: 0% 100%; }
+  .split-char { transform-origin: 50% 100% -0.2em; backface-visibility: hidden; }
+  .split-3d { perspective: 800px; }
+  /* Depth with the pointer (Cursor.jsx sets --px and --py, -1 to 1): layers
+     drift a few pixels against each other. Off for touch and reduced motion. */
+  .depth-1 { translate: calc(var(--px, 0) * -6px) calc(var(--py, 0) * -4px); }
+  .depth-2 { translate: calc(var(--px, 0) * 10px) calc(var(--py, 0) * 7px); }
+  .depth-3 { translate: calc(var(--px, 0) * 18px) calc(var(--py, 0) * 12px); }
 }
 
 /* Live map (Location): brochure-toned pins, labels and controls. MapLibre

@@ -102,16 +102,18 @@ export default function ArkadeFamilyPage() {
 // A framed photograph that takes whatever height its part leaves it beside
 // the viewport (stacked, it keeps its own proportion). Its foot is shaded
 // so the type laid over it always reads. A `badge` (a seal) sits at its top
-// right; a missing file just leaves the corner empty.
-function Frame({ image, focus, ratio, badge, className = '', children }) {
+// right; a missing file just leaves the corner empty. With `flow`, a stacked
+// or short frame grows with its caption instead of keeping a proportion (the
+// page scrolls to its foot), so a long caption never runs off its top.
+function Frame({ image, focus, ratio, badge, flow = false, className = '', children }) {
   const [badgeShown, setBadgeShown] = useState(true)
-  return <figure data-reveal="mask" data-part-frame className={`relative m-0 shrink-0 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 ${ratio} split:aspect-auto split:min-h-52 split:flex-1 split:shrink ${className}`}>
+  return <figure data-reveal="mask" data-part-frame className={`relative m-0 shrink-0 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 ${flow ? 'flex flex-col justify-end' : ''} ${ratio} split:aspect-auto split:min-h-52 split:flex-1 split:shrink ${className}`}>
     <GLImage src={image.src} srcSet={image.srcSet} sizes="(min-width: 64rem) 62vw, 100vw" alt={image.alt} focus={focus} />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/90 via-ink/35 via-45% to-transparent" />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-ink/45 to-transparent to-60%" />
     {badge && badgeShown && <img src={badge.src} srcSet={badge.srcSet} sizes="6rem" alt={badge.alt} draggable="false" onError={() => setBadgeShown(false)}
       className="pointer-events-none absolute right-[clamp(0.75rem,1.6vw,1.5rem)] top-[clamp(0.75rem,1.6vw,1.5rem)] h-auto w-[clamp(3rem,5.5vw,5.5rem)] select-none drop-shadow-[0_2px_10px_rgba(18,11,13,.45)]" />}
-    <figcaption className="absolute inset-x-0 bottom-0 px-[clamp(1.1rem,2.6vw,2.5rem)] pb-[clamp(1rem,3vh,2.25rem)] text-ivory">{children}</figcaption>
+    <figcaption className={`${flow ? 'relative pt-[min(52vw,18rem)] split:absolute split:pt-0 short:relative! short:pt-[44vh]!' : 'absolute'} inset-x-0 bottom-0 px-[clamp(1.1rem,2.6vw,2.5rem)] pb-[clamp(1rem,3vh,2.25rem)] text-ivory`}>{children}</figcaption>
     {/* Small, in the photograph's bottom right corner (client, 16 Oct 2026). */}
     <p className="photo-note absolute bottom-2 right-2.5">Representational image</p>
   </figure>
@@ -122,30 +124,34 @@ function PartNumber({ number, onPhoto = true }) {
   return <p data-part className={`eyebrow num ${onPhoto ? 'text-gold-300!' : ''}`}>{pad(number)} / {pad(parts.length)}</p>
 }
 
+// The legacy: the photograph takes the whole panel, the title set large over
+// it, and the deck's eight figures on a frosted band across its foot.
 function Legacy({ number }) {
-  return <>
-    <Frame image={legacy.image} badge={legacy.badge} focus="50% 40%" ratio="aspect-[4/3] @lg:aspect-[16/9]">
-      <PartNumber number={number} />
-      <h2 data-part className="display mt-3 max-w-[18ch] text-[clamp(1.6rem,min(3.4vw,6.4vh),3.8rem)] leading-[1.02]">{legacy.title}</h2>
-      <ul data-part className="mt-[clamp(0.8rem,2.4vh,1.4rem)] flex flex-wrap gap-x-8 gap-y-2">
-        {legacy.certifications.map(item => <li key={item.name} className="flex items-baseline gap-3">
-          <span className="num text-[0.78rem] font-medium tracking-[0.06em] text-gold-200">{item.name}</span>
-          <span className="text-[0.55rem] uppercase tracking-[0.18em] text-ivory/75">{item.scope}</span>
-        </li>)}
-      </ul>
-    </Frame>
-    {/* The deck's eight figures in two ruled rows, divided as it divides them. */}
-    <dl className="grid shrink-0 grid-cols-2 border-y border-line @xl:grid-cols-4">
-      {legacy.figures.map((figure, i) => <div key={figure.label} data-reveal data-part
-        className={`flex min-w-0 flex-col-reverse justify-end border-line px-[clamp(0.75rem,1.6vw,1.5rem)] py-[clamp(0.8rem,2.4vh,1.4rem)] ${RULES[i]}`}>
-        <dt className="mt-2 text-[0.58rem] uppercase leading-snug tracking-[0.16em] text-muted">{figure.label}</dt>
-        <dd className="num whitespace-nowrap text-[clamp(1.6rem,min(2.7vw,5vh),3.2rem)] leading-none text-fg">
-          {figure.text ?? <span data-count={figure.value} data-decimals={figure.decimals ?? 0}>{figure.value.toLocaleString('en-IN')}</span>}
-          {figure.plus && <span className="text-accent">+</span>}
-        </dd>
-      </div>)}
-    </dl>
-  </>
+  return <Frame image={legacy.image} badge={legacy.badge} focus="50% 40%" flow ratio="" className="short:flex-none! split:-mr-(--gutter) split:rounded-r-none split:border-r-0">
+    <div className="flex flex-col gap-[clamp(1rem,3vh,2rem)]">
+      <div>
+        <PartNumber number={number} />
+        <h2 data-part className="display mt-3 max-w-[16ch] text-[clamp(2rem,min(4.6vw,8vh),5.4rem)] leading-[0.95] [text-shadow:0_2px_30px_rgba(18,11,13,.5)]">{legacy.title}</h2>
+        <ul data-part className="mt-[clamp(0.7rem,2vh,1.2rem)] flex flex-wrap gap-x-8 gap-y-2">
+          {legacy.certifications.map(item => <li key={item.name} className="flex items-baseline gap-3">
+            <span className="num whitespace-nowrap text-[0.78rem] font-medium tracking-[0.06em] text-gold-200">{item.name}</span>
+            <span className="text-[0.55rem] uppercase tracking-[0.18em] text-ivory/75">{item.scope}</span>
+          </li>)}
+        </ul>
+      </div>
+      {/* The deck's eight figures, on frosted glass across the photograph's foot. */}
+      <dl data-part className="glass-panel grid grid-cols-2 rounded-sm @xl:grid-cols-4 split:mr-(--gutter)">
+        {legacy.figures.map((figure, i) => <div key={figure.label}
+          className={`flex min-w-0 flex-col-reverse justify-end border-ivory/12 px-[clamp(0.75rem,1.4vw,1.4rem)] py-[clamp(0.6rem,1.8vh,1.1rem)] ${RULES[i]}`}>
+          <dt className="mt-1.5 text-[0.55rem] uppercase leading-snug tracking-[0.16em] text-gold-100/80">{figure.label}</dt>
+          <dd className="num whitespace-nowrap text-[clamp(1.5rem,min(2.5vw,4.6vh),3rem)] leading-none text-ivory">
+            {figure.text ?? <span data-count={figure.value} data-decimals={figure.decimals ?? 0}>{figure.value.toLocaleString('en-IN')}</span>}
+            {figure.plus && <span className="text-gold-300">+</span>}
+          </dd>
+        </div>)}
+      </dl>
+    </div>
+  </Frame>
 }
 
 // Rules between the figures: two columns of four rows, or four of two.

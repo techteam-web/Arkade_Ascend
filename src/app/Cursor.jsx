@@ -28,6 +28,11 @@ export default function Cursor() {
     const ringY = gsap.quickTo(ring.current, 'y', { duration: 0.5, ease: 'power3' })
     const dotX = gsap.quickTo(dot.current, 'x', { duration: 0.12, ease: 'power2' })
     const dotY = gsap.quickTo(dot.current, 'y', { duration: 0.12, ease: 'power2' })
+    // the page's depth layers (.depth-1 to 3) lean with the pointer
+    const html = document.documentElement
+    gsap.set(html, { '--px': 0, '--py': 0 })
+    const leanX = gsap.quickTo(html, '--px', { duration: 1.2, ease: 'power3' })
+    const leanY = gsap.quickTo(html, '--py', { duration: 1.2, ease: 'power3' })
     let magnet = null
     const pulls = new Map()
     const pull = node => {
@@ -47,6 +52,7 @@ export default function Cursor() {
     const move = event => {
       if (event.pointerType !== 'mouse') return
       ringX(event.clientX); ringY(event.clientY)
+      leanX(event.clientX / window.innerWidth * 2 - 1); leanY(event.clientY / window.innerHeight * 2 - 1)
       dotX(event.clientX); dotY(event.clientY)
       if (el.dataset.shown !== 'true') {
         gsap.set([ring.current, dot.current], { x: event.clientX, y: event.clientY })
@@ -96,6 +102,7 @@ export default function Cursor() {
       window.removeEventListener('pointerup', up)
       document.documentElement.removeEventListener('pointerleave', leave)
       pulls.forEach((_, node) => gsap.set(node, { '--mx': 0, '--my': 0 }))
+      gsap.set(html, { '--px': 0, '--py': 0 })
     }
   }, [])
 

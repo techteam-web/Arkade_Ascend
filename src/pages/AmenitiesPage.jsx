@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
+import { SplitText } from 'gsap/SplitText'
 import { ImageSlot, PageHeading } from '../components/PageKit.jsx'
 import GLImage from '../components/GLImage.jsx'
 import { prefetchImages } from '../app/prefetch.js'
@@ -71,76 +72,86 @@ export default function AmenitiesPage() {
     return () => window.removeEventListener('keydown', onKey, true)
   }, [lightbox, index])
 
+  // Each amenity's line rises letter by letter as it arrives; its labels lift in.
   useLayoutEffect(() => {
     if (prefersReducedMotion()) return
     const context = gsap.context(() => {
-      gsap.from('[data-amenity-copy]', { autoAlpha: 0, y: 10, duration: 0.7, stagger: 0.05, ease: 'silk' })
+      const title = caption.current?.querySelector('[data-amenity-title]')
+      if (title) {
+        const split = SplitText.create(title, { type: 'words,chars', mask: 'words', charsClass: 'split-char' })
+        gsap.from(split.chars, { yPercent: 115, rotate: 7, duration: 1, stagger: 0.018, ease: 'rise' })
+      }
+      gsap.from('[data-amenity-copy]', { autoAlpha: 0, y: 14, duration: 0.8, stagger: 0.06, ease: 'rise' })
     }, caption)
     return () => context.revert()
   }, [index])
 
-  // The groups as one row of tabs: across the page above the photograph and
-  // the list where there is room (the list then starts level with the
-  // photograph's top), otherwise above the list.
-  return <section ref={root} className="page page-scroll grid grid-cols-[minmax(0,1fr)] content-start gap-[clamp(1rem,3vh,2rem)] split:grid-rows-[auto_minmax(0,1fr)_auto] split:content-stretch roomy:grid-rows-[auto_auto_minmax(0,1fr)_auto]">
-    <PageHeading id="amenities" title="Amenities" subtitle={`Presenting ${club.name} · ${club.line.toLowerCase()}`} />
-    <div data-reveal className="hidden roomy:block"><GroupTabs active={active.group} onChoose={chooseGroup} /></div>
+  // The amenity fills the page, edge to edge, in WebGL (it rises in over the
+  // last and ripples under the pointer). Over it: the heading and the
+  // groups along the top, and at the foot the amenity's line set large, with
+  // its group's list and the steps on a frosted panel beside it.
+  return <section ref={root} className="absolute inset-0 overflow-hidden" aria-label="Amenities">
+    <div data-reveal="fade" className="absolute inset-0 bg-plum-950" aria-live="polite">
+      {picture
+        ? <GLImage src={picture.src} srcSet={picture.srcSet} sizes="100vw" alt={active.name} focus={shownImage?.focus ?? active.focus} />
+        : <ImageSlot label="Image to follow" className="pb-[22%]" />}
+    </div>
+    {/* Shade the sides that carry type. */}
+    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,rgba(18,11,13,.8),rgba(18,11,13,.3)_42%,transparent_68%)] stack:bg-[linear-gradient(180deg,rgba(18,11,13,.25),transparent_30%)]" />
+    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(18,11,13,.8),rgba(18,11,13,.5)_30%,transparent_46%,transparent_52%,rgba(18,11,13,.9))]" />
 
-    <div className="grid gap-[clamp(1.25rem,3vw,3rem)] split:min-h-0 split:grid-rows-[minmax(0,1fr)] split:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] 3xl:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
-      <figure data-reveal="fade" className="relative m-0 aspect-4/3 overflow-hidden rounded-sm border border-line bg-plum-950 split:aspect-auto split:h-full split:min-h-0" aria-live="polite">
-        {/* The shown photograph rises in over the last (an amenity with
-            several pictures rises through them in turn); one without a
-            photograph yet shows the framed placeholder. */}
-        {picture
-          ? <GLImage src={picture.src} srcSet={picture.srcSet} sizes={PHOTO_SIZES} alt={active.name} focus={shownImage?.focus ?? active.focus} />
-          : <div className="absolute inset-0"><ImageSlot label="Image to follow" className="pb-[22%]" /></div>}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink/85 via-ink/35 to-transparent" />
-        <figcaption ref={caption} className="absolute inset-x-0 bottom-0 px-[clamp(1.25rem,3vw,2.5rem)] pb-[clamp(1.1rem,3vh,2.25rem)] text-ivory">
-          <p data-amenity-copy className="eyebrow text-gold-300!">{active.group.label} · <span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
-          <h2 data-amenity-copy className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5vh),2.8rem)] normal-case leading-[1.1]">{active.line}</h2>
-        </figcaption>
-        {active.image && <div className="absolute right-3 top-3 flex items-center gap-3">
-          <p className="photo-note">{shownImage?.note ?? active.note ?? 'Representational image'}</p>
-          <button ref={opener} type="button" className="btn-icon" onClick={() => setLightbox(true)} aria-label={`View ${active.name} full screen`}>
-            <svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></svg>
-          </button>
-        </div>}
-        {/* One thin segment per picture: the shown one fills over its time,
-            those before it stay full. */}
-        {slides && slides.length > 1 && <div aria-hidden="true" className="pointer-events-none absolute left-[clamp(1.25rem,3vw,2.5rem)] top-[clamp(1rem,2.6vh,1.5rem)] flex w-[clamp(4.5rem,9vw,7rem)] gap-1.5">
-          {slides.map((picture, k) => <span key={picture.src} className="relative h-[2px] flex-1 overflow-hidden rounded-full bg-ivory/30 shadow-[0_1px_4px_rgba(0,0,0,.35)]">
-            {k < slide && <span className="absolute inset-0 bg-gold-300" />}
-            {/* restarts with its timer, also when the menu closes */}
-            {k === slide && <span key={`${index}-${slide}-${paused}`} className="slide-fill absolute inset-0 bg-gold-300 motion-reduce:animate-none"
-              style={{ '--slide-time': `${SLIDE_MS}ms`, animationPlayState: paused ? 'paused' : 'running' }} />}
-          </span>)}
-        </div>}
-      </figure>
+    <div className="page pointer-events-none flex flex-col gap-[clamp(0.75rem,2.4vh,1.5rem)]">
+      <div className="pointer-events-auto flex flex-col gap-[clamp(0.75rem,2.4vh,1.5rem)] split:max-w-[min(100%,56rem)]">
+        <PageHeading id="amenities" title="Amenities" subtitle={`Presenting ${club.name} · ${club.line.toLowerCase()}`} />
+        <div data-reveal><GroupTabs active={active.group} onChoose={chooseGroup} /></div>
+      </div>
 
-      <div data-reveal className="flex min-w-0 flex-col gap-[clamp(0.75rem,2vh,1.25rem)] split:min-h-0">
-        <div className="shrink-0 roomy:hidden"><GroupTabs active={active.group} onChoose={chooseGroup} /></div>
-        {active.group.line && <p key={`line-${active.group.id}`} className="finder-in shrink-0 text-right font-display text-[clamp(0.95rem,min(1.3vw,2.6vh),1.35rem)] leading-tight text-accent">{active.group.line}</p>}
-        <ol key={active.group.id} className="-mx-2 px-2 split:min-h-0 split:overflow-y-auto split:overscroll-contain" aria-label={`${active.group.label} amenities`}>
-          {active.group.items.map(item => {
-            const i = AMENITIES.findIndex(entry => entry.id === item.id)
-            return <li key={item.id} className="finder-in">
-              <button type="button" onClick={() => select(i)} aria-current={i === index ? 'true' : undefined}
-                className="group flex min-h-11 w-full items-baseline gap-4 border-b border-line py-[clamp(0.35rem,1.1vh,0.8rem)] text-left outline-offset-[-2px]">
-                <span aria-hidden="true" className={`num w-6 shrink-0 text-[0.66rem] transition-colors duration-500 ${i === index ? 'text-accent' : 'text-muted'}`}>{pad(i + 1)}</span>
-                <span className={`min-w-0 font-display text-[clamp(1rem,min(1.6vw,3vh),1.6rem)] leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 ${i === index ? 'text-fg' : 'text-muted'}`}>{AMENITIES[i].heading}{AMENITIES[i].line !== AMENITIES[i].heading && <span className="visually-hidden">: {AMENITIES[i].line}</span>}</span>
-                <span className={`ml-auto h-px shrink-0 self-center bg-accent transition-[width] duration-500 ease-silk ${i === index ? 'w-8' : 'w-0'}`} aria-hidden="true" />
-              </button>
-            </li>
-          })}
-        </ol>
+      <div className="mt-auto grid items-end gap-[clamp(1rem,3vw,3rem)] split:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)]">
+        <div ref={caption} className="pointer-events-auto min-w-0">
+          <p data-amenity-copy className="eyebrow flex items-center gap-3 text-gold-300!"><span>{active.group.label}</span><span className="h-px w-8 bg-gold-300/60" aria-hidden="true" /><span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
+          <h2 key={index} data-amenity-title className="display mt-[clamp(0.6rem,1.8vh,1.1rem)] max-w-[16ch] text-[clamp(2.2rem,min(6.4vw,10.5vh),7rem)] normal-case leading-[0.95] text-ivory [text-shadow:0_2px_30px_rgba(18,11,13,.45)]">{active.line}</h2>
+          {active.group.line && <p data-amenity-copy className="mt-[clamp(0.6rem,1.8vh,1.1rem)] font-display text-[clamp(1rem,min(1.5vw,2.8vh),1.5rem)] leading-tight text-gold-200/95">{active.group.line}</p>}
+          {/* One thin segment per picture: the shown one fills over its time. */}
+          {slides && slides.length > 1 && <div aria-hidden="true" className="mt-4 flex w-[clamp(5rem,10vw,8rem)] gap-1.5">
+            {slides.map((picture, k) => <span key={picture.src} className="relative h-[2px] flex-1 overflow-hidden rounded-full bg-ivory/30">
+              {k < slide && <span className="absolute inset-0 bg-gold-300" />}
+              {k === slide && <span key={`${index}-${slide}-${paused}`} className="slide-fill absolute inset-0 bg-gold-300 motion-reduce:animate-none"
+                style={{ '--slide-time': `${SLIDE_MS}ms`, animationPlayState: paused ? 'paused' : 'running' }} />}
+            </span>)}
+          </div>}
+        </div>
+
+        <div data-reveal className="glass-panel pointer-events-auto flex min-w-0 flex-col gap-3 rounded-sm p-[clamp(0.9rem,1.6vw,1.4rem)] split:max-h-[min(46vh,30rem)]">
+          <ol key={active.group.id} aria-label={`${active.group.label} amenities`}
+            className="-mx-1 min-h-0 overflow-y-auto overscroll-contain px-1 stack:flex stack:gap-2 stack:overflow-x-auto stack:overflow-y-visible stack:[scrollbar-width:none]">
+            {active.group.items.map(item => {
+              const i = AMENITIES.findIndex(entry => entry.id === item.id)
+              return <li key={item.id} className="finder-in shrink-0">
+                <button type="button" onClick={() => select(i)} aria-current={i === index ? 'true' : undefined}
+                  className="group flex min-h-11 w-full items-baseline gap-3 border-b border-ivory/10 py-[clamp(0.3rem,1vh,0.6rem)] text-left outline-offset-[-2px] stack:rounded-full stack:border stack:px-4 stack:py-0 stack:items-center">
+                  <span aria-hidden="true" className={`num w-6 shrink-0 text-[0.62rem] transition-colors duration-500 stack:hidden ${i === index ? 'text-gold-300' : 'text-ivory/50'}`}>{pad(i + 1)}</span>
+                  <span className={`min-w-0 whitespace-nowrap font-display text-[clamp(1rem,min(1.45vw,2.8vh),1.45rem)] leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 stack:text-[0.95rem] ${i === index ? 'text-ivory' : 'text-ivory/60'}`}>
+                    {AMENITIES[i].heading}{AMENITIES[i].line !== AMENITIES[i].heading && <span className="visually-hidden">: {AMENITIES[i].line}</span>}
+                  </span>
+                  <span className={`ml-auto h-px shrink-0 self-center bg-gold-300 transition-[width] duration-500 ease-silk stack:hidden ${i === index ? 'w-6' : 'w-0'}`} aria-hidden="true" />
+                </button>
+              </li>
+            })}
+          </ol>
+          <div className="flex items-center justify-between gap-3 border-t border-ivory/15 pt-3">
+            {active.image && <button ref={opener} type="button" className="btn-icon" onClick={() => setLightbox(true)} aria-label={`View ${active.name} full screen`} data-magnetic>
+              <svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></svg>
+            </button>}
+            <div className="ml-auto flex items-center gap-2">
+              <button type="button" className="btn-icon" onClick={() => select(index - 1)} aria-label="Previous amenity" data-magnetic><ChevronIcon direction="left" /></button>
+              <p className="num w-14 text-center text-[0.95rem] text-ivory">{pad(index + 1)}<span className="text-ivory/50"> / {pad(COUNT)}</span></p>
+              <button type="button" className="btn-icon" onClick={() => select(index + 1)} aria-label="Next amenity" data-magnetic><ChevronIcon /></button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-
-    <div data-reveal className="flex items-center justify-end gap-3">
-      <button type="button" className="btn-icon" onClick={() => select(index - 1)} aria-label="Previous amenity"><ChevronIcon direction="left" /></button>
-      <p className="num w-16 text-center text-base text-fg">{pad(index + 1)}<span className="text-muted"> / {pad(COUNT)}</span></p>
-      <button type="button" className="btn-icon" onClick={() => select(index + 1)} aria-label="Next amenity"><ChevronIcon /></button>
-    </div>
+    <p className="photo-note absolute bottom-(--credit-bottom) right-(--gutter) z-10">{shownImage?.note ?? active.note ?? 'Representational image'}</p>
 
     {/* Portalled into the frame: above the page, still beneath the full-screen gate. */}
     {lightbox && picture && createPortal(<div role="dialog" aria-modal="true" aria-label={`${active.name}, full screen`} onClick={closeLightbox}
