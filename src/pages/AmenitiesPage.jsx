@@ -11,7 +11,13 @@ import { useShell } from '../app/ShellContext.js'
 
 // Club Ark from the brochure, as one sequence of photographs in its groups;
 // an amenity without a photograph yet shows the framed placeholder.
-const AMENITIES = amenityGroups.flatMap(group => group.items.map(item => ({ ...item, group })))
+// Each name reads "Heading – Subline": the photograph carries the subline,
+// the list the heading (the whole name where there is no subline).
+const splitName = name => {
+  const [heading, ...rest] = name.split(/\s+[–-]\s+/)
+  return { heading, line: rest.join(' – ') || name }
+}
+const AMENITIES = amenityGroups.flatMap(group => group.items.map(item => ({ ...item, group, ...splitName(item.name) })))
 const COUNT = AMENITIES.length
 const PHOTO_SIZES = '(min-width: 64rem) 60vw, 100vw'
 const SLIDE_MS = 4000   // an amenity with several pictures shows each for this long, in turn
@@ -91,7 +97,7 @@ export default function AmenitiesPage() {
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink/85 via-ink/35 to-transparent" />
         <figcaption ref={caption} className="absolute inset-x-0 bottom-0 px-[clamp(1.25rem,3vw,2.5rem)] pb-[clamp(1.1rem,3vh,2.25rem)] text-ivory">
           <p data-amenity-copy className="eyebrow text-gold-300!">{active.group.label} · <span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
-          <h2 data-amenity-copy className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5vh),2.8rem)] normal-case leading-[1.1]">{active.name}</h2>
+          <h2 data-amenity-copy className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5vh),2.8rem)] normal-case leading-[1.1]">{active.line}</h2>
         </figcaption>
         {active.image && <div className="absolute right-3 top-3 flex items-center gap-3">
           <p className="pointer-events-none text-[0.5rem] uppercase tracking-[0.2em] text-ivory/60 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">{shownImage?.note ?? active.note ?? 'Representational image'}</p>
@@ -118,10 +124,10 @@ export default function AmenitiesPage() {
           {active.group.items.map(item => {
             const i = AMENITIES.findIndex(entry => entry.id === item.id)
             return <li key={item.id} className="finder-in">
-              <button type="button" onClick={() => select(i)} aria-current={i === index ? 'true' : undefined}
+              <button type="button" onClick={() => select(i)} aria-label={item.name} aria-current={i === index ? 'true' : undefined}
                 className="group flex min-h-11 w-full items-baseline gap-4 border-b border-line py-[clamp(0.35rem,1.1vh,0.8rem)] text-left outline-offset-[-2px]">
                 <span className={`num w-6 shrink-0 text-[0.66rem] transition-colors duration-500 ${i === index ? 'text-accent' : 'text-muted'}`}>{pad(i + 1)}</span>
-                <span className={`min-w-0 font-display text-[clamp(1rem,min(1.6vw,3vh),1.6rem)] leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 ${i === index ? 'text-fg' : 'text-muted'}`}>{item.name}</span>
+                <span className={`min-w-0 font-display text-[clamp(1rem,min(1.6vw,3vh),1.6rem)] leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 ${i === index ? 'text-fg' : 'text-muted'}`}>{AMENITIES[i].heading}</span>
                 <span className={`ml-auto h-px shrink-0 self-center bg-accent transition-[width] duration-500 ease-silk ${i === index ? 'w-8' : 'w-0'}`} aria-hidden="true" />
               </button>
             </li>
