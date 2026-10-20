@@ -21,8 +21,8 @@ const STOREYS = 37
 // the 5th, the first homes on the 6th. The top is the climbing counter.
 const MARKS = [
   { at: 0, label: 'G', note: 'Arrival' },
-  { at: 5, label: '05', note: 'Club Ark' },
-  { at: 6, label: '06', note: 'First homes', minor: true },
+  { at: 5, label: '05', note: 'Club Ark', shift: '95%' },
+  { at: 6, label: '06', note: 'First homes', minor: true, shift: '5%' },
 ]
 
 export default function HomePage() {
@@ -110,7 +110,7 @@ function StoreyScale({ scaleRef }) {
         stroke="currentColor" strokeWidth="1" vectorEffect="non-scaling-stroke" className={floor % 5 === 0 ? 'text-gold-300/70' : 'text-gold-500/40'} />)}
     </svg>
     {MARKS.map(mark => <p key={mark.at} data-reveal="fade" data-delay="0.9"
-      className={`home-scale-mark ${mark.minor ? 'max-sm:hidden short:hidden' : ''}`} style={{ '--at': mark.at / STOREYS }}>
+      className={`home-scale-mark ${mark.minor ? 'max-sm:hidden short:hidden' : ''}`} style={{ '--at': mark.at / STOREYS, '--shift': mark.shift }}>
       <span className="num text-ivory/90">{mark.label}</span><span className="max-md:hidden"> {mark.note}</span>
     </p>)}
     <span className="home-scale-marker block h-px w-[clamp(1.25rem,2.4cqw,2.5rem)] bg-gold-200 shadow-[0_0_10px_rgba(242,213,163,.8)]" />

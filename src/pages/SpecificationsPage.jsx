@@ -79,17 +79,17 @@ export default function SpecificationsPage() {
     <div ref={frame} data-reveal="mask" className="absolute split:inset-y-0 split:left-[34%] split:right-0 split:[mask-image:linear-gradient(90deg,transparent,#000_34%)] stack:inset-x-0 stack:top-0 stack:h-[46cqh] stack:[mask-image:linear-gradient(transparent,#000_0%,#000_62%,transparent)]">
       <GLImage src={current.src} srcSet={current.srcSet} sizes="(min-width: 64rem) 66vw, 100vw" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} focus={current.focus} />
       {/* The photograph fades out at its left and its foot (a mask), into whatever ground is there. */}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(18,11,13,.55),transparent_22%,transparent_60%,rgba(18,11,13,.6))]" />
-      <button ref={opener} type="button" className="btn-icon absolute right-(--gutter) top-[calc(var(--header-h)+0.5rem)] z-1" onClick={() => setLightbox(true)} aria-label={`View ${spec.title} image full screen`} data-magnetic>
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(18,11,13,.55),transparent_22%,transparent_60%,rgba(18,11,13,.6))] stack:bg-[linear-gradient(180deg,rgba(18,11,13,.72),rgba(18,11,13,.35)_34%,transparent_52%)]" />
+      <button ref={opener} type="button" className="btn-icon absolute right-(--gutter) z-1 split:top-[calc(var(--header-h)+0.5rem)] stack:top-[calc(46cqh-6.75rem)]" onClick={() => setLightbox(true)} aria-label={`View ${spec.title} image full screen`} data-magnetic>
         <svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></svg>
       </button>
-      <p className="photo-note absolute right-(--gutter) split:bottom-(--credit-bottom) stack:top-[calc(var(--header-h)+3.6rem)]">{current.note ?? 'Representational image'}</p>
+      <p className="photo-note absolute split:right-(--gutter) split:bottom-(--credit-bottom) stack:right-[calc(var(--gutter)+3.4rem)] stack:top-[calc(46cqh-5.55rem)]">{current.note ?? 'Representational image'}</p>
     </div>
 
     <div className="page page-scroll relative z-10 flex flex-col gap-6 split:grid split:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] split:grid-rows-[minmax(0,1fr)] split:gap-x-[3vw] stack:pt-[calc(46cqh-3.5rem)] 3xl:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]">
       <div className="flex shrink-0 flex-col gap-6 split:min-h-0 split:justify-center-safe stack:order-2">
         {/* Beside the photograph on wide screens; over its top on portrait ones. */}
-        <div className="stack:absolute stack:inset-x-(--gutter) stack:top-[calc(var(--header-h)+0.25rem)]"><PageHeading id="specifications" title="Specifications" subtitle="Crafted in detail" /></div>
+        <div className="stack:absolute stack:inset-x-(--gutter) stack:top-[calc(var(--header-h)+0.25rem)]"><PageHeading id="specifications" title="Specifications" subtitle="Crafted in detail" onPhoto /></div>
         <div role="tablist" aria-label="Specification categories" aria-orientation="vertical" onKeyDown={onKeyDown} data-reveal
           className="-mx-1 flex gap-2 overflow-x-auto px-1 py-1 split:flex-col split:gap-0 split:overflow-visible" data-own-gesture>
           {specifications.map((item, i) => <button key={item.id} ref={element => { tabs.current[i] = element }} role="tab" id={`spec-tab-${item.id}`}

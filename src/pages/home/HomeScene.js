@@ -129,15 +129,15 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
   const pmrem = new THREE.PMREMGenerator(renderer)
   const environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
   scene.environment = environment
-  scene.environmentIntensity = 0.32
+  scene.environmentIntensity = 0.2
 
   // light: a low warm key from the setting sun on one face, a cool rim on
   // the other, a faint fill, so the two faces read apart
-  const key = new THREE.DirectionalLight('#ffb27a', 2.5)
+  const key = new THREE.DirectionalLight('#ffb27a', 3.1)
   key.position.set(-16, 6, 9)
   const rim = new THREE.DirectionalLight('#8ea6d4', 1.2)
   rim.position.set(14, 8, -10)
-  scene.add(key, rim, new THREE.HemisphereLight('#5a3e44', '#120b0d', 0.28))
+  scene.add(key, rim, new THREE.HemisphereLight('#5a3e44', '#120b0d', 0.16))
 
   const uniforms = {
     uTime: { value: 0 },
@@ -258,6 +258,14 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
           float trail = smoothstep(uRise, uRise - 0.08, hh) * step(hh, uRise) * uBand;
           totalEmissiveRadiance += vec3(1.0, 0.7, 0.36) * (band * 2.6 + trail * 0.05);
           #ifdef IS_GLASS
+            // the dusk in the glass: warm low down, plum overhead, a glint of
+            // the low sun, stronger at grazing angles (the facets are flat)
+            vec3 toEye = normalize(vViewPosition);
+            vec3 rw = normalize((vec4(reflect(-toEye, normal), 0.0) * viewMatrix).xyz);
+            float fres = pow(1.0 - clamp(abs(dot(normal, toEye)), 0.0, 1.0), 2.5);
+            vec3 sky = mix(vec3(0.2, 0.075, 0.035), vec3(0.016, 0.007, 0.011), smoothstep(-0.05, 0.55, rw.y));
+            sky += vec3(1.0, 0.55, 0.25) * pow(max(dot(rw, normalize(vec3(-0.6, 0.16, 0.78))), 0.0), 22.0) * 0.85;
+            totalEmissiveRadiance += sky * (0.1 + 0.9 * fres);
             float floorId = floor(hh * ${STOREYS}.0);
             float bay = floor((vWorld.x * 0.83 + vWorld.z * 1.21) * 2.2);
             float on = step(0.42, lhash(vec2(floorId, bay)));

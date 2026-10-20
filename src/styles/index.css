@@ -474,13 +474,18 @@ html { font-size: 100%; }
   }
   @media (max-height: 34rem) { .home-scale-side { top: calc(var(--header-h) + .5rem); height: calc(100cqh - var(--header-h) - 1.5rem - var(--credit-space)); right: var(--gutter); } .home-scale-mark { display: none; } }
   .home-scale-mark {
-    position: absolute; left: clamp(1rem, 1.6cqw, 1.5rem); bottom: calc(var(--at) * 100%); translate: 0 50%; margin: 0; white-space: nowrap;
+    position: absolute; left: clamp(1rem, 1.6cqw, 1.5rem); bottom: calc(var(--at) * 100%); translate: 0 var(--shift, 50%); margin: 0; white-space: nowrap;
     font-size: clamp(.5rem, .62cqw, .62rem); letter-spacing: .22em; text-transform: uppercase; color: color-mix(in oklab, var(--color-gold-200) 70%, transparent);
   }
   .home-scale-marker { position: absolute; left: 0; bottom: calc(var(--climb, 1) * 100%); translate: 0 50%; margin-left: -1px; }
   .home-scale-top { position: absolute; left: clamp(1rem, 1.6cqw, 1.5rem); top: 0; translate: 0 -.35em; margin: 0; }
-  @media (max-width: 47.999rem) { .home-scale-top { left: .9rem; } }
-  @media (max-width: 47.999rem) { .home-scale-mark { left: .9rem; } }
+  /* On a phone the scale is a thin rule at the edge, its count to its left,
+     above the crown; the marks would cross the tower, so they go. */
+  @media (max-width: 47.999rem) {
+    .home-scale-side { right: max(.75rem, env(safe-area-inset-right)); width: 1rem; }
+    .home-scale-top { left: auto; right: calc(100% + .45rem); text-align: right; }
+    .home-scale-mark { display: none; }
+  }
   .home-foot {
     position: absolute; inset-inline: var(--gutter); bottom: max(clamp(1rem, 4cqh, 2.5rem), var(--credit-space));
     display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 1.5rem;

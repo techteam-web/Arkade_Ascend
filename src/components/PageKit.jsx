@@ -8,7 +8,8 @@ import { isTemplate } from '../content/template.js'
 // Section index, headline and a supporting line, shared by every page. The
 // index reads like a stop on the lift (its number, a rule, the last stop);
 // the headline's letters rise out of their mask (data-reveal="chars").
-export function PageHeading({ id, title, subtitle, className = '', titleClass = '' }) {
+// `onPhoto` lifts the supporting line for a heading set over a photograph.
+export function PageHeading({ id, title, subtitle, onPhoto = false, className = '', titleClass = '' }) {
   const index = sectionIndex(id)
   // Long titles shrink to fit their column (about 0.74em per capital).
   const fit = `min(clamp(2.6rem, min(7vw, 10.5vh), 8rem), ${(130 / title.length).toFixed(2)}cqi)`
@@ -21,7 +22,7 @@ export function PageHeading({ id, title, subtitle, className = '', titleClass = 
       <span className="num tracking-[0.12em] text-muted" aria-hidden="true">{pad(sections.length)}</span>
     </p>
     <h1 tabIndex={-1} data-reveal="chars" className={`display sheen mt-[clamp(0.6rem,1.6vh,1rem)] whitespace-nowrap text-fg outline-none ${titleClass}`} style={{ fontSize: fit, lineHeight: 0.9 }}>{title}</h1>
-    {subtitle && <p data-reveal className="mt-[clamp(0.6rem,1.8vh,1.1rem)] text-[clamp(0.9rem,1.1vw,1.15rem)] tracking-[0.02em] text-muted">{subtitle}</p>}
+    {subtitle && <p data-reveal className={`mt-[clamp(0.6rem,1.8vh,1.1rem)] text-[clamp(0.9rem,1.1vw,1.15rem)] tracking-[0.02em] ${onPhoto ? 'text-ivory/85 [text-shadow:0_1px_14px_rgba(18,11,13,.7)]' : 'text-muted'}`}>{subtitle}</p>}
   </div>
 }
 

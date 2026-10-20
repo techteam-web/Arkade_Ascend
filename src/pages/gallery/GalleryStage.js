@@ -28,7 +28,7 @@ const vertex = /* glsl */ `
 const fragment = /* glsl */ `
   uniform sampler2D uMap;
   uniform vec4 uFit;            // cover scale (xy) and offset (zw)
-  uniform float uVelocity, uReady, uRise;
+  uniform float uVelocity, uReady, uRise, uFocus;
   varying vec2 vUv;
   varying float vSide;
   void main() {
@@ -38,11 +38,12 @@ const fragment = /* glsl */ `
     vec2 t = vec2(uv.x, uv.y + (1.0 - uRise)) * uFit.xy + uFit.zw;
     float shift = clamp(uVelocity, -1.0, 1.0) * 0.012;
     vec3 col = vec3(texture2D(uMap, t + vec2(shift, 0.0)).r, texture2D(uMap, t).g, texture2D(uMap, t - vec2(shift, 0.0)).b);
-    // the centre in full colour; the others dim and cool as they curve away
-    float away = clamp(abs(vSide) / 2.2, 0.0, 1.0);
+    // the centre in full colour; the others dim and cool, darker still as
+    // they curve away (in linear light, so the dimming reads after output)
+    float away = 1.0 - uFocus;
     float grey = dot(col, vec3(0.299, 0.587, 0.114));
-    col = mix(col, vec3(grey) * vec3(0.92, 0.9, 1.0), away * 0.8);
-    col *= mix(1.0, 0.22, smoothstep(0.0, 1.0, away));
+    col = mix(col, vec3(grey) * vec3(0.92, 0.9, 1.0), away * 0.75);
+    col *= mix(1.0, 0.11, away) * (1.0 - clamp(abs(vSide) / 3.0, 0.0, 1.0) * 0.4 * away);
     // a whisper of vignette inside each frame
     vec2 c = vUv - 0.5;
     col *= 1.0 - dot(c, c) * 0.35;
@@ -53,7 +54,9 @@ const fragment = /* glsl */ `
 
 const HEIGHT = 1          // a picture's height in world units
 const GAP = 0.16
-const widthOf = aspect => HEIGHT * THREE.MathUtils.clamp(aspect || 1.6, 0.72, 1.9)
+// On a tall stage (a phone) every picture is framed upright (cropped to its focus),
+// so the strip fills a phone instead of running as a thin band across it.
+const widthOf = (aspect, tall) => HEIGHT * THREE.MathUtils.clamp(aspect || 1.6, 0.72, tall ? 0.82 : 1.9)
 
 // Cover-fit of a picture (aspect w/h) in a frame (w/h), around a focus point.
 function fitFor(aspect, frame, focus = '50% 50%') {
@@ -93,13 +96,14 @@ export function createGalleryStage(canvas, { onIndex, onOpen, reduced = false } 
   const fit = () => {
     const width = canvas.clientWidth, height = canvas.clientHeight
     if (!width || !height) return
+    if (cards.length && isTall() !== tall) { tall = !tall; relayout() }
     renderer.setSize(width, height, false)
     camera.aspect = width / height
     // a picture takes about 70% of the stage's height (less on tall screens,
     // so a wide one still fits the width)
     const vfov = THREE.MathUtils.degToRad(camera.fov)
     const byHeight = HEIGHT / 0.8 / 2 / Math.tan(vfov / 2)
-    const widest = Math.max(...cards.map(card => card.width), 1.6)
+    const widest = Math.max(...cards.map(card => card.width), tall ? 0.72 : 1.6)
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camera.aspect)
     const byWidth = widest / 0.86 / 2 / Math.tan(hfov / 2)
     camera.position.set(0, 0, Math.max(byHeight, byWidth))
@@ -108,14 +112,33 @@ export function createGalleryStage(canvas, { onIndex, onOpen, reduced = false } 
     needsRender = true
   }
 
+  const isTall = () => canvas.clientHeight > canvas.clientWidth * 0.8
+  let tall = isTall()
+  // An orientation change reframes the pictures where they are.
+  const relayout = () => {
+    let x = 0
+    cards.forEach(card => {
+      card.width = widthOf(card.item.aspect, tall)
+      card.mesh.scale.set(card.width, HEIGHT, 1)
+      card.mesh.material.uniforms.uFit.value = fitFor(card.item.aspect, card.width / HEIGHT, card.item.focus)
+      card.centre = x + card.width / 2
+      x += card.width + GAP
+    })
+    total = Math.max(x, 7)
+    settle?.kill()
+    position = centreOf(index)
+    velocity = 0
+  }
+
   const setItems = (items, start = 0) => {
     cards.forEach(card => { card.mesh.material.uniforms.uMap.value?.dispose(); card.mesh.material.dispose(); scene.remove(card.mesh) })
     let x = 0
+    tall = isTall()
     cards = items.map((item, i) => {
-      const width = widthOf(item.aspect)
+      const width = widthOf(item.aspect, tall)
       const material = new THREE.ShaderMaterial({
         vertexShader: vertex, fragmentShader: fragment,
-        uniforms: { ...shared, uMap: { value: null }, uFit: { value: fitFor(item.aspect, width / HEIGHT, item.focus) }, uReady: { value: 0 }, uRise: { value: reduced ? 1 : 0 } },
+        uniforms: { ...shared, uMap: { value: null }, uFit: { value: fitFor(item.aspect, width / HEIGHT, item.focus) }, uReady: { value: 0 }, uRise: { value: reduced ? 1 : 0 }, uFocus: { value: i === start ? 1 : 0 } },
       })
       const mesh = new THREE.Mesh(geometry, material)
       mesh.scale.set(width, HEIGHT, 1)
@@ -242,7 +265,12 @@ export function createGalleryStage(canvas, { onIndex, onOpen, reduced = false } 
     if (Math.abs(shared.uVelocity.value) > 0.001) needsRender = true
     if (!needsRender) return
     needsRender = false
-    cards.forEach(card => { card.mesh.position.x = wrap(card.centre - position) })
+    // a picture comes into full colour as it nears the centre
+    cards.forEach(card => {
+      const x = wrap(card.centre - position)
+      card.mesh.position.x = x
+      card.mesh.material.uniforms.uFocus.value = 1 - THREE.MathUtils.smoothstep(Math.abs(x), 0, card.width * 0.5 + GAP + 0.25)
+    })
     renderer.render(scene, camera)
   }
   gsap.ticker.add(tick)

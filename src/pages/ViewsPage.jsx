@@ -206,7 +206,7 @@ export default function ViewsPage() {
     <div className="pointer-events-none absolute inset-x-0 top-0 h-[46%] bg-linear-to-b from-ink/70 via-ink/35 to-transparent sm:hidden" />
 
     <div className="page pointer-events-none flex flex-col justify-between">
-      <div className="flex"><PageHeading id="views" title="Views" subtitle="The city from above" className="pointer-events-auto flex-1" /></div>
+      <div className="flex"><PageHeading id="views" title="Views" subtitle="The city from above" onPhoto className="pointer-events-auto flex-1" /></div>
 
       <div className="pointer-events-auto flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div data-reveal className="max-w-sm">

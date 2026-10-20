@@ -102,7 +102,7 @@ export default function AmenitiesPage() {
 
     <div className="page pointer-events-none flex flex-col gap-[clamp(0.75rem,2.4vh,1.5rem)]">
       <div className="pointer-events-auto flex flex-col gap-[clamp(0.75rem,2.4vh,1.5rem)] split:max-w-[min(100%,56rem)]">
-        <PageHeading id="amenities" title="Amenities" subtitle={`Presenting ${club.name} · ${club.line.toLowerCase()}`} />
+        <PageHeading id="amenities" title="Amenities" subtitle={`Presenting ${club.name} · ${club.line.toLowerCase()}`} onPhoto />
         <div data-reveal><GroupTabs active={active.group} onChoose={chooseGroup} /></div>
       </div>
 
@@ -175,10 +175,17 @@ export default function AmenitiesPage() {
 function GroupTabs({ active, onChoose }) {
   const bar = useRef(null)
   const [mark, setMark] = useState(null)
+  // A scrolling row fades only at an edge with more tabs beyond it.
+  const edges = () => {
+    const row = bar.current
+    if (!row) return
+    row.style.setProperty('--fade-start', row.scrollLeft > 2 ? '1.5rem' : '0px')
+    row.style.setProperty('--fade-end', row.scrollLeft + row.clientWidth < row.scrollWidth - 2 ? '1.5rem' : '0px')
+  }
   useLayoutEffect(() => {
     const row = bar.current, tab = row?.querySelector('[aria-pressed="true"]')
     if (!tab) return
-    const place = () => setMark({ x: tab.offsetLeft, width: tab.offsetWidth, scrolls: row.scrollWidth > row.clientWidth + 1 })
+    const place = () => { setMark({ x: tab.offsetLeft, width: tab.offsetWidth, scrolls: row.scrollWidth > row.clientWidth + 1 }); edges() }
     place()
     if (row.scrollWidth > row.clientWidth) {
       row.scrollTo({ left: Math.max(0, tab.offsetLeft - (row.clientWidth - tab.offsetWidth) / 2), behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
@@ -187,8 +194,8 @@ function GroupTabs({ active, onChoose }) {
     observer.observe(row)
     return () => observer.disconnect()
   }, [active])
-  return <div ref={bar} role="group" aria-label={`${club.name} groups`} data-own-gesture
-    className={`relative flex gap-x-[clamp(1.1rem,2.4vw,3rem)] overflow-x-auto border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${mark?.scrolls ? '[mask-image:linear-gradient(90deg,transparent,#000_1.5rem,#000_calc(100%-1.5rem),transparent)]' : ''}`}>
+  return <div ref={bar} role="group" aria-label={`${club.name} groups`} data-own-gesture onScroll={edges}
+    className={`relative flex gap-x-[clamp(1.1rem,2.4vw,3rem)] overflow-x-auto border-b border-line [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${mark?.scrolls ? '[mask-image:linear-gradient(90deg,transparent,#000_var(--fade-start,1.5rem),#000_calc(100%-var(--fade-end,1.5rem)),transparent)]' : ''}`}>
     {amenityGroups.map(group => {
       const chosen = group === active
       return <button key={group.id} type="button" aria-pressed={chosen} onClick={() => onChoose(group)}
