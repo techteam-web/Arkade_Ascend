@@ -331,19 +331,26 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
   // they show from at most 10 degrees below the horizon, so the camera never
   // looks steeply up. On arrival it rides up beside the light at about the
   // light's own height, then draws back to the hero framing.
-  const view = { azimuth: 0.62, radius: 30, distance: 1, camY: HEIGHT * 0.78, lookY: HEIGHT * 0.52 }
-  const hero = { distance: 1, camY: HEIGHT * 0.78, lookY: HEIGHT * 0.52 }
+  // The hero framing stands the podium just clear of the foot's controls.
+  const view = { azimuth: 0.62, radius: 30, distance: 1, camY: HEIGHT * 0.78, lookY: HEIGHT * 0.48 }
+  const hero = { distance: 1, camY: HEIGHT * 0.78, lookY: HEIGHT * 0.48 }
+  let intro = null       // the arrival's timeline (below)
   const lean = { x: 0, y: 0, tx: 0, ty: 0 }
   const drag = { active: false, x: 0, velocity: 0, id: null }
   const target = new THREE.Vector3()
   const fit = () => {
-    // Far enough that the tower (and its ribbons) fill about 78% of the
-    // height on landscape screens; narrower screens step back to fit width.
+    // Far enough that the tower (and its ribbons) fill about 72% of the
+    // height on landscape screens, 60% on portrait ones (their foot is
+    // taller), standing a little higher; narrow screens step back to fit width.
+    const portrait = camera.aspect < 0.8
+    hero.lookY = HEIGHT * (portrait ? 0.4 : 0.48)
+    if (!intro?.isActive()) view.lookY = hero.lookY
     const vfov = THREE.MathUtils.degToRad(camera.fov)
-    const byHeight = (HEIGHT * 0.5) / Math.tan(vfov / 2) / 0.8
+    const byHeight = (HEIGHT * 0.5) / Math.tan(vfov / 2) / (portrait ? 0.6 : 0.74)
     const hfov = 2 * Math.atan(Math.tan(vfov / 2) * camera.aspect)
-    // The podium is wide: on narrow screens it may run off the sides.
-    const byWidth = ((tower.userData.radius ?? 1.6) * 1.15) / Math.tan(hfov / 2)
+    // The podium is wide: on a portrait screen its ends may run a little
+    // off the sides, so the tower itself stands taller there.
+    const byWidth = ((tower.userData.radius ?? 1.6) * (portrait ? 0.86 : 1.15)) / Math.tan(hfov / 2)
     view.radius = Math.max(byHeight, byWidth) + 1.5
   }
   let needsRender = true
@@ -407,7 +414,6 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
   observer.observe(canvas)
 
   // --- the arrival ---
-  let intro = null
   const begin = () => {
     resize()
     if (reduced) { onRise?.(1); needsRender = true; onReady?.(); return }

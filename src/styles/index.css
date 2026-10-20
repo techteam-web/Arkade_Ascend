@@ -475,9 +475,10 @@ html { font-size: 100%; }
   }
   .home-scale-marker { position: absolute; left: 0; bottom: calc(var(--climb, 1) * 100%); translate: 0 50%; margin-left: -1px; }
   .home-scale-top { position: absolute; left: clamp(1rem, 1.6cqw, 1.5rem); top: 0; translate: 0 -.35em; margin: 0; }
-  /* On a phone the scale is a thin rule at the edge, its count to its left,
-     above the crown; the marks would cross the tower, so they go. */
-  @media (max-width: 47.999rem) {
+  /* On a phone or a portrait tablet the scale is a thin rule at the edge, its
+     count to its left, above the crown; the marks would cross the tower, so
+     they go. */
+  @media (max-width: 47.999rem), (max-width: 63.999rem) and (orientation: portrait) {
     .home-scale-side { right: max(.75rem, env(safe-area-inset-right)); width: 1rem; }
     .home-scale-top { left: auto; right: calc(100% + .45rem); text-align: right; }
     .home-scale-mark { display: none; }
