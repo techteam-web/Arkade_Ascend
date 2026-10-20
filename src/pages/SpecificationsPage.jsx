@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
 import { prefetchImages } from '../app/prefetch.js'
-import { PageHeading } from '../components/PageKit.jsx'
+import { PageHeading, RiseImage } from '../components/PageKit.jsx'
+import { Roll } from '../components/Brand.jsx'
 import { specifications } from '../content/project.js'
 import { pad } from '../app/routes.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
@@ -55,14 +56,6 @@ export default function SpecificationsPage() {
     }, panel)
     return () => context.revert()
   }, [index])
-  // A new photograph fades and settles in.
-  useLayoutEffect(() => {
-    if (prefersReducedMotion()) return
-    const context = gsap.context(() => {
-      gsap.from('[data-spec-image]', { autoAlpha: 0, scale: 1.03, duration: 1, ease: 'silk' })
-    }, frame)
-    return () => context.revert()
-  }, [current.src])
 
   const onKeyDown = event => {
     const keys = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }
@@ -87,7 +80,7 @@ export default function SpecificationsPage() {
           aria-selected={index === i} aria-controls="spec-panel" tabIndex={index === i ? 0 : -1} onClick={() => chooseCategory(i)}
           className={`group flex min-h-11 shrink-0 items-center gap-4 text-left transition-colors duration-500 stack:rounded-full stack:border stack:px-4 split:border-b split:border-line split:py-1 ${index === i ? 'text-gold-300 stack:border-gold-500 stack:bg-gold-500 stack:text-espresso' : 'text-fg/70 hover:text-fg stack:border-line'}`}>
           <span className={`num hidden text-[0.68rem] split:inline ${index === i ? 'text-gold-400' : 'text-muted'}`}>{pad(i + 1)}</span>
-          <span className="text-[0.74rem] font-medium uppercase tracking-[0.18em] split:transition-transform split:duration-700 split:group-hover:translate-x-1.5">{item.title}</span>
+          <span className="text-[0.74rem] font-medium uppercase tracking-[0.18em] split:transition-[translate] split:duration-700 split:ease-silk split:group-hover:translate-x-1.5"><Roll>{item.title}</Roll></span>
           <span className={`ml-auto hidden size-1.5 rounded-full bg-gold-400 transition-opacity duration-700 split:block ${index === i ? 'opacity-100' : 'opacity-0'}`} />
         </button>)}
       </div>
@@ -95,9 +88,9 @@ export default function SpecificationsPage() {
 
     <div ref={panel} id="spec-panel" role="tabpanel" aria-labelledby={`spec-tab-${spec.id}`}
       className="grid shrink-0 items-center gap-8 split:min-h-0 split:shrink md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-[4vw]">
-      <div ref={frame} data-reveal="mask" className="relative aspect-4/3 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 md:aspect-auto md:h-[min(64cqh,44rem)] md:min-h-72">
-        <img data-spec-image key={current.src} src={current.src} srcSet={current.srcSet} sizes="(min-width: 48rem) 45vw, 100vw" decoding="async" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} draggable="false"
-          className="absolute inset-0 size-full select-none object-cover" style={{ objectPosition: current.focus }} />
+      <div ref={frame} data-reveal="mask" className="relative aspect-4/3 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 md:aspect-auto md:h-[min(76cqh,52rem)] md:min-h-72">
+        {/* A new photograph rises in over the last. */}
+        <RiseImage src={current.src} srcSet={current.srcSet} sizes="(min-width: 48rem) 45vw, 100vw" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} focus={current.focus} />
         <button ref={opener} type="button" className="btn-icon absolute right-3 top-3 z-1" onClick={() => setLightbox(true)} aria-label={`View ${spec.title} image full screen`}>
           <svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></svg>
         </button>
@@ -105,7 +98,7 @@ export default function SpecificationsPage() {
       </div>
       <div data-reveal>
         <p className="eyebrow num">{pad(index + 1)} / {pad(specifications.length)}</p>
-        <h2 data-spec-title className="display mt-4 text-[clamp(1.6rem,min(3.4vw,7vh),3.8rem)] text-fg">{spec.title}</h2>
+        <h2 key={spec.id} data-spec-title className="display mt-4 text-[clamp(1.8rem,min(3.8vw,7.4vh),4.4rem)] leading-[0.95] text-fg">{spec.title}</h2>
         <p data-spec-title className="mt-3 max-w-[40ch] text-[0.62rem] uppercase leading-relaxed tracking-[0.2em] text-muted">{spec.line}</p>
         <ul className="mt-6">
           {spec.items.map((item, i) => {

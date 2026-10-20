@@ -8,9 +8,12 @@ gsap.registerPlugin(SplitText, CustomEase, DrawSVGPlugin)
 CustomEase.create('silk', '0.22, 1, 0.36, 1')
 CustomEase.create('curtain', '0.76, 0, 0.24, 1')
 
+CustomEase.create('rise', '0.16, 1, 0.3, 1')
+
 // Pages mark elements with data-reveal; the stage choreographs them in DOM
-// order when a route arrives, and releases them when it leaves. Motion is
-// deliberately quiet: short rises and fades, no blur, no overshoot.
+// order when a route arrives, and releases them when it leaves. The motion
+// verb is "rise" (DESIGN.md): lines and letters rise out of their masks,
+// pictures unveil from the bottom up, everything else lifts into place.
 //   up (default) | fade | lines | chars | title | line | line-v | mask | scale | draw
 // data-delay adds seconds to an element's slot.
 const STEP = 0.06
@@ -26,9 +29,14 @@ export function revealIn(root) {
     const kind = item.dataset.reveal || 'up'
     const at = Math.min(index * STEP, 0.8) + Number(item.dataset.delay || 0)
     gsap.set(item, { autoAlpha: 1 })
-    if (kind === 'lines' || kind === 'chars') {
+    if (kind === 'chars') {
+      // Each letter rises out of its line's mask, a breath after the last,
+      // turning upright as it comes, like a lift display rolling over.
+      const split = SplitText.create(item, { type: 'chars,lines', mask: 'lines', linesClass: 'split-line', charsClass: 'split-char' })
+      timeline.from(split.chars, { yPercent: 115, rotate: 7, duration: 1.05, stagger: { each: 0.028, from: 'start' }, ease: 'rise' }, at)
+    } else if (kind === 'lines') {
       const split = SplitText.create(item, { type: 'lines', mask: 'lines', linesClass: 'split-line' })
-      timeline.from(split.lines, { yPercent: 100, duration: 1, stagger: 0.08 }, at)
+      timeline.from(split.lines, { yPercent: 105, duration: 1.05, stagger: 0.085, ease: 'rise' }, at)
     } else if (kind === 'title') {
       // Gradient-clipped lettering cannot be split, so it fades up whole.
       timeline.from(item, { autoAlpha: 0, yPercent: 6, duration: 1.4 }, at)
@@ -37,16 +45,29 @@ export function revealIn(root) {
     } else if (kind === 'line-v') {
       timeline.from(item, { scaleY: 0, transformOrigin: '50% 0%', duration: 1.1 }, at)
     } else if (kind === 'mask') {
-      timeline.from(item, { clipPath: 'inset(0% 0% 100% 0%)', duration: 1.1, ease: 'curtain' }, at)
-        .from(item.querySelector('img, [data-mask-inner]') || item, { scale: 1.04, duration: 1.6 }, at)
+      // Pictures unveil from the bottom up while the picture inside settles.
+      timeline.fromTo(item, { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.25, ease: 'curtain', clearProps: 'clipPath' }, at)
+        .from(item.querySelector('img, [data-mask-inner]') || item, { scale: 1.16, yPercent: 4, duration: 1.8, ease: 'rise' }, at)
     } else if (kind === 'scale') {
       timeline.from(item, { autoAlpha: 0, scale: 0.98, duration: 1 }, at)
+    } else if (kind === 'climb') {
+      // A marker climbing a scale: --climb runs 0 to 1 and the counter inside
+      // ([data-climb-count]) rolls up to data-climb-to, floor by floor.
+      const counter = item.querySelector('[data-climb-count]')
+      const top = Number(item.dataset.climbTo || 1)
+      const state = { value: 0 }
+      const paint = () => {
+        item.style.setProperty('--climb', state.value)
+        if (counter) counter.textContent = String(Math.round(state.value * top)).padStart(2, '0')
+      }
+      paint()
+      timeline.to(state, { value: 1, duration: 2.6, ease: 'power2.inOut', onUpdate: paint }, at)
     } else if (kind === 'draw') {
       drawIn(item, timeline, at)
     } else if (kind === 'fade') {
       timeline.from(item, { autoAlpha: 0, duration: 1, ease: 'power2.out' }, at)
     } else {
-      timeline.from(item, { autoAlpha: 0, y: 14, duration: 0.9 }, at)
+      timeline.from(item, { autoAlpha: 0, y: 22, duration: 1, ease: 'rise' }, at)
     }
   })
   countUp(root, timeline, 0.3)
@@ -74,14 +95,17 @@ export function countUp(root, timeline = gsap.timeline(), at = 0) {
   return timeline
 }
 
-// The whole page (plans, maps, carousels and anything unmarked) fades out
-// together, so nothing lingers into the next page.
-export function revealOut(root) {
+// The whole page (plans, maps, carousels and anything unmarked) leaves
+// together, so nothing lingers into the next page. It drifts the way the lift
+// travels (up for a later section, down for an earlier one) as the curtain
+// passes over it.
+export function revealOut(root, direction = 1) {
   const items = [...root.querySelectorAll('[data-reveal]')].filter(item => item.getBoundingClientRect().width)
   const timeline = gsap.timeline()
   if (prefersReducedMotion()) return timeline
-  if (items.length) timeline.to(items, { autoAlpha: 0, y: -6, duration: 0.35, ease: 'power2.in' }, 0)
-  return timeline.to(root, { autoAlpha: 0, duration: 0.35, ease: 'power2.in' }, 0.05)
+  if (items.length) timeline.to(items, { autoAlpha: 0, y: -26 * direction, duration: 0.5, stagger: 0.012, ease: 'power3.in' }, 0)
+  return timeline.to(root, { y: -48 * direction, duration: 0.8, ease: 'curtain' }, 0)
+    .to(root, { autoAlpha: 0, duration: 0.3, ease: 'power1.in' }, 0.45)
 }
 
 // Line art (AscendLockup, NeuGenMark): each outline draws in, then its fill

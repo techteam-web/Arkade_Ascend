@@ -1,7 +1,7 @@
 import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
-import { ArrowIcon } from './Brand.jsx'
+import { ArrowIcon, Roll } from './Brand.jsx'
 import PanoramaViewer from './PanoramaViewer.jsx'
 import SheetSwitch from './SheetSwitch.jsx'
 import { BACK_HOMES, homeOutlook } from './ViewOverlay.jsx'
@@ -130,7 +130,7 @@ const UnitFinder = forwardRef(function UnitFinder({ reopen = null, onClose, onOp
             ? <div className="grid h-full min-h-40 place-items-center rounded-sm border border-line p-8 text-center">
               <div>
                 <p className="text-sm tracking-[0.04em] text-muted">No homes match these filters.</p>
-                <button type="button" className="btn-lux mt-4" onClick={reset}>Reset filters</button>
+                <button type="button" className="btn-lux mt-4" onClick={reset}><Roll>Reset filters</Roll></button>
               </div>
             </div>
             : view === 'plans'
@@ -151,7 +151,7 @@ const UnitFinder = forwardRef(function UnitFinder({ reopen = null, onClose, onOp
           <div className="ml-auto flex gap-2">
             <button type="button" className="chip border-transparent!" onClick={() => setCompare([])}>Clear</button>
             <button ref={compareButton} type="button" className="btn-lux" disabled={compare.length < 2} onClick={() => setComparing(true)}>
-              {compare.length < 2 ? 'Pick one more' : 'Compare'}<ArrowIcon />
+              <Roll>{compare.length < 2 ? 'Pick one more' : 'Compare'}</Roll><ArrowIcon />
             </button>
           </div>
         </div>}
@@ -236,7 +236,7 @@ function PlanCard({ group, look, inCompare, compareFull, onCompare, onOpen, onHo
           <button type="button" className="chip" aria-pressed={inCompare} disabled={!inCompare && compareFull} onClick={onCompare}
             aria-label={`${inCompare ? 'Remove' : 'Add'} ${type.label} ${inCompare ? 'from' : 'to'} compare`}>{inCompare ? 'Comparing' : 'Compare'}</button>
           <button type="button" className="chip" onClick={onView} aria-label={`See the view from ${type.label}, floor ${group.floors[group.floors.length >> 1]}`}>View</button>
-          <button type="button" className="btn-lux bg-transparent! px-4!" onClick={onHomes} aria-label={`See the ${plural(homes.length, 'home')} of ${type.label}`}>Homes<ArrowIcon /></button>
+          <button type="button" className="btn-lux bg-transparent! px-4!" onClick={onHomes} aria-label={`See the ${plural(homes.length, 'home')} of ${type.label}`}><Roll>Homes</Roll><ArrowIcon /></button>
         </div>
       </div>
     </article>
@@ -552,13 +552,13 @@ function CompareDialog({ ids, results, look, restore, onLook, onClose, onOpen: o
         {view === 'plans'
           ? <>
             <SheetSwitch value={look} onChange={onLook} />
-            <button type="button" className="btn-lux whitespace-nowrap bg-transparent!" onClick={() => show('views')}>Compare views<ArrowIcon className="shrink-0" /></button>
-            <button type="button" className="btn-lux whitespace-nowrap" onClick={() => show('details')}>Full detail plan<ArrowIcon className="shrink-0" /></button>
+            <button type="button" className="btn-lux whitespace-nowrap bg-transparent!" onClick={() => show('views')}><Roll>Compare views</Roll><ArrowIcon className="shrink-0" /></button>
+            <button type="button" className="btn-lux whitespace-nowrap" onClick={() => show('details')}><Roll>Full detail plan</Roll><ArrowIcon className="shrink-0" /></button>
           </>
           : <>
             {view === 'details' && <button type="button" className="chip" aria-pressed={onlyDiff} onClick={() => setOnlyDiff(value => !value)}>Differences only</button>}
             <button type="button" className="btn-lux is-back whitespace-nowrap bg-transparent!" onClick={() => show('plans')}>
-              <svg viewBox="0 0 32 12" aria-hidden="true"><path d="M31 6H3m5-5-5 5 5 5" /></svg>Unit plans
+              <svg viewBox="0 0 32 12" aria-hidden="true"><path d="M31 6H3m5-5-5 5 5 5" /></svg><Roll>Unit plans</Roll>
             </button>
           </>}
         <button type="button" data-close className="btn-icon" onClick={onClose} aria-label="Close comparison"><Icon d="m5 5 14 14M19 5 5 19" /></button>
@@ -586,7 +586,7 @@ function CompareDialog({ ids, results, look, restore, onLook, onClose, onOpen: o
                     alt={`${type.label} ${look === 'sheet' ? 'plan sheet' : 'plan'}`} className="absolute inset-0 size-full object-contain p-[3%]" draggable="false" />
                 </button>
                 {heading(type)}
-                <button type="button" className="btn-lux w-full bg-transparent!" onClick={() => onOpen(type.id)}>View plan<ArrowIcon /></button>
+                <button type="button" className="btn-lux w-full bg-transparent!" onClick={() => onOpen(type.id)}><Roll>View plan</Roll><ArrowIcon /></button>
               </div>
             </li>
           })}

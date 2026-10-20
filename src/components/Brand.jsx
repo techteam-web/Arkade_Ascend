@@ -68,3 +68,9 @@ export function SpinIcon({ paused }) {
     <path d={paused ? 'M6.5 5.5v13l10-6.5z' : 'M7 6v12m6-12v12'} />
   </svg>
 }
+
+// A label that rolls up on hover or focus (.roll in index.css): the text is
+// read once; its copy is only a text shadow.
+export function Roll({ children, className = '' }) {
+  return <span className={`roll ${className}`}><span>{children}</span></span>
+}

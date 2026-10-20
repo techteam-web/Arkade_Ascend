@@ -2,7 +2,7 @@ import { forwardRef, lazy, Suspense, useEffect, useLayoutEffect, useRef, useStat
 import { useSearchParams } from 'react-router'
 import { gsap } from '../app/reveal.js'
 import { useShell } from '../app/ShellContext.js'
-import { ArrowIcon, ChevronIcon } from '../components/Brand.jsx'
+import { ArrowIcon, ChevronIcon, Roll } from '../components/Brand.jsx'
 import { PageHeading } from '../components/PageKit.jsx'
 import UnitFinder from '../components/UnitFinder.jsx'
 import ViewOverlay from '../components/ViewOverlay.jsx'
@@ -182,7 +182,7 @@ export default function ResidencesPage() {
                   <button type="button" className="btn-icon max-sm:hidden short:hidden" aria-label="Turn the building right" onClick={() => rotate(1)}><ChevronIcon /></button>
                 </div>
               </div>
-              <button type="button" className="btn-lux whitespace-nowrap" disabled={!chosen} onClick={() => go(`/floor-plans?wing=${choice.tower}&floor=${choice.n}`)}>Floor plans<ArrowIcon className="shrink-0" /></button>
+              <button type="button" className="btn-lux whitespace-nowrap" disabled={!chosen} onClick={() => go(`/floor-plans?wing=${choice.tower}&floor=${choice.n}`)}><Roll>Floor plans</Roll><ArrowIcon className="shrink-0" /></button>
             </div>
           </div>
           <p className="-mt-2 text-right text-[0.52rem] uppercase tracking-[0.22em] text-muted/90">Architect’s impression</p>
@@ -201,14 +201,16 @@ export default function ResidencesPage() {
 }
 
 const PathButton = forwardRef(function PathButton({ number, title, copy, onClick, pressed }, ref) {
-  return <button ref={ref} type="button" data-reveal onClick={onClick} aria-expanded={pressed}
-    className="group relative flex min-h-16 items-center gap-5 border-b border-line py-4 text-left">
-    <span className="text-[0.62rem] tracking-[0.2em] text-accent">{number}</span>
-    <span className="flex-1">
-      <span className="block font-display text-[clamp(1.3rem,2vw,1.9rem)] uppercase leading-tight text-fg transition-transform duration-700 ease-silk group-hover:translate-x-2 group-focus-visible:translate-x-2">{title}</span>
-      <span className="mt-1 block text-[0.72rem] text-muted">{copy}</span>
+  return <button ref={ref} type="button" data-reveal onClick={onClick} aria-expanded={pressed} data-cursor="Open"
+    className="group relative flex min-h-20 items-center gap-[clamp(1rem,2vw,1.75rem)] border-b border-line py-[clamp(0.9rem,2.4vh,1.4rem)] text-left">
+    <span className="num self-start pt-[0.45em] text-[0.7rem] tracking-[0.2em] text-accent">{number}</span>
+    <span className="min-w-0 flex-1">
+      <span className="block font-display text-[clamp(1.45rem,min(2.25vw,4.6vh),2.4rem)] uppercase leading-none text-fg transition-[translate] duration-700 ease-silk group-hover:translate-x-2 group-focus-visible:translate-x-2"><Roll>{title}</Roll></span>
+      <span className="mt-2 block max-w-[38ch] text-[0.78rem] leading-relaxed text-muted">{copy}</span>
     </span>
-    <ArrowIcon className="h-3 w-9 fill-none stroke-current stroke-[1.1] text-accent transition-transform duration-500 group-hover:translate-x-1.5" />
+    <span data-magnetic className="grid size-12 shrink-0 place-items-center rounded-full border border-line text-accent transition-[background-color,border-color,color] duration-500 group-hover:border-accent group-hover:bg-accent group-hover:text-espresso group-focus-visible:border-accent group-focus-visible:bg-accent group-focus-visible:text-espresso">
+      <ArrowIcon className="h-2.5 w-6 fill-none stroke-current stroke-[1.2]" />
+    </span>
     <span className="absolute inset-x-0 -bottom-px h-px origin-left scale-x-0 bg-gold-400 transition-transform duration-700 ease-silk group-hover:scale-x-100 group-focus-visible:scale-x-100" />
   </button>
 })

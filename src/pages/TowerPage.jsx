@@ -18,7 +18,7 @@ export default function TowerPage() {
   const rotate = direction => { setTurn(value => ({ count: value.count + 1, direction })); setMoved(true) }
 
   return <section className="absolute inset-0 overflow-hidden" aria-label="The Tower">
-    <div data-reveal="fade" className="absolute inset-0">
+    <div data-reveal="fade" data-cursor="Drag" className="absolute inset-0">
       <Suspense fallback={<img src={orbit.poster.day} alt="" className="absolute inset-0 size-full object-cover" />}>
         {/* Zoomed in, so the tower reads larger (client, 14 Oct 2026). */}
         <OrbitView light={light} keys turn={turn} zoom={1.32} onFirstMove={() => setMoved(true)}
@@ -31,7 +31,18 @@ export default function TowerPage() {
 
     <div className="page pointer-events-none flex flex-col">
       {/* Subheading to follow from the client. */}
-      <div className="pointer-events-auto max-w-md"><PageHeading id="tower" title="The Tower" /></div>
+      <div className="pointer-events-auto max-w-md"><PageHeading id="tower" title="The Tower" subtitle="Rise to a life extraordinaire" /></div>
+      {/* The tower in figures, from the brochure. */}
+      <dl className="pointer-events-auto mt-[clamp(1.25rem,4vh,2.75rem)] flex gap-[clamp(1.5rem,3vw,3.25rem)] max-sm:hidden short:hidden">
+        {[[37, 'Storeys'], [2, 'Wings']].map(([value, label]) => <div key={label} data-reveal className="flex flex-col-reverse">
+          <dt className="mt-2 text-[0.58rem] uppercase tracking-[0.24em] text-ivory/70">{label}</dt>
+          <dd className="num text-[clamp(1.8rem,3vw,3rem)] leading-none text-ivory"><span data-count={value}>{value}</span></dd>
+        </div>)}
+        <div data-reveal className="flex max-w-[13rem] flex-col-reverse border-l border-ivory/25 pl-[clamp(1rem,2vw,1.75rem)]">
+          <dt className="mt-2 text-[0.58rem] uppercase tracking-[0.24em] text-ivory/70">Club Ark</dt>
+          <dd className="text-[0.82rem] leading-snug text-ivory/90">Leisure experiences across Ground, Level <span className="num">5</span> &amp; Level <span className="num">6</span></dd>
+        </div>
+      </dl>
     </div>
 
     {/* The drag hint, until the first move. */}

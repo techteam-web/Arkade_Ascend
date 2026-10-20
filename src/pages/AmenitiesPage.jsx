@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
-import { ImageSlot, PageHeading } from '../components/PageKit.jsx'
+import { ImageSlot, PageHeading, RiseImage } from '../components/PageKit.jsx'
+import { prefetchImages } from '../app/prefetch.js'
 import { ChevronIcon } from '../components/Brand.jsx'
 import { amenityGroups, club } from '../content/project.js'
 import { pad } from '../app/routes.js'
@@ -52,6 +53,11 @@ export default function AmenitiesPage() {
   const picture = shownImage ? { src: shownImage.src, srcSet: shownImage.srcSet, note: shownImage.note ?? active.note }
     : active.image && { src: active.image, srcSet: active.srcSet, note: active.note }
   const closeLightbox = () => { setLightbox(false); requestAnimationFrame(() => opener.current?.focus({ preventScroll: true })) }
+  // The amenities either side load ahead, so stepping shows them at once.
+  useEffect(() => prefetchImages([-1, 1].flatMap(step => {
+    const next = AMENITIES[(index + step + COUNT) % COUNT]
+    return next.images ?? (next.image ? [{ src: next.image, srcSet: next.srcSet }] : [])
+  }), PHOTO_SIZES), [index])
   // Full screen: Escape closes it, the arrow keys step through the amenities.
   useEffect(() => {
     if (!lightbox) return
@@ -81,19 +87,12 @@ export default function AmenitiesPage() {
 
     <div className="grid gap-[clamp(1.25rem,3vw,3rem)] split:min-h-0 split:grid-rows-[minmax(0,1fr)] split:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] 3xl:grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)]">
       <figure data-reveal="fade" className="relative m-0 aspect-4/3 overflow-hidden rounded-sm border border-line bg-plum-950 split:aspect-auto split:h-full split:min-h-0" aria-live="polite">
-        {/* Only the shown photograph and its neighbours load. */}
-        {AMENITIES.map((amenity, i) => {
-          const near = Math.min(Math.abs(i - index), COUNT - Math.abs(i - index)) <= 1
-          const fade = `absolute inset-0 size-full transition-opacity duration-700 ease-silk ${i === index ? 'opacity-100' : 'opacity-0'}`
-          if (!amenity.image) return <div key={amenity.id} aria-hidden={i !== index} className={fade}><ImageSlot label="Image to follow" className="pb-[22%]" /></div>
-          if (amenity.images && i === index) return <div key={amenity.id} className="absolute inset-0">
-            {amenity.images.map((picture, k) => <img key={picture.src} src={picture.src} srcSet={picture.srcSet} sizes={PHOTO_SIZES} alt={k === 0 ? amenity.name : ''} aria-hidden={k !== slide} draggable="false" decoding="async"
-              className={`absolute inset-0 size-full select-none object-cover transition-opacity duration-700 ease-silk ${k === slide ? 'opacity-100' : 'opacity-0'}`}
-              style={{ objectPosition: picture.focus ?? amenity.focus }} />)}
-          </div>
-          return <img key={amenity.id} src={near ? amenity.image : undefined} srcSet={near ? amenity.srcSet : undefined} sizes={PHOTO_SIZES} alt={i === index ? amenity.name : ''} aria-hidden={i !== index} draggable="false" decoding="async"
-            className={`${fade} select-none object-cover`} style={{ objectPosition: amenity.focus }} />
-        })}
+        {/* The shown photograph rises in over the last (an amenity with
+            several pictures rises through them in turn); one without a
+            photograph yet shows the framed placeholder. */}
+        {picture
+          ? <RiseImage src={picture.src} srcSet={picture.srcSet} sizes={PHOTO_SIZES} alt={active.name} focus={shownImage?.focus ?? active.focus} />
+          : <div className="absolute inset-0"><ImageSlot label="Image to follow" className="pb-[22%]" /></div>}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink/85 via-ink/35 to-transparent" />
         <figcaption ref={caption} className="absolute inset-x-0 bottom-0 px-[clamp(1.25rem,3vw,2.5rem)] pb-[clamp(1.1rem,3vh,2.25rem)] text-ivory">
           <p data-amenity-copy className="eyebrow text-gold-300!">{active.group.label} · <span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
@@ -126,7 +125,7 @@ export default function AmenitiesPage() {
             return <li key={item.id} className="finder-in">
               <button type="button" onClick={() => select(i)} aria-label={item.name} aria-current={i === index ? 'true' : undefined}
                 className="group flex min-h-11 w-full items-baseline gap-4 border-b border-line py-[clamp(0.35rem,1.1vh,0.8rem)] text-left outline-offset-[-2px]">
-                <span className={`num w-6 shrink-0 text-[0.66rem] transition-colors duration-500 ${i === index ? 'text-accent' : 'text-muted'}`}>{pad(i + 1)}</span>
+                <span aria-hidden="true" className={`num w-6 shrink-0 text-[0.66rem] transition-colors duration-500 ${i === index ? 'text-accent' : 'text-muted'}`}>{pad(i + 1)}</span>
                 <span className={`min-w-0 font-display text-[clamp(1rem,min(1.6vw,3vh),1.6rem)] leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 ${i === index ? 'text-fg' : 'text-muted'}`}>{AMENITIES[i].heading}</span>
                 <span className={`ml-auto h-px shrink-0 self-center bg-accent transition-[width] duration-500 ease-silk ${i === index ? 'w-8' : 'w-0'}`} aria-hidden="true" />
               </button>

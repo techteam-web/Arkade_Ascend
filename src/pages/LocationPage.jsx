@@ -76,7 +76,7 @@ export default function LocationPage() {
 
   return <section ref={section} data-tone="light" aria-label="Location" className="absolute inset-0 overflow-hidden">
     {/* The map fills the screen; everything else floats over it. */}
-    <figure data-reveal="fade" className="location-map absolute inset-0 m-0 bg-cream-100" style={{ '--map-inset-bottom': `${inset.bottom}px` }}
+    <figure data-reveal="fade" data-cursor="Drag" className="location-map absolute inset-0 m-0 bg-cream-100" style={{ '--map-inset-bottom': `${inset.bottom}px` }}
       data-own-gesture data-own-keys aria-label={`Map of Malad West showing Arkade Ascend${current ? ` and ${current.name}` : ''}`}>
       {live
         ? <Suspense fallback={<MapLoading />}>

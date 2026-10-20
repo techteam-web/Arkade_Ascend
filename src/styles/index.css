@@ -209,12 +209,12 @@ html { font-size: 100%; }
     transition: color .5s var(--ease-silk), border-color .5s var(--ease-silk), transform .3s var(--ease-silk);
   }
   .btn-lux::before {
-    content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit;
-    background: linear-gradient(110deg, #a67c50, #e8cc9d 45%, #c49a6c);
-    transform: translateX(-102%); transition: transform .65s var(--ease-silk);
+    content: ''; position: absolute; inset: -1px; z-index: -1; border-radius: inherit;
+    background: linear-gradient(170deg, #f1d9ad 0%, #d6b07c 42%, #b48859 100%);
+    transform: translateY(104%); transition: transform .6s var(--ease-silk);
   }
   .btn-lux:where(:hover, :focus-visible, [aria-pressed="true"]) { color: var(--color-espresso); border-color: transparent; }
-  .btn-lux:where(:hover, :focus-visible, [aria-pressed="true"])::before { transform: translateX(0); }
+  .btn-lux:where(:hover, :focus-visible, [aria-pressed="true"])::before { transform: translateY(0); }
   .btn-lux:active { transform: scale(0.97); }
   .btn-lux svg { width: 1.6rem; height: 0.6rem; stroke: currentColor; stroke-width: 1.1; fill: none; transition: transform .5s var(--ease-silk); }
   .btn-lux:where(:hover, :focus-visible) svg { transform: translateX(4px); }
@@ -234,6 +234,9 @@ html { font-size: 100%; }
     transition: background .4s var(--ease-silk), color .4s var(--ease-silk), transform .3s var(--ease-silk), border-color .4s;
   }
   .btn-icon:where(:hover, :focus-visible) { background: var(--color-gold-500); color: var(--color-espresso); border-color: var(--color-gold-500); }
+  /* Pulled a few pixels toward the pointer (src/app/Cursor.jsx sets the
+     variables); `translate` stays separate from GSAP's transforms. */
+  [data-magnetic] { translate: calc(var(--mx, 0) * 1px) calc(var(--my, 0) * 1px); }
   .btn-icon:active { transform: scale(.94); }
   .btn-icon:disabled { opacity: .3; pointer-events: none; }
   .btn-icon svg { width: 40%; height: 40%; stroke: currentColor; stroke-width: 1.3; fill: none; }
@@ -340,6 +343,142 @@ html { font-size: 100%; }
   @keyframes slide-fill { from { transform: scaleX(0); } }
   @keyframes caption-in { from { opacity: 0; transform: translateY(6px); } }
 
+  /* A label that rolls up on hover or focus: its own copy (a text shadow one
+     line below) rises into place, so the label is read once. Wrap the text in
+     <Roll> (Brand.jsx); the hover comes from the nearest .group or button. */
+  .roll { display: inline-flex; overflow: hidden; vertical-align: bottom; line-height: 1.25; padding-block: .02em; white-space: nowrap; max-width: 100%; }
+  .roll > span { display: inline-block; text-shadow: 0 1.25em currentColor; transition: translate .55s var(--ease-silk); }
+  :where(.group, button, a):where(:hover, :focus-visible) > .roll > span,
+  :where(.group, button, a):where(:hover, :focus-visible) .roll > span { translate: 0 -1.25em; }
+
+  /* The Lift (LiftCurtain.jsx): the plum lining and the gold satin, each
+     domed on its leading edge while it travels. */
+  .lift-panel {
+    position: absolute; inset: 0; will-change: transform;
+    border-radius: 50% 50% 50% 50% / var(--dome-top, 0px) var(--dome-top, 0px) var(--dome-bottom, 0px) var(--dome-bottom, 0px);
+  }
+  .lift-lining { background: linear-gradient(172deg, #5a4046 0%, #3d2a2f 45%, #1b1113 100%); }
+  .lift-satin {
+    overflow: hidden;
+    background:
+      radial-gradient(90% 60% at 28% 18%, rgba(255, 241, 214, .55), transparent 60%),
+      radial-gradient(70% 50% at 80% 85%, rgba(90, 63, 38, .45), transparent 70%),
+      repeating-linear-gradient(96deg, rgba(255, 250, 238, .035) 0 2px, transparent 2px 7px),
+      linear-gradient(168deg, #6b4a2c 0%, #a67c50 20%, #dcb987 40%, #f3dcae 52%, #c99f6c 66%, #8e643a 84%, #5a3f26 100%);
+  }
+  .lift-sheen {
+    position: absolute; inset: -10% -40%; pointer-events: none; mix-blend-mode: soft-light;
+    background: linear-gradient(100deg, transparent 36%, rgba(255, 249, 236, .85) 50%, transparent 64%);
+  }
+  .lift-label { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center; gap: clamp(.5rem, 2vh, 1.25rem); color: #2f1c14; }
+  .lift-display {
+    position: relative; overflow: hidden; margin: 0;
+    font-size: clamp(6.5rem, 34vh, 22rem); line-height: .86; letter-spacing: -.045em; padding-bottom: .04em;
+    color: rgba(56, 32, 19, .78); mix-blend-mode: multiply;
+  }
+  .lift-digit { display: block; text-align: center; }
+  .lift-digit-next { position: absolute; inset: 0; }
+  .lift-name {
+    margin: 0; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .16em; padding-left: .16em;
+    font-size: clamp(1.1rem, 3.6vh, 2.4rem); color: rgba(47, 28, 20, .86);
+  }
+
+  /* The pointer's follower (Cursor.jsx): a gold ring trailing the native
+     cursor, larger over anything that answers a click, naming what it does. */
+  .cursor { position: fixed; left: 0; top: 0; z-index: 120; pointer-events: none; opacity: 0; transition: opacity .4s; }
+  .cursor[data-shown="true"] { opacity: 1; }
+  .cursor-ring { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+  .cursor-circle {
+    position: absolute; left: -1.25rem; top: -1.25rem; width: 2.5rem; height: 2.5rem; border-radius: 50%;
+    border: 1px solid color-mix(in oklab, var(--color-gold-300) 80%, transparent);
+    background: transparent;
+    transition: scale .55s var(--ease-silk), background-color .4s, border-color .4s;
+  }
+  .cursor-dot { position: absolute; left: -2px; top: -2px; width: 4px; height: 4px; border-radius: 50%; background: var(--color-gold-200); transition: opacity .3s; }
+  .cursor-label {
+    position: absolute; left: 0; top: 0; translate: -50% -50%; white-space: nowrap; opacity: 0; scale: .6;
+    font: 500 .56rem/1 var(--font-sans); letter-spacing: .24em; text-transform: uppercase; color: var(--color-espresso);
+    transition: opacity .3s, scale .45s var(--ease-silk);
+  }
+  .cursor[data-state="link"] .cursor-circle { scale: 1.55; background: color-mix(in oklab, var(--color-gold-400) 14%, transparent); border-color: var(--color-gold-300); }
+  .cursor[data-state="label"] .cursor-circle { scale: 2.3; background: color-mix(in oklab, var(--color-gold-400) 92%, transparent); border-color: transparent; }
+  .cursor[data-state="label"] .cursor-label { opacity: 1; scale: 1; }
+  .cursor[data-state="label"] .cursor-dot, .cursor[data-state="link"] .cursor-dot { opacity: 0; }
+  .cursor[data-tone="light"] .cursor-circle { border-color: color-mix(in oklab, var(--color-plum-700) 70%, transparent); }
+  .cursor[data-tone="light"] .cursor-dot { background: var(--color-plum-700); }
+  .cursor[data-tone="light"][data-state="link"] .cursor-circle { background: color-mix(in oklab, var(--color-plum-700) 10%, transparent); border-color: var(--color-plum-700); }
+  .cursor[data-pressed="true"] .cursor-circle { scale: .8; }
+
+  /* A light that sweeps slowly across display type, now and then. */
+  .sheen { position: relative; }
+  .sheen::after {
+    content: ''; position: absolute; inset: -10% -5%; pointer-events: none; mix-blend-mode: soft-light;
+    background: linear-gradient(105deg, transparent 40%, rgba(255, 246, 228, .9) 50%, transparent 60%) no-repeat;
+    background-size: 40% 100%; background-position: -60% 0; animation: sheen 9s var(--ease-curtain) 3s infinite;
+  }
+  @keyframes sheen { 0%, 70% { background-position: -60% 0; } 100% { background-position: 160% 0; } }
+
+  /* Home (HomePage.jsx). The window's height sets the composition: the name
+     crosses its middle, the storey scale stands at its right. Portrait
+     screens size the window by width instead; short ones give it the full
+     height between the header and the foot. */
+  .home-stage {
+    --foot-h: clamp(8.25rem, 21cqh, 12.5rem);
+    --win-h: calc(100cqh - var(--header-h) - var(--foot-h));
+    --win-w: calc(var(--win-h) * .62);
+    --win-top: calc(var(--header-h) + .25rem);
+  }
+  @media (max-width: 63.999rem) and (orientation: portrait) {
+    .home-stage {
+      --foot-h: clamp(12rem, 30cqh, 16rem);
+      --win-w: min(58cqw, calc((100cqh - var(--header-h) - var(--foot-h)) * .62));
+      --win-h: calc(var(--win-w) / .62);
+      --win-top: calc(var(--header-h) + (100cqh - var(--header-h) - var(--foot-h) - var(--win-h)) * .45);
+    }
+  }
+  @media (max-height: 34rem) {
+    .home-stage { --foot-h: 0px; --win-h: calc(100cqh - var(--header-h) - 1rem); --win-w: calc(var(--win-h) * .62); }
+  }
+  .home-window { position: absolute; left: 50%; top: var(--win-top); width: var(--win-w); height: var(--win-h); translate: -50% 0; display: block; padding: 0; }
+  .home-word {
+    position: absolute; inset-inline: 0; top: calc(var(--win-top) + var(--win-h) * .56); margin: 0; translate: 0 -50%;
+    font-size: min(20.5cqw, 31cqh); line-height: .8; letter-spacing: -.012em; text-align: center; padding-left: .02em;
+    text-shadow: 0 .04em .3em rgba(18, 11, 13, .35);
+  }
+  @media (max-width: 63.999rem) and (orientation: portrait) { .home-word { font-size: 19.5cqw; top: calc(var(--win-top) + var(--win-h) * .62); } }
+  .home-scale { position: absolute; top: var(--win-top); height: var(--win-h); left: calc(50% + var(--win-w) / 2 + clamp(.75rem, 2.2cqw, 2.25rem)); width: clamp(3rem, 12cqw, 10rem); color: var(--color-gold-200); }
+  .home-scale-mark {
+    position: absolute; left: clamp(1rem, 1.6cqw, 1.5rem); bottom: calc(var(--at) * 100%); translate: 0 50%; margin: 0; white-space: nowrap;
+    font-size: clamp(.5rem, .62cqw, .62rem); letter-spacing: .22em; text-transform: uppercase; color: color-mix(in oklab, var(--color-gold-200) 70%, transparent);
+  }
+  .home-scale-marker { position: absolute; left: 0; bottom: calc(var(--climb, 1) * 100%); translate: 0 50%; margin-left: -1px; }
+  .home-scale-top { position: absolute; left: clamp(1rem, 1.6cqw, 1.5rem); top: 0; translate: 0 -.35em; margin: 0; }
+  @media (max-width: 47.999rem) { .home-scale-top { left: .9rem; } }
+  @media (max-width: 47.999rem) { .home-scale-mark { left: .9rem; } }
+  .home-foot {
+    position: absolute; inset-inline: var(--gutter); bottom: max(clamp(1rem, 4cqh, 2.5rem), var(--credit-space));
+    display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: end; gap: 1.5rem;
+  }
+  .home-foot-cta { justify-self: center; }
+  .home-foot-rera { justify-self: end; }
+  @media (max-width: 63.999rem) and (orientation: portrait) {
+    .home-foot { grid-template-columns: minmax(0, 1fr) auto; row-gap: 1.25rem; }
+    .home-foot-cta { grid-column: 1 / -1; grid-row: 2; justify-self: stretch; }
+    .home-foot-cta .btn-lux { width: 100%; }
+    .home-foot-brand { grid-row: 1; }
+    .home-foot-rera { grid-row: 1; }
+  }
+  @media (max-height: 34rem) {
+    .home-foot { inset-inline: var(--gutter); grid-template-columns: minmax(0, 1fr) auto; }
+    .home-foot-brand { display: none; }
+    .home-foot-rera { display: none; }
+    .home-foot-cta { justify-self: end; grid-column: 2; }
+  }
+  /* The tower breathes in its window: a slow drift, off under reduced motion. */
+  .home-drift { animation: home-drift 26s ease-in-out infinite alternate; }
+  @keyframes home-drift { from { transform: scale(1.02) translateY(0); } to { transform: scale(1.09) translateY(-1.6%); } }
+  @media (prefers-reduced-motion: reduce) { .home-drift { animation: none; } }
+
   /* The BrainWing credit (App.jsx): the logo as a mask filled with the tone's
      colour, in the bottom band every page keeps clear. */
   /* A soft shadow in the opposite tone keeps it legible over gold, photographs
@@ -358,14 +497,20 @@ html { font-size: 100%; }
   }
   /* Still film grain over the whole presentation, very faint. */
   .grain {
-    pointer-events: none; position: absolute; inset: 0; z-index: 60; opacity: .04; mix-blend-mode: overlay;
+    pointer-events: none; position: absolute; inset: -50%; z-index: 60; opacity: .05; mix-blend-mode: overlay;
+    animation: grain 1.2s steps(6) infinite;
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
 
+  @keyframes grain {
+    0% { transform: translate(0, 0); } 17% { transform: translate(-4%, 3%); } 33% { transform: translate(3%, -5%); }
+    50% { transform: translate(-6%, -2%); } 67% { transform: translate(5%, 4%); } 83% { transform: translate(-2%, 6%); } 100% { transform: translate(0, 0); }
+  }
   .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
-  /* SplitText line masks. */
+  /* SplitText line masks; letters turn about their foot as they rise. */
   .split-line { overflow: clip; padding-bottom: .08em; margin-bottom: -.08em; }
+  .split-char { transform-origin: 0% 100%; }
 }
 
 /* Live map (Location): brochure-toned pins, labels and controls. MapLibre
@@ -451,4 +596,6 @@ html { font-size: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
   .grain { display: none; }
+  .cursor { display: none; }
+  .sheen::after { display: none; }
 }

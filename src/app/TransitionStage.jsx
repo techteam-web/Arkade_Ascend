@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router'
 import { gsap, revealIn, revealOut, primeReveal, settleReveal } from './reveal.js'
+import { routeForPath, sectionIndex } from './routes.js'
+import LiftCurtain from './LiftCurtain.jsx'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import { sceneStore } from '../scenes/sceneStore.js'
 import HomePage from '../pages/HomePage.jsx'
@@ -15,15 +17,25 @@ import LocationPage from '../pages/LocationPage.jsx'
 import GalleryPage from '../pages/GalleryPage.jsx'
 import ArkadeFamilyPage from '../pages/ArkadeFamilyPage.jsx'
 
-// Holds the outgoing page on screen while its elements release, then swaps
-// to the new route and choreographs its arrival: a simple cross-fade. The
-// WebGL scene blends to the new preset underneath at the same time.
+// Holds the outgoing page on screen while the lift (LiftCurtain) rises over
+// it, swaps to the new route once the screen is covered, then lets the lift
+// carry on as the new page rises in behind it. A later section rides up, an
+// earlier one down. From the menu (the old page already hidden) and under
+// reduced motion the swap is immediate. The WebGL scene blends to the new
+// preset underneath at the same time.
 export default function TransitionStage({ active }) {
   const location = useLocation()
   const [shown, setShown] = useState(location)
   const stage = useRef(null)
+  const curtain = useRef(null)
   const leaving = useRef(null)
   const arriving = useRef(null)   // the current page's entrance timeline
+  // { direction, to } from the moment the lift sets off until it has let the
+  // new page through. Matched by path, not cleared on first use: StrictMode
+  // runs the arrival twice and the second run must still find it.
+  const lifting = useRef(null)
+  const latest = useRef(location)
+  latest.current = location
 
   useLayoutEffect(() => {
     if (location.pathname === shown.pathname) {
@@ -32,26 +44,42 @@ export default function TransitionStage({ active }) {
       if (leaving.current?.isActive()) {
         leaving.current.kill()
         leaving.current = null
+        lifting.current = null
         sceneStore.leaving = false
+        curtain.current?.clear()
         settleReveal(stage.current)
         gsap.to([stage.current, ...stage.current.querySelectorAll('[data-reveal]')], { autoAlpha: 1, y: 0, duration: 0.5, ease: 'silk', overwrite: true })
       }
       if (location.key !== shown.key) setShown(location)
       return
     }
+    // Already travelling: the lift's display shows the newer stop and the
+    // stage swaps to it once covered (the swap reads the latest location).
+    if (leaving.current?.isActive() && lifting.current) {
+      curtain.current?.retarget(routeForPath(location.pathname))
+      lifting.current.to = location.pathname
+      return
+    }
     leaving.current?.kill()
     // Arriving from the menu (old page hidden) or with reduced motion: swap
     // before paint, so the previous page never reappears mid-exit.
     if (location.state?.instant || prefersReducedMotion()) {
+      lifting.current = null
+      curtain.current?.clear()
       setShown(location)
       return
     }
     // Stop the entrance first: an entrance and an exit never share elements.
     arriving.current?.kill()
     sceneStore.leaving = true
-    leaving.current = gsap.timeline({ onComplete: () => setShown(location) })
-      .add(revealOut(stage.current), 0)
-      .to({}, { duration: 0.05 })
+    const fromRoute = routeForPath(shown.pathname)
+    const toRoute = routeForPath(location.pathname)
+    const direction = sectionIndex(toRoute.id) >= sectionIndex(fromRoute.id) ? 1 : -1
+    lifting.current = { direction, to: location.pathname }
+    leaving.current = gsap.timeline({ onComplete: () => setShown(latest.current) })
+      .add(revealOut(stage.current, direction), 0)
+      .add(curtain.current.cover({ fromRoute, toRoute, direction }), 0)
+      .to({}, { duration: 0.12 })
   }, [location])
 
   useLayoutEffect(() => {
@@ -59,12 +87,16 @@ export default function TransitionStage({ active }) {
     sceneStore.leaving = false
     if (!active) return
     primeReveal(root)
+    // The lift that brought this page, if any: it carries on as the page rises.
+    const lift = lifting.current?.to === shown.pathname ? lifting.current : null
     let timeline
     let cancelled = false
     const context = gsap.context(() => {
       const start = () => {
         if (cancelled) return
-        timeline = revealIn(root)
+        timeline = gsap.timeline()
+        if (lift) timeline.add(curtain.current.reveal(lift), 0).call(() => { if (lifting.current === lift) lifting.current = null }, null, 0.95)
+        timeline.add(revealIn(root), lift ? 0.3 : 0)
         arriving.current = timeline
         ;[...root.querySelectorAll('h1')].find(heading => heading.offsetParent)?.focus({ preventScroll: true })
       }
@@ -88,6 +120,7 @@ export default function TransitionStage({ active }) {
   }, [shown.pathname])
 
   return <>
+    <LiftCurtain ref={curtain} />
     <div ref={stage} className="absolute inset-0" key={shown.pathname}>
       <Routes location={shown}>
         <Route path="/" element={<HomePage />} />

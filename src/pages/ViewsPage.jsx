@@ -198,7 +198,7 @@ export default function ViewsPage() {
           alt={item.id === time ? `Aerial view over Malad West, ${item.label.toLowerCase()}` : ''} aria-hidden={item.id !== time || undefined}
           className={`absolute inset-0 size-full object-cover transition-opacity motion-reduce:transition-none ${item.id === time ? 'z-1 opacity-100 duration-1000' : 'opacity-0 delay-1000 duration-0'}`} />)}
       </div>
-      : <div ref={frame} data-own-gesture role="img" aria-label={`360-degree aerial view over Malad West, ${grade.label.toLowerCase()}. Drag to look around.`}
+      : <div ref={frame} data-own-gesture data-cursor="Drag" role="img" aria-label={`360-degree aerial view over Malad West, ${grade.label.toLowerCase()}. Drag to look around.`}
         className="absolute inset-0 cursor-grab touch-none active:cursor-grabbing" />}
     {/* Shade the corners that carry text, so it reads over bright sky. */}
     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(18,11,13,.62),transparent_30%,transparent_62%,rgba(18,11,13,.85))]" />

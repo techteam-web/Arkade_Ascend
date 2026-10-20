@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap, countUp } from '../app/reveal.js'
 import { pad } from '../app/routes.js'
-import { ArkadeMark } from '../components/Brand.jsx'
+import { ArkadeMark, Roll } from '../components/Brand.jsx'
 import { PageHeading } from '../components/PageKit.jsx'
 import { landmarks, legacy, portfolio } from '../content/arkadeFamily.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
@@ -43,11 +43,12 @@ export default function ArkadeFamilyPage() {
     animated.current = index
     if (prefersReducedMotion()) return
     const context = gsap.context(() => {
+      // The part's picture and map unveil from the bottom up, its lines rise.
       const timeline = gsap.timeline({ defaults: { ease: 'silk' } })
-        .from('[data-part-frame]', { autoAlpha: 0, duration: 0.7, ease: 'power2.out' }, 0)
-        .from('[data-part]', { autoAlpha: 0, y: 10, duration: 0.8, stagger: 0.04 }, 0.15)
+        .fromTo('[data-part-frame]', { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 1.05, ease: 'curtain', clearProps: 'clipPath' }, 0)
+        .from('[data-part]', { autoAlpha: 0, y: 22, duration: 0.95, stagger: 0.045, ease: 'rise' }, 0.25)
       const images = panel.current.querySelectorAll('[data-part-image]')
-      if (images.length) timeline.from(images, { scale: 1.04, duration: 1.2 }, 0)
+      if (images.length) timeline.from(images, { scale: 1.14, yPercent: 4, duration: 1.5, ease: 'rise' }, 0)
       countUp(panel.current, timeline, 0.3)
     }, panel)
     return () => context.revert()
@@ -81,7 +82,7 @@ export default function ArkadeFamilyPage() {
             className={`group relative flex min-h-11 shrink-0 items-center gap-4 text-left transition-colors duration-500 stack:rounded-full stack:border stack:px-4 split:items-baseline split:border-b split:border-line split:py-[clamp(0.6rem,1.8vh,1rem)] ${selected ? 'stack:border-gold-500 stack:bg-gold-500 stack:text-espresso' : 'stack:border-line'}`}>
             <span className={`num hidden w-6 shrink-0 text-[0.68rem] transition-colors duration-500 split:inline ${selected ? 'text-accent' : 'text-muted'}`}>{pad(i + 1)}</span>
             <span className="min-w-0 split:transition-[translate] split:duration-500 split:ease-silk split:group-hover:translate-x-1 split:group-focus-visible:translate-x-1">
-              <span className={`block uppercase stack:text-[0.74rem] stack:font-medium stack:tracking-[0.18em] split:font-display split:text-[clamp(1.1rem,min(1.75vw,3.6vh),1.85rem)] split:leading-tight split:transition-colors split:duration-500 ${selected ? 'split:text-fg' : 'split:text-muted split:group-hover:text-fg'}`}>{part.label}</span>
+              <span className={`block uppercase stack:text-[0.74rem] stack:font-medium stack:tracking-[0.18em] split:font-display split:text-[clamp(1.05rem,min(1.7vw,3.6vh),1.85rem)] split:leading-tight split:transition-colors split:duration-500 ${selected ? 'split:text-fg' : 'split:text-muted split:group-hover:text-fg'}`}><Roll>{part.label}</Roll></span>
               <span className={`mt-1 hidden text-[0.58rem] uppercase tracking-[0.22em] transition-colors duration-500 split:block ${selected ? 'text-accent' : 'text-muted/80'}`}>{part.hint}</span>
             </span>
             <span className={`ml-auto hidden h-px shrink-0 self-center bg-accent transition-[width] duration-500 ease-silk split:block ${selected ? 'w-8' : 'w-0'}`} aria-hidden="true" />

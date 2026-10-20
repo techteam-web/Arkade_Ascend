@@ -3,7 +3,7 @@ import { drawIn, gsap, settleReveal } from '../app/reveal.js'
 import { SplitText } from 'gsap/SplitText'
 import { useShell } from '../app/ShellContext.js'
 import { setScenePreset } from '../scenes/sceneStore.js'
-import { ArrowIcon } from '../components/Brand.jsx'
+import { ArrowIcon, Roll } from '../components/Brand.jsx'
 import NeuGenMark from '../components/NeuGenMark.jsx'
 import LandmarkMark from '../components/LandmarkMark.jsx'
 import { pad } from '../app/routes.js'
@@ -136,8 +136,8 @@ export default function NeuGenPage() {
           <svg viewBox="0 0 24 24"><path d="m6 15 6-6 6 6" /></svg>
         </button>
         {last
-          ? <button type="button" className="btn-lux" onClick={() => go('/tower')}>The tower<ArrowIcon /></button>
-          : <button type="button" className="btn-lux" onClick={() => change(c => c + 1)}>Continue<ArrowIcon /></button>}
+          ? <button type="button" className="btn-lux" onClick={() => go('/tower')} data-magnetic><Roll>The tower</Roll><ArrowIcon /></button>
+          : <button type="button" className="btn-lux" onClick={() => change(c => c + 1)} data-magnetic><Roll>Continue</Roll><ArrowIcon /></button>}
       </div>
     </div>
   </section>

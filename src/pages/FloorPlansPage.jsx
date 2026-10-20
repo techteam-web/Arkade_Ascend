@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router'
 import { gsap } from '../app/reveal.js'
 import { prefetchImages } from '../app/prefetch.js'
 import { useShell } from '../app/ShellContext.js'
-import { ArrowIcon } from '../components/Brand.jsx'
+import { ArrowIcon, Roll } from '../components/Brand.jsx'
 import { Figure, PageHeading } from '../components/PageKit.jsx'
 import SheetSwitch from '../components/SheetSwitch.jsx'
 import ViewOverlay from '../components/ViewOverlay.jsx'
@@ -109,7 +109,7 @@ export default function FloorPlansPage() {
         {type && <BackButton onClick={() => show({ unit: null })}>Typical floor plan</BackButton>}
         {fromFinder && <BackButton onClick={() => go('/residences?finder')}>Unit finder</BackButton>}
         {fromCompare && <BackButton onClick={() => go('/residences?finder=compare')}>Compare</BackButton>}
-        {type && <button type="button" className={`btn-lux is-solid ${COMPACT}`} onClick={() => setViewing(true)}>See view<ArrowIcon /></button>}
+        {type && <button type="button" className={`btn-lux is-solid ${COMPACT}`} onClick={() => setViewing(true)}><Roll>See view</Roll><ArrowIcon /></button>}
       </div>}
     </div>
 
@@ -154,7 +154,7 @@ const floorZones = floor => positions.map(position => {
 
 function BackButton({ onClick, children }) {
   return <button type="button" className={`btn-lux is-back bg-transparent! ${COMPACT}`} onClick={onClick}>
-    <svg viewBox="0 0 32 12" aria-hidden="true"><path d="M31 6H3m5-5-5 5 5 5" /></svg>{children}
+    <svg viewBox="0 0 32 12" aria-hidden="true"><path d="M31 6H3m5-5-5 5 5 5" /></svg><Roll>{children}</Roll>
   </button>
 }
 
@@ -191,7 +191,7 @@ function FloorOverview({ floor, hovered, onHover, onFloor, onOpen, onFinder }) {
         {configurations.map(id => {
           const n = count('configuration', entry => entry.type.configuration === id)
           return <button key={id} type="button" className="chip" aria-pressed={chosen.configuration.includes(id)} disabled={!n && !chosen.configuration.includes(id)}
-            onClick={() => toggle('configuration', id)} aria-label={`${id}, ${n} ${n === 1 ? 'home' : 'homes'}`}>{id}<span className="num ml-2 opacity-60">{n}</span></button>
+            onClick={() => toggle('configuration', id)} aria-label={`${id}, ${n} ${n === 1 ? 'home' : 'homes'}`}>{id}<span aria-hidden="true" className="num ml-2 opacity-60">{n}</span></button>
         })}
         {offered.map(feature => {
           const on = chosen.feature.includes(feature.id)
@@ -238,7 +238,7 @@ function FloorOverview({ floor, hovered, onHover, onFloor, onOpen, onFinder }) {
         would fight it and leave the pill short of its place. */}
     <div data-reveal className="shrink-0">
       <button type="button" className="btn-lux w-full bg-transparent!" onClick={onFinder}>
-        <span className="whitespace-nowrap">Search all <span className="num">{homes.length}</span> homes</span><ArrowIcon />
+        <Roll className="whitespace-nowrap">Search all <span className="num">{homes.length}</span> homes</Roll><ArrowIcon />
       </button>
     </div>
   </>
@@ -505,7 +505,7 @@ function WingPending({ id, onShow }) {
     <PageHeading id="floor-plans" title="Floor Plans" subtitle={`Wing ${id}`} />
     <div data-reveal className="max-w-lg border-t border-line pt-6">
       <p className="text-[clamp(0.9rem,1.1vw,1.1rem)] leading-relaxed text-muted">The Wing {id} floor plans will follow. The homes of Wing {wing} are open now, floor by floor.</p>
-      <button type="button" className="btn-lux mt-6" onClick={onShow}>Wing {wing} floor plans<ArrowIcon /></button>
+      <button type="button" className="btn-lux mt-6" onClick={onShow}><Roll>Wing {wing} floor plans</Roll><ArrowIcon /></button>
     </div>
   </section>
 }

@@ -6,6 +6,7 @@ import FullscreenGate from './app/FullscreenGate.jsx'
 import SiteHeader from './app/SiteHeader.jsx'
 import MenuOverlay from './app/MenuOverlay.jsx'
 import TransitionStage from './app/TransitionStage.jsx'
+import Cursor from './app/Cursor.jsx'
 import { ShellContext } from './app/ShellContext.js'
 import { routeForPath } from './app/routes.js'
 import useFullscreen from './hooks/useFullscreen.js'
@@ -80,7 +81,7 @@ export default function App() {
         <div className={`absolute inset-0 transition-opacity duration-700 ${menuOpen ? 'opacity-0' : 'opacity-100'}`} inert={menuOpen ? '' : undefined}>
           <TransitionStage active={!gated} />
         </div>
-        <SiteHeader route={route} tone={tone} hidden={route.id === 'home' || menuOpen} menuOpen={menuOpen}
+        <SiteHeader route={route} tone={tone} hidden={menuOpen} menuOpen={menuOpen}
           onMenu={() => setMenuOpen(true)} menuButton={menuButton} />
         <MenuOverlay open={menuOpen} currentId={route.id} onClose={closeMenu} onNavigate={go} />
       </div>
@@ -93,6 +94,7 @@ export default function App() {
       </div>
       <FullscreenGate open={gated} resumed={everStarted} supported={fullscreen.supported}
         keyboardLocked={fullscreen.keyboardLocked} onEnter={enter} />
+      <Cursor />
     </main>
   </ShellContext.Provider>
 }

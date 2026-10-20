@@ -57,13 +57,13 @@ export default function GalleryPage() {
         // The image on show and two either side load; the rest wait their turn.
         const near = Math.min(offset, filtered.length - offset) <= 2
         return <figure key={image.src} aria-hidden={offset !== 0}
-          className={`absolute left-1/2 top-1/2 m-0 aspect-16/10 w-[min(64cqw,calc(100cqh*1.45))] overflow-hidden rounded-sm border border-gold-500/30 bg-plum-950 shadow-[0_30px_70px_-35px_rgba(0,0,0,.7)] transition-[transform,opacity,filter] duration-900 ease-silk max-md:w-[min(94cqw,calc(100cqh*1.45))] ${pose === 'center' ? 'z-10' : 'z-0'} ${pose === 'left' || pose === 'right' ? 'max-md:opacity-0!' : ''}`}
+          className={`absolute left-1/2 top-1/2 m-0 aspect-16/10 w-[min(70cqw,calc(100cqh*1.55))] overflow-hidden rounded-sm border border-gold-500/30 bg-plum-950 shadow-[0_30px_70px_-35px_rgba(0,0,0,.7)] transition-[transform,opacity,filter] duration-900 ease-silk max-md:w-[min(94cqw,calc(100cqh*1.45))] ${pose === 'center' ? 'z-10' : 'z-0'} ${pose === 'left' || pose === 'right' ? 'max-md:opacity-0!' : ''}`}
           style={{ transform: POSES[pose], opacity: pose === 'back' ? 0 : pose === 'center' ? 1 : 0.35, filter: pose === 'center' ? 'none' : 'saturate(.7) brightness(.75)' }}>
           {/* Tall views are shown whole; the rest fill the frame around their focus. */}
           <img src={near ? image.src : undefined} srcSet={near ? image.srcSet : undefined} sizes="(max-width: 767px) 94vw, 64vw" alt={image.alt} draggable="false"
             className={`size-full select-none ${image.fit === 'contain' ? 'object-contain' : 'object-cover'}`} style={{ objectPosition: image.focus }} />
           {pose === 'center'
-            ? <button type="button" className="absolute inset-0 cursor-zoom-in" onClick={() => setLightbox(true)} aria-label={`View ${image.category} image full screen`} />
+            ? <button type="button" data-cursor="View" className="absolute inset-0 cursor-zoom-in" onClick={() => setLightbox(true)} aria-label={`View ${image.category} image full screen`} />
             : pose !== 'back' && <button type="button" tabIndex={-1} className="absolute inset-0" onClick={() => step(pose === 'left' ? -1 : 1)} aria-label={pose === 'left' ? 'Previous image' : 'Next image'} />}
           {pose === 'center' && <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/75 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">{image.note ?? RENDER_NOTE}</p>}
           {pose === 'center' && <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-linear-to-t from-espresso/85 to-transparent px-5 pb-4 pt-14">
