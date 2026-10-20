@@ -123,10 +123,10 @@ export default function AmenitiesPage() {
           {active.group.items.map(item => {
             const i = AMENITIES.findIndex(entry => entry.id === item.id)
             return <li key={item.id} className="finder-in">
-              <button type="button" onClick={() => select(i)} aria-label={item.name} aria-current={i === index ? 'true' : undefined}
+              <button type="button" onClick={() => select(i)} aria-current={i === index ? 'true' : undefined}
                 className="group flex min-h-11 w-full items-baseline gap-4 border-b border-line py-[clamp(0.35rem,1.1vh,0.8rem)] text-left outline-offset-[-2px]">
                 <span aria-hidden="true" className={`num w-6 shrink-0 text-[0.66rem] transition-colors duration-500 ${i === index ? 'text-accent' : 'text-muted'}`}>{pad(i + 1)}</span>
-                <span className={`min-w-0 font-display text-[clamp(1rem,min(1.6vw,3vh),1.6rem)] leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 ${i === index ? 'text-fg' : 'text-muted'}`}>{AMENITIES[i].heading}</span>
+                <span className={`min-w-0 font-display text-[clamp(1rem,min(1.6vw,3vh),1.6rem)] leading-tight transition-[color,translate] duration-500 ease-silk group-hover:translate-x-1 group-focus-visible:translate-x-1 ${i === index ? 'text-fg' : 'text-muted'}`}>{AMENITIES[i].heading}{AMENITIES[i].line !== AMENITIES[i].heading && <span className="visually-hidden">: {AMENITIES[i].line}</span>}</span>
                 <span className={`ml-auto h-px shrink-0 self-center bg-accent transition-[width] duration-500 ease-silk ${i === index ? 'w-8' : 'w-0'}`} aria-hidden="true" />
               </button>
             </li>

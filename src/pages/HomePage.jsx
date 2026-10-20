@@ -28,7 +28,7 @@ export default function HomePage() {
     <h1 tabIndex={-1} className="visually-hidden outline-none">Arkade Ascend, Malad West</h1>
 
     {/* The tower, in a tall window that unveils from the ground up. */}
-    <button type="button" onClick={() => go('/tower')} data-cursor="The tower" aria-label="See the tower (architect’s impression)"
+    <button type="button" onClick={() => go('/tower')} data-cursor="The tower" aria-label="See the tower"
       className="home-window group outline-offset-4">
       <span data-reveal="mask" className="absolute inset-0 block overflow-hidden bg-plum-950">
         <span className="home-drift absolute inset-0 block">
@@ -37,9 +37,9 @@ export default function HomePage() {
         </span>
         <span className="absolute inset-0 bg-linear-to-t from-ink/80 via-ink/5 to-ink/25" />
         <span className="absolute inset-[clamp(0.4rem,0.9cqw,0.75rem)] border border-gold-200/30" />
-        <span aria-hidden="true" className="absolute bottom-[clamp(0.7rem,1.6cqh,1.1rem)] right-[clamp(0.8rem,1.4cqw,1.2rem)] text-[0.48rem] uppercase tracking-[0.2em] text-ivory/75">Architect’s impression</span>
       </span>
     </button>
+    <p data-reveal="fade" data-delay="0.9" className="home-window-note">Architect’s impression</p>
 
     {/* The name, across the window. Decorative: the heading above names the page. */}
     <p aria-hidden="true" className="home-word display sheen pointer-events-none z-10 select-none text-ivory">

@@ -191,7 +191,7 @@ function FloorOverview({ floor, hovered, onHover, onFloor, onOpen, onFinder }) {
         {configurations.map(id => {
           const n = count('configuration', entry => entry.type.configuration === id)
           return <button key={id} type="button" className="chip" aria-pressed={chosen.configuration.includes(id)} disabled={!n && !chosen.configuration.includes(id)}
-            onClick={() => toggle('configuration', id)} aria-label={`${id}, ${n} ${n === 1 ? 'home' : 'homes'}`}>{id}<span aria-hidden="true" className="num ml-2 opacity-60">{n}</span></button>
+            onClick={() => toggle('configuration', id)}>{id}<span className="num ml-2 opacity-60">{n}</span><span className="visually-hidden"> {n === 1 ? 'home' : 'homes'}</span></button>
         })}
         {offered.map(feature => {
           const on = chosen.feature.includes(feature.id)
@@ -216,14 +216,13 @@ function FloorOverview({ floor, hovered, onHover, onFloor, onOpen, onFinder }) {
       {sorted.map(({ id, type }) => <li key={id}>
         <button type="button" onClick={() => onOpen(id)}
           onPointerEnter={event => { if (event.pointerType === 'mouse') onHover(id) }} onFocus={() => onHover(id)} onBlur={() => onHover(null)}
-          aria-label={`${floor ? `Home ${homeId(floor, id)}, ` : ''}Unit ${id}, ${type.configuration}, ${area(type.reraArea)} square feet RERA carpet. Open its plan.`}
           className={`group grid min-h-12 w-full grid-cols-[2.6rem_minmax(0,1fr)_auto_1.75rem] py-1 items-center gap-x-3 border-b border-line text-left outline-offset-[-2px] transition-colors duration-500 ${hovered === id ? 'text-gold-700' : 'text-fg'}`}>
-          <span className="num text-[1.35rem] leading-none">{id}</span>
+          <span className="num text-[1.35rem] leading-none"><span className="visually-hidden">{floor ? `Home ${homeId(floor, id)}, unit ` : 'Unit '}</span>{id}</span>
           <span className="min-w-0">
             <span className="block text-[0.74rem] font-medium uppercase tracking-[0.14em]">{type.configuration}</span>
             <span className="block truncate text-[0.6rem] uppercase tracking-[0.12em] text-muted">{type.features.map(featureLabel).join(' · ') || `${type.bedrooms} bedrooms`}</span>
           </span>
-          <span className="text-right"><span className="num text-[0.85rem]">{area(type.reraArea)}</span> <span className="text-[0.55rem] uppercase tracking-[0.14em] text-muted">sq.ft</span></span>
+          <span className="text-right"><span className="num text-[0.85rem]">{area(type.reraArea)}</span> <span className="text-[0.55rem] uppercase tracking-[0.14em] text-muted">sq.ft</span><span className="visually-hidden"> RERA carpet. Open its plan.</span></span>
           <ArrowIcon className="h-3 w-7 justify-self-end fill-none stroke-current stroke-[1.1] text-accent transition-[translate] duration-500 group-hover:translate-x-1" />
         </button>
       </li>)}

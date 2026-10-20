@@ -137,11 +137,13 @@ export default function LocationPage() {
             <p className="font-display text-[clamp(0.95rem,1.2vw,1.2rem)] uppercase leading-snug text-gold-300">{nearby.headline}</p>
             <NearbyCategories open={category} onOpen={setCategory} active={active} onSelect={setActive} onHover={setHovered} />
           </div>
-          : <ul ref={list} data-reveal id="location-places" role="tabpanel" aria-labelledby={`location-tab-${group}`} className="mt-2">
-            {shown.map(place => <li key={place.id}>
-              <PlaceButton place={place} active={active === place.id} onSelect={setActive} onHover={setHovered} />
-            </li>)}
-          </ul>}
+          : <div id="location-places" role="tabpanel" aria-labelledby={`location-tab-${group}`} className="mt-2">
+            <ul ref={list} data-reveal>
+              {shown.map(place => <li key={place.id}>
+                <PlaceButton place={place} active={active === place.id} onSelect={setActive} onHover={setHovered} />
+              </li>)}
+            </ul>
+          </div>}
         <p data-reveal="fade" className="mt-3 text-[0.52rem] uppercase leading-relaxed tracking-[0.16em] text-ivory/50">
           {group === 'nearby' ? 'Places as listed in the brochure. Indicative locations from OpenStreetMap and published addresses; walking routes and distances, approximate.' : 'Indicative locations. Walking routes and distances from OpenStreetMap, approximate.'}
         </p>

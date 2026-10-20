@@ -440,6 +440,11 @@ html { font-size: 100%; }
     .home-stage { --foot-h: 0px; --win-h: calc(100cqh - var(--header-h) - 1rem); --win-w: calc(var(--win-h) * .62); }
   }
   .home-window { position: absolute; left: 50%; top: var(--win-top); width: var(--win-w); height: var(--win-h); translate: -50% 0; display: block; padding: 0; }
+  .home-window-note {
+    position: absolute; margin: 0; pointer-events: none; z-index: 1; white-space: nowrap;
+    left: calc(50% + var(--win-w) / 2 - clamp(.8rem, 1.4cqw, 1.2rem)); top: calc(var(--win-top) + var(--win-h) - clamp(.7rem, 1.6cqh, 1.1rem));
+    translate: -100% -100%; font-size: .48rem; letter-spacing: .2em; text-transform: uppercase; color: color-mix(in oklab, var(--color-ivory) 75%, transparent);
+  }
   .home-word {
     position: absolute; inset-inline: 0; top: calc(var(--win-top) + var(--win-h) * .56); margin: 0; translate: 0 -50%;
     font-size: min(20.5cqw, 31cqh); line-height: .8; letter-spacing: -.012em; text-align: center; padding-left: .02em;
@@ -472,7 +477,7 @@ html { font-size: 100%; }
     .home-foot { inset-inline: var(--gutter); grid-template-columns: minmax(0, 1fr) auto; }
     .home-foot-brand { display: none; }
     .home-foot-rera { display: none; }
-    .home-foot-cta { justify-self: end; grid-column: 2; }
+    .home-foot-cta { justify-self: start; grid-column: 1; grid-row: 1; }
   }
   /* The tower breathes in its window: a slow drift, off under reduced motion. */
   .home-drift { animation: home-drift 26s ease-in-out infinite alternate; }
@@ -506,6 +511,13 @@ html { font-size: 100%; }
     0% { transform: translate(0, 0); } 17% { transform: translate(-4%, 3%); } 33% { transform: translate(3%, -5%); }
     50% { transform: translate(-6%, -2%); } 67% { transform: translate(5%, 4%); } 83% { transform: translate(-2%, 6%); } 100% { transform: translate(0, 0); }
   }
+  /* Shown only when focused, above everything, so keyboard visitors can pass the header. */
+  .skip-link {
+    position: fixed; left: var(--gutter); top: .75rem; z-index: 130; padding: .8rem 1.2rem; border-radius: 999px;
+    background: var(--color-gold-400); color: var(--color-espresso); font-size: .7rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase;
+    translate: 0 -200%; transition: translate .4s var(--ease-silk);
+  }
+  .skip-link:focus-visible { translate: 0 0; }
   .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
   /* SplitText line masks; letters turn about their foot as they rise. */

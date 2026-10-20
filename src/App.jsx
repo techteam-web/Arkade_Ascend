@@ -1,6 +1,5 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router'
-import SilkScene from './scenes/silk/SilkScene.jsx'
 import { sceneStore, setScenePreset } from './scenes/sceneStore.js'
 import FullscreenGate from './app/FullscreenGate.jsx'
 import SiteHeader from './app/SiteHeader.jsx'
@@ -11,6 +10,13 @@ import { ShellContext } from './app/ShellContext.js'
 import { routeForPath } from './app/routes.js'
 import useFullscreen from './hooks/useFullscreen.js'
 import useMediaQuery from './hooks/useMediaQuery.js'
+
+// The silk (three.js, the largest library) downloads alongside the app
+// rather than ahead of it: the intro gate covers the first seconds, and a
+// still plum ground stands in until the silk is ready.
+const silkModule = import('./scenes/silk/SilkScene.jsx')
+const SilkScene = lazy(() => silkModule)
+const PLUM_GROUND = <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_80%_at_30%_20%,#4e373c,#21161a_75%)]" />
 
 // Development-only escape hatch for automated screenshots: ?fullscreen=off
 const bypassGate = import.meta.env.DEV && new URLSearchParams(location.search).get('fullscreen') === 'off'
@@ -50,6 +56,18 @@ export default function App() {
     }
   }, [menuOpen])
   useLayoutEffect(() => { setScenePreset(route.scene) }, [route.scene])
+  // Each section has its own title in the tab, history and shared links.
+  useEffect(() => {
+    document.title = route.id === 'home' ? 'Arkade Ascend | Malad West' : `${route.label} | Arkade Ascend, Malad West`
+    document.querySelector('meta[name="description"]')?.setAttribute('content', route.id === 'home'
+      ? 'Arkade Ascend, Malad West: a 37-storey tower by Arkade Developers. Malad’s Neu Gen life has arrived.'
+      : `${route.label}: ${route.hint}. Arkade Ascend, Malad West, by Arkade Developers.`)
+  }, [route.id])
+  // The skip link moves focus to the page's heading, past the header.
+  const skip = event => {
+    event.preventDefault()
+    ;[...document.querySelectorAll('.page-frame h1')].find(heading => heading.offsetParent)?.focus()
+  }
 
   const enter = async () => {
     if (!fullscreen.supported || !(await fullscreen.request())) setStarted(true)
@@ -74,8 +92,9 @@ export default function App() {
   const shell = useMemo(() => ({ openMenu: () => setMenuOpen(true), go, menuOpen, setTone }), [go, menuOpen])
 
   return <ShellContext.Provider value={shell}>
-    <main className="fixed inset-0 overflow-hidden bg-espresso">
-      <SilkScene quality={compact ? 'low' : 'high'} />
+    <a href="#content" onClick={skip} className="skip-link">Skip to content</a>
+    <main id="content" className="fixed inset-0 overflow-hidden bg-espresso">
+      <Suspense fallback={PLUM_GROUND}><SilkScene quality={compact ? 'low' : 'high'} /></Suspense>
       <div className={`page-frame transition-opacity duration-700 ${gated ? 'opacity-0' : 'opacity-100'}`}
         inert={gated ? '' : undefined} aria-hidden={gated || undefined}>
         <div className={`absolute inset-0 transition-opacity duration-700 ${menuOpen ? 'opacity-0' : 'opacity-100'}`} inert={menuOpen ? '' : undefined}>
