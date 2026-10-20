@@ -35,6 +35,10 @@ export default function TransitionStage({ active, onCovered, curtain }) {
   const lifting = useRef(null)
   const latest = useRef(location)
   latest.current = location
+  // Set by the first real navigation: from then on an arriving page takes
+  // focus to its heading. The first page of a visit leaves focus at the top,
+  // so Tab finds the skip link first.
+  const navigated = useRef(false)
 
   useLayoutEffect(() => {
     if (location.pathname === shown.pathname) {
@@ -52,6 +56,7 @@ export default function TransitionStage({ active, onCovered, curtain }) {
       if (location.key !== shown.key) setShown(location)
       return
     }
+    navigated.current = true
     // Already travelling: the lift's display shows the newer stop and the
     // stage swaps to it once covered (the swap reads the latest location).
     if (leaving.current?.isActive() && lifting.current) {
@@ -98,7 +103,7 @@ export default function TransitionStage({ active, onCovered, curtain }) {
         if (lift) timeline.add(curtain.current.reveal(lift), 0).call(() => { if (lifting.current === lift) lifting.current = null }, null, 0.95)
         timeline.add(revealIn(root), lift ? 0.3 : 0)
         arriving.current = timeline
-        ;[...root.querySelectorAll('h1')].find(heading => heading.offsetParent)?.focus({ preventScroll: true })
+        if (navigated.current) [...root.querySelectorAll('h1')].find(heading => heading.offsetParent)?.focus({ preventScroll: true })
       }
       // SplitText needs final font metrics for its line breaks.
       if (document.fonts?.status === 'loaded') start()

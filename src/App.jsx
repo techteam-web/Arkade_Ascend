@@ -71,6 +71,9 @@ export default function App() {
     document.querySelector('meta[name="description"]')?.setAttribute('content', route.id === 'home'
       ? 'Arkade Ascend, Malad West: a 37-storey tower by Arkade Developers. Malad’s Neu Gen life has arrived.'
       : `${route.label}: ${route.hint}. Arkade Ascend, Malad West, by Arkade Developers.`)
+    let canonical = document.querySelector('link[rel="canonical"]')
+    if (!canonical) { canonical = document.createElement('link'); canonical.rel = 'canonical'; document.head.append(canonical) }
+    canonical.href = `${window.location.origin}${route.path}`
   }, [route.id])
   // The skip link moves focus to the page's heading, past the header.
   const skip = event => {
@@ -109,11 +112,13 @@ export default function App() {
       <Suspense fallback={PLUM_GROUND}><SilkScene quality={compact ? 'low' : 'high'} /></Suspense>
       <div className={`page-frame transition-opacity duration-700 ${gated ? 'opacity-0' : 'opacity-100'}`}
         inert={gated ? '' : undefined} aria-hidden={gated || undefined}>
+        {/* The header comes first in the tab order (after the skip link); it
+            stays above the page by its own z-index. */}
+        <SiteHeader route={route} tone={tone} hidden={menuOpen} menuOpen={menuOpen}
+          onMenu={() => setMenuOpen(true)} menuButton={menuButton} />
         <div className={`absolute inset-0 transition-opacity duration-700 ${menuOpen ? 'opacity-0' : 'opacity-100'}`} inert={menuOpen ? '' : undefined}>
           <TransitionStage active={!gated} onCovered={onCovered} curtain={curtain} />
         </div>
-        <SiteHeader route={route} tone={tone} hidden={menuOpen} menuOpen={menuOpen}
-          onMenu={() => setMenuOpen(true)} menuButton={menuButton} />
         <MenuOverlay open={menuOpen} currentId={route.id} onClose={closeMenu} onNavigate={go} />
         <LiftCurtain ref={curtain} />
       </div>

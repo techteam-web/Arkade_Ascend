@@ -21,7 +21,7 @@ export function PageHeading({ id, title, subtitle, onPhoto = false, className = 
       <span data-reveal="line" aria-hidden="true" className="h-px w-[clamp(1.75rem,4cqi,3.5rem)] bg-accent" />
       <span className="num tracking-[0.12em] text-muted" aria-hidden="true">{pad(sections.length)}</span>
     </p>
-    <h1 tabIndex={-1} data-reveal="chars" className={`display sheen mt-[clamp(0.6rem,1.6vh,1rem)] whitespace-nowrap text-fg outline-none ${titleClass}`} style={{ fontSize: fit, lineHeight: 0.9 }}>{title}</h1>
+    <h1 tabIndex={-1} data-reveal="chars" className={`display mt-[clamp(0.6rem,1.6vh,1rem)] whitespace-nowrap text-fg outline-none ${titleClass}`} style={{ fontSize: fit, lineHeight: 0.9 }}>{title}</h1>
     {subtitle && <p data-reveal className={`mt-[clamp(0.6rem,1.8vh,1.1rem)] text-[clamp(0.9rem,1.1vw,1.15rem)] tracking-[0.02em] ${onPhoto ? 'text-ivory/85 [text-shadow:0_1px_14px_rgba(18,11,13,.7)]' : 'text-muted'}`}>{subtitle}</p>}
   </div>
 }

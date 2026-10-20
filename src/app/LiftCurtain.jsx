@@ -44,7 +44,7 @@ const LiftCurtain = forwardRef(function LiftCurtain(_, ref) {
     return () => { gsap.ticker.remove(draw); drawing.current = false; liquid.current?.dispose(); liquid.current = null }
   }, [])
   useLayoutEffect(() => {
-    gsap.set(root.current, { autoAlpha: 0 })
+    gsap.set(root.current, { autoAlpha: 0, display: 'none' })
     gsap.set([lining.current, satin.current], { yPercent: 100 })
   }, [])
 
@@ -62,7 +62,7 @@ const LiftCurtain = forwardRef(function LiftCurtain(_, ref) {
       name.current.textContent = end.name
       const s = state.current
       gsap.killTweensOf([s, s.lining, s.satin, lining.current, satin.current, from.current, to.current, name.current, label.current])
-      gsap.set(root.current, { autoAlpha: 1 })
+      gsap.set(root.current, { autoAlpha: 1, display: 'block' })
       gsap.set(from.current, { yPercent: 0 })
       gsap.set(to.current, { yPercent: 100 * direction })
       gsap.set(name.current, { autoAlpha: 0, y: 18 * direction })
@@ -105,7 +105,7 @@ const LiftCurtain = forwardRef(function LiftCurtain(_, ref) {
     reveal({ direction = 1 }) {
       const s = state.current
       const done = () => {
-        gsap.set(root.current, { autoAlpha: 0 })
+        gsap.set(root.current, { autoAlpha: 0, display: 'none' })
         stopDrawing()
         s.lining = [START, START]
         s.satin = [START, START]
@@ -136,7 +136,7 @@ const LiftCurtain = forwardRef(function LiftCurtain(_, ref) {
       s.wobble = 0
       stopDrawing()
       liquid.current?.set(s)
-      gsap.set(root.current, { autoAlpha: 0 })
+      gsap.set(root.current, { autoAlpha: 0, display: 'none' })
       gsap.set([lining.current, satin.current], { yPercent: 100 })
     },
   }), [])

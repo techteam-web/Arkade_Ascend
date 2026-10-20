@@ -1,5 +1,10 @@
 # Arkade Ascend: design direction (redesign, 20 Oct 2026)
 
+Round two (same day): the owner found round one too plain and asked for an
+immersive WebGL studio site (3D scenes, shader transitions, fluid pictures,
+everything alive) with "anything goes" on structure. The concept stays; its
+execution moved into WebGL, as described below.
+
 The presentation is a sales tool a salesperson drives on a laptop, a tablet or a
 phone, face to face with a buyer. The redesign keeps every fact, label and
 function the client approved; it changes how the presentation looks, moves and
@@ -14,20 +19,24 @@ Idea:        The presentation rises like the tower: every section is a level
              a gold satin lift.
 Metaphor:    The tower's lift and the brochure's silk. Sections are stops on a
              lift display; the brochure's gold satin is the lift's curtain.
-Signature:   The Lift, the page transition. A two-layer satin curtain (plum
-             lining, then gold) sweeps up past the screen with a domed leading
-             edge that flattens as it covers; the section number rolls like a
-             lift display (old floor out, new floor in) and the curtain carries
-             on up, its trailing edge domed, as the new page's lines rise out of
-             their masks behind it. Going back to an earlier section, everything
-             runs downward. (src/app/LiftCurtain.jsx, TransitionStage.jsx)
+Signature:   The Lift, the page transition. Molten satin floods up the screen
+             in WebGL: a plum lining a breath ahead of the gold, each with a
+             rippling, domed front, flowing highlights and a bright meniscus.
+             While it covers, the lift display rolls from the old floor to the
+             new one; then it drains on upward as the new page's letters turn
+             up out of their masks behind it. Going back, everything runs
+             downward. Choosing a section from the menu rides the same lift
+             (the menu closes under the satin). (src/app/liquid.js,
+             LiftCurtain.jsx, TransitionStage.jsx; CSS panels without WebGL)
 Emotion:     Weightless and expensive: the first three seconds feel like the
              doors of a private lift closing on a quiet night.
 Motion verb: rise. Lines rise out of masks, pictures unveil from the bottom up,
              numbers roll up like a lift display, the curtain ascends.
-Screenshot:  Home: ASCEND set monumental across the screen in the brochure's
-             display face, the twilight tower standing in a tall window behind
-             it, a storey scale beside it whose gold marker has climbed to 37.
+Screenshot:  Home: the tower itself in real time, standing in front of ASCEND
+             set monumental in the brochure's display face, a band of gold
+             light that has climbed it floor by floor switching its windows
+             on, silk ribbons drifting through the dusk behind it, and a
+             storey scale whose marker has counted up to 37.
 ```
 
 Anchor: the project's own name (Ascend), its 37-storey tower and the
@@ -95,9 +104,19 @@ primary action, the curtain).
     hairline draws;
   - the pointer: a gold ring follows the native cursor (never replacing it),
     grows over anything clickable and names drag targets ("Drag").
-- Idle: the silk veil on Home and Neu Gen, a slow drift in the hero picture, a
-  light sweeping over the hero word. Everything stops under reduced motion.
-- Reduced motion: no curtain, no follower, no rolls; content is shown at once.
+- Idle: Home's tower turns slowly (drag to orbit, with a throw), its windows
+  flicker faintly, the ribbons and the dusk drift; every other page's satin
+  ground folds slowly under a light that follows the pointer (`SilkScene`),
+  except where a photograph, orbit, panorama or map covers it (`covered`
+  presets). Pages that are working tools (the orbit, the plans, the map, the
+  panoramas between turns, a photograph being discussed) rest still on
+  purpose, so the salesperson can talk over a steady picture; their hovers,
+  pictures and the lift carry the life. Everything stops under reduced
+  motion.
+- Pictures: `GLImage` changes a picture by rising liquid with a gold seam at
+  its front, and ripples (with a slight colour split) under the pointer.
+- Reduced motion: no liquid, no follower, no rolls, no orbit; content is
+  shown at once.
 
 ## Intro
 
@@ -120,9 +139,22 @@ HOME                                   MENU
  Neu Gen life        MahaRERA No.      [QR] MahaRERA                Malad West
 ```
 
-Inner pages keep their working layouts (orbit, plans, map, panoramas) and gain
-the shared system: lift-display index, character-rise titles, pictures that
-unveil upward, rising pills, the follower and the lift between them.
+Round two recomposed the inner pages:
+
+- Home: the tower in three.js (`src/pages/home/HomeScene.js`, the map's
+  lighter model, flat shaded, dusk key and cool rim, glass reflecting the
+  dusk), the camera riding up beside the rising light and drawing back to
+  the hero framing; ASCEND as letter planes behind it; bloom.
+- About Us: the legacy over its photograph, bleeding to the right edge, with
+  the eight figures on a frosted band across its foot.
+- Amenities and Specifications: full bleed. The photograph is the page; the
+  heading, tabs and lists float over it on scrims and frosted panels.
+- Gallery: every render on one curved WebGL strip (drag with a throw, wheel,
+  arrows); the centre picture in full colour, the others dimmed and cooled;
+  on a phone the pictures are framed upright.
+- Orbit, plans, map and panoramas keep their working layouts, with the
+  shared system: lift-display index, 3D character titles, the follower,
+  depth parallax on headings, and the lift between pages.
 
 ## Genericness test
 

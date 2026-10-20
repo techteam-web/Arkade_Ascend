@@ -21,9 +21,22 @@
     <link rel="preload" href="/fonts/avenir-lt-std-black.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>Arkade Ascend | Malad West</title>
+    <style>
+      body { margin: 0; background: #1b1113; }
+      .prerender { position: fixed; inset: 0; display: grid; place-content: center; gap: .6rem; padding: 1rem; text-align: center; color: #ecd3a8; font: 400 13px/1.6 Gotham, system-ui, sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+      .prerender h1 { margin: 0; color: #f6efe4; font: 400 clamp(2rem, 6vw, 4rem)/1 "Billie Eilish", serif; letter-spacing: .01em; }
+      .prerender p { margin: 0; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!-- Replaced as soon as the presentation starts. -->
+      <main class="prerender">
+        <h1>Arkade Ascend</h1>
+        <p>A 37-storey tower by Arkade Developers, Malad West, Mumbai</p>
+        <p>MahaRERA registration PM1180002601025</p>
+      </main>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

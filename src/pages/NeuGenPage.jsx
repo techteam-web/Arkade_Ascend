@@ -77,7 +77,9 @@ export default function NeuGenPage() {
     const incoming = sections[to]
     const entrance = !outgoing
     const dir = from !== null && to < from ? -1 : 1
-    sections.forEach(section => { if (section !== incoming && section !== outgoing) gsap.set(section, { autoAlpha: 0 }) })
+    // Chapters not on screen leave the layout (display: none), so their text
+    // is not read or counted as hidden; the splits were made with all laid out.
+    sections.forEach(section => { if (section !== incoming && section !== outgoing) gsap.set(section, { autoAlpha: 0, display: 'none' }) })
     const reduced = prefersReducedMotion()
     const timeline = gsap.timeline({ defaults: { ease: 'power3.out' } })
     running.current = timeline
@@ -87,11 +89,12 @@ export default function NeuGenPage() {
     if (reduced) gsap.set(frame, { autoAlpha: framed ? 1 : 0 })
     else timeline.to(frame, { autoAlpha: framed ? 1 : 0, duration: entrance ? 1.2 : 0.5, ease: 'power2.inOut' }, 0)
     if (outgoing) {
-      if (reduced) gsap.set(outgoing, { autoAlpha: 0 })
+      if (reduced) gsap.set(outgoing, { autoAlpha: 0, display: 'none' })
       else timeline.to(outgoing, { autoAlpha: 0, duration: 0.35, ease: 'power2.inOut' }, 0)
         .to(outgoing.querySelectorAll('[data-ch]:not([data-ch="image"])'), { y: -14 * dir, duration: 0.35, ease: 'power2.in' }, 0)
+        .set(outgoing, { display: 'none' }, 0.36)
     }
-    gsap.set(incoming, { autoAlpha: 1 })
+    gsap.set(incoming, { autoAlpha: 1, clearProps: 'display' })
     const items = [...incoming.querySelectorAll('[data-ch]')]
     gsap.set(items, { clearProps: 'opacity,visibility,filter,transform' })
     items.forEach(item => { const split = splits.current.get(item); if (split) gsap.set(split.lines, { clearProps: 'transform' }) })
@@ -113,6 +116,8 @@ export default function NeuGenPage() {
 
   const last = chapter === chapters.length - 1
   return <section ref={root} className="absolute inset-0 overflow-hidden" aria-roledescription="presentation" aria-label="Neu Gen life">
+    {/* The page's one heading; each chapter's own title is an h2. */}
+    <h1 tabIndex={-1} className="visually-hidden">Neu Gen Life</h1>
     <Frame />
     <Landmark active={chapter === 0} />
     <Arrival active={chapter === 1} />
@@ -170,11 +175,11 @@ function Landmark({ active }) {
   const { lead, line, label } = neuGen.landmark
   return <Chapter active={active} label={label}>
     <div className="page page-scroll flex flex-col items-center justify-center-safe pb-[clamp(5.5rem,13vh,8rem)] text-center short:pb-20">
-      <h1 tabIndex={-1} className="flex flex-col items-center outline-none" aria-label={label}>
+      <h2 className="flex flex-col items-center" aria-label={label}>
         <span data-ch aria-hidden="true" className="text-[clamp(0.85rem,min(3.6vw,3.2vh),2.2rem)] font-medium uppercase tracking-[0.06em] text-ivory">{lead}</span>
         <LandmarkMark data-ch="draw" className="mt-[clamp(0.6rem,2vh,1.25rem)] block h-auto w-[clamp(11rem,min(46vw,40vh),28rem)] text-gold-300 short:mt-2 short:w-[clamp(8rem,34vh,12rem)]" />
         <span data-ch aria-hidden="true" className="mt-[clamp(0.9rem,4.4vh,2.6rem)] text-[clamp(0.85rem,min(3.6vw,3.2vh),2.2rem)] font-medium uppercase tracking-[0.06em] text-ivory short:mt-2">{line}</span>
-      </h1>
+      </h2>
     </div>
   </Chapter>
 }
@@ -186,9 +191,9 @@ function Arrival({ active }) {
     <div className="page page-scroll flex flex-col items-center justify-center-safe pb-[clamp(5.5rem,13vh,8rem)] text-center short:pb-20">
       <p data-ch className="font-display text-[clamp(1rem,min(2vw,3.6vh),1.9rem)] uppercase tracking-[0.34em] pl-[0.34em] text-gold-300">Malad&rsquo;s</p>
       {/* The brochure's monogram draws itself in (NeuGenMark). */}
-      <h1 tabIndex={-1} className="mt-[clamp(0.6rem,2.2vh,1.4rem)] text-gold-300 outline-none" aria-label="Malad's Neu Gen life has arrived">
+      <h2 className="mt-[clamp(0.6rem,2.2vh,1.4rem)] text-gold-300" aria-label="Malad's Neu Gen life has arrived">
         <NeuGenMark withLife data-ch="draw" className="block h-auto w-[clamp(9.5rem,min(44vw,40vh),26rem)]" />
-      </h1>
+      </h2>
       <p data-ch className="mt-[clamp(0.9rem,3vh,1.75rem)] font-display text-[clamp(0.85rem,min(1.4vw,2.6vh),1.25rem)] uppercase tracking-[0.42em] pl-[0.42em] text-gold-300/95 short:mt-2">Has arrived</p>
     </div>
   </Chapter>

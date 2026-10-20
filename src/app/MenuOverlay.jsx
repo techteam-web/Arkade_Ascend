@@ -23,8 +23,9 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
   const currentIndex = sections.findIndex(route => route.id === currentId)
   const shown = previewed ?? Math.max(0, currentIndex)
 
+  // Closed, the menu leaves the layout (display: none) as well as the view.
   useLayoutEffect(() => {
-    gsap.set(root.current, { autoAlpha: 0 })
+    gsap.set(root.current, { autoAlpha: 0, display: 'none' })
     gsap.set(curtain.current, { yPercent: 100 })
   }, [])
 
@@ -34,6 +35,7 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
     running.current?.kill()
     const q = gsap.utils.selector(el)
     if (open) {
+      gsap.set(el, { clearProps: 'display' })
       if (reduced) { gsap.set(el, { autoAlpha: 1 }); gsap.set(curtain.current, { yPercent: 0, '--dome-top': '0px', '--dome-bottom': '0px' }); return }
       running.current = gsap.timeline({ defaults: { ease: 'silk' } })
         .set(el, { autoAlpha: 1 })
@@ -46,8 +48,8 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
         .fromTo(q('.menu-fade'), { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.8, stagger: 0.06 }, 0.45)
     } else {
       if (gsap.getProperty(el, 'autoAlpha') === 0) return
-      if (reduced) { gsap.set(el, { autoAlpha: 0 }); return }
-      running.current = gsap.timeline({ onComplete: () => gsap.set(el, { autoAlpha: 0 }) })
+      if (reduced) { gsap.set(el, { autoAlpha: 0, display: 'none' }); return }
+      running.current = gsap.timeline({ onComplete: () => gsap.set(el, { autoAlpha: 0, display: 'none' }) })
         .to(q('.menu-content'), { autoAlpha: 0, y: -24, duration: 0.35, ease: 'power2.in' }, 0)
         .to(curtain.current, { yPercent: -100, '--dome-bottom': dome(), duration: 0.75, ease: 'curtain' }, 0.1)
         .set(q('.menu-content'), { y: 0 })

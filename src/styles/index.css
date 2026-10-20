@@ -235,11 +235,12 @@ html { font-size: 100%; }
   .btn-icon {
     display: inline-grid; place-items: center; width: 2.9rem; height: 2.9rem; flex: none;
     border: 1px solid color-mix(in oklab, var(--tone-accent) 60%, transparent); border-radius: 999px; color: var(--tone-fg);
-    background: color-mix(in oklab, var(--color-plum-950) 25%, transparent);
+    /* Gold rises inside the circle from its foot on hover (the motion verb). */
+    background: linear-gradient(var(--color-gold-500), var(--color-gold-500)) 50% 100% / 100% 0% no-repeat, color-mix(in oklab, var(--color-plum-950) 25%, transparent);
     backdrop-filter: blur(6px);
-    transition: background .4s var(--ease-silk), color .4s var(--ease-silk), transform .3s var(--ease-silk), border-color .4s;
+    transition: background-size .5s var(--ease-silk), color .4s var(--ease-silk), transform .3s var(--ease-silk), border-color .4s;
   }
-  .btn-icon:where(:hover, :focus-visible) { background: var(--color-gold-500); color: var(--color-espresso); border-color: var(--color-gold-500); }
+  .btn-icon:where(:hover, :focus-visible) { background-size: 100% 100%, auto; color: var(--color-espresso); border-color: var(--color-gold-500); }
   /* Pulled a few pixels toward the pointer (src/app/Cursor.jsx sets the
      variables); `translate` stays separate from GSAP's transforms. */
   [data-magnetic] { translate: calc(var(--mx, 0) * 1px) calc(var(--my, 0) * 1px); }
@@ -252,9 +253,11 @@ html { font-size: 100%; }
     min-height: 2.75rem; padding: 0 1.1rem; border-radius: 999px;
     border: 1px solid var(--tone-line); color: var(--tone-muted);
     font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500;
-    transition: color .4s, border-color .4s, background .4s;
+    /* a faint wash of the accent rises inside it on hover */
+    background: linear-gradient(color-mix(in oklab, var(--tone-accent) 18%, transparent), color-mix(in oklab, var(--tone-accent) 18%, transparent)) 50% 100% / 100% 0% no-repeat;
+    transition: color .4s, border-color .4s, background-size .45s var(--ease-silk), background-color .4s;
   }
-  .chip:where(:hover, :focus-visible) { color: var(--tone-fg); border-color: var(--tone-accent); }
+  .chip:where(:hover, :focus-visible) { color: var(--tone-fg); border-color: var(--tone-accent); background-size: 100% 100%; }
   @media (max-width: 40rem) { .chip { padding: 0 0.85rem; letter-spacing: 0.14em; } }
   .chip[aria-pressed="true"], .chip[aria-selected="true"] { color: var(--color-espresso); background: var(--color-gold-500); border-color: var(--color-gold-500); }
   .chip:disabled { opacity: .35; pointer-events: none; }
@@ -421,13 +424,6 @@ html { font-size: 100%; }
   .cursor[data-pressed="true"] .cursor-circle { scale: .8; }
 
   /* A light that sweeps slowly across display type, now and then. */
-  .sheen { position: relative; }
-  .sheen::after {
-    content: ''; position: absolute; inset: -10% -5%; pointer-events: none; mix-blend-mode: soft-light;
-    background: linear-gradient(105deg, transparent 40%, rgba(255, 246, 228, .9) 50%, transparent 60%) no-repeat;
-    background-size: 40% 100%; background-position: -60% 0; animation: sheen 9s var(--ease-curtain) 3s infinite;
-  }
-  @keyframes sheen { 0%, 70% { background-position: -60% 0; } 100% { background-position: 160% 0; } }
 
   /* Home (HomePage.jsx). The window's height sets the composition: the name
      crosses its middle, the storey scale stands at its right. Portrait
@@ -632,7 +628,11 @@ html { font-size: 100%; }
 /* Phones zoom by pinching, so the zoom column gives the small map its room. */
 @media (max-width: 47.999rem) { .location-map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-group { display: none; } }
 .maplibregl-ctrl-group { border-radius: 999px !important; overflow: hidden; background: color-mix(in oklab, var(--color-cream-50) 92%, transparent) !important; box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-plum-700) 18%, transparent) !important; }
-.maplibregl-ctrl-group button { width: 2.75rem !important; height: 2.75rem !important; }
+.maplibregl-ctrl-group button { width: 2.75rem !important; height: 2.75rem !important;
+  /* a gold wash rises inside the button on hover, as on the other round controls */
+  background: linear-gradient(color-mix(in oklab, var(--color-gold-500) 34%, transparent), color-mix(in oklab, var(--color-gold-500) 34%, transparent)) 50% 100% / 100% 0% no-repeat !important;
+  transition: background-size .45s var(--ease-silk); }
+.maplibregl-ctrl-group button:not(:disabled):where(:hover, :focus-visible) { background-size: 100% 100% !important; }
 .maplibregl-ctrl-attrib { font: 400 .55rem/1.4 var(--font-sans); background: color-mix(in oklab, var(--color-cream-50) 85%, transparent) !important; color: var(--color-plum-700); }
 .maplibregl-ctrl-attrib a { color: inherit; }
 
@@ -648,5 +648,4 @@ html { font-size: 100%; }
   *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
   .grain { display: none; }
   .cursor { display: none; }
-  .sheen::after { display: none; }
 }

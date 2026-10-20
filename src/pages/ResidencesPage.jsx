@@ -201,7 +201,7 @@ export default function ResidencesPage() {
 }
 
 const PathButton = forwardRef(function PathButton({ number, title, copy, onClick, pressed }, ref) {
-  return <button ref={ref} type="button" data-reveal onClick={onClick} aria-expanded={pressed} data-cursor="Open"
+  return <button ref={ref} type="button" data-reveal onClick={onClick} aria-expanded={pressed}
     className="group relative flex min-h-20 items-center gap-[clamp(1rem,2vw,1.75rem)] border-b border-line py-[clamp(0.9rem,2.4vh,1.4rem)] text-left">
     <span className="num self-start pt-[0.45em] text-[0.7rem] tracking-[0.2em] text-accent">{number}</span>
     <span className="min-w-0 flex-1">
