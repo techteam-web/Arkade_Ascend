@@ -8,7 +8,7 @@ import PanoramaViewer from './PanoramaViewer.jsx'
 import ViewMap, { zoneCentre } from './ViewMap.jsx'
 import { floorExceptions, positions, typicalPlan, wing as planWing } from '../content/floorPlans.js'
 import { ordinal, typeAt } from '../content/inventory.js'
-import { nearestFloor, planHeading, roomViews, topView, wingPanoramas } from '../content/panoramas.js'
+import { nearestFloor, outlookPitch, planHeading, roomViews, topView, wingPanoramas } from '../content/panoramas.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
 // The drone panoramas filling the presentation: the view from a wing at the
@@ -16,7 +16,7 @@ import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 // building model, the floor plans and the unit finder. Portalled into the
 // page frame so the full-screen gate still covers it, and closed with Escape.
 // Radians; positive pitch looks down.
-const WING_START = { yaw: 0, pitch: 0.05, fov: 1.47 }
+const WING_START = { yaw: 0, pitch: outlookPitch * Math.PI / 180, fov: 1.47 }
 const TOP_START = { yaw: 0, pitch: 1.45, fov: 1.25 }
 
 // Room by room: a home looks out away from the building's core, along the line
@@ -39,19 +39,33 @@ const spanOf = ([left, right]) => ((right - left) % 360 + 360) % 360
 // The up / down limits set by hand ([top, bottom] pitch, degrees), lowest first, else the default.
 const tiltOf = room => Array.isArray(room?.tilt) && room.tilt.every(edge => typeof edge === 'number')
   ? [Math.min(...room.tilt) * rad, Math.max(...room.tilt) * rad] : OUTLOOK_TILT
-// Every home looks out at the back as well as the front (client, 16 Oct 2026):
-// each side has its own view (`back` in roomViews), chosen with Front view /
-// Back view; a back not yet set faces the other way from the front's estimate.
-const BACK_HOMES = positions
+// The corner homes, Units 01 and 04, look out at the back as well as the
+// front, on every floor (client, 20 Oct 2026): each side has its own view
+// (`back` in roomViews), chosen with Front view / Back view. Other homes have
+// the front only, here and in the unit finder's comparison.
+export const BACK_HOMES = ['01', '04']
 const outlookOf = (wingId, position, rooms, side = 'front') => {
   const home = rooms[wingId]?.[position]
   const room = side === 'back' ? home?.back : home
   const edges = edgesOf(room)
   const estimate = bearingOf(position) + (side === 'back' ? 180 : 0) - planHeading[wingId]
   const yaw = edges ? (edges[0] + spanOf(edges) / 2) * rad : estimate * rad
-  const view = room?.start ? toRadians(room.start) : { yaw, pitch: 0.09 }
-  const lock = room?.outlook === false ? null : { yaw, span: edges ? spanOf(edges) * rad : OUTLOOK_SPAN, pitch: tiltOf(room) }
+  // Every outlook opens at the one standard height (`outlookPitch`), whatever
+  // pitch its start was set with, and is held there (client, 20 Oct 2026): it
+  // turns left and right within its edges but never tilts, and zooms out no
+  // further than it opens.
+  const view = { ...(room?.start ? toRadians(room.start) : { yaw }), pitch: outlookPitch * rad }
+  const lock = room?.outlook === false ? null : {
+    yaw, span: edges ? spanOf(edges) * rad : OUTLOOK_SPAN, pitch: tiltOf(room), level: view.pitch, maxFov: view.fov ?? WING_START.fov,
+  }
   return { manual: !!(room?.start || room?.outlook !== undefined || room?.tilt), sector: !!edges, view, lock }
+}
+
+// A Wing A home's outlook as visitors see it, where it opens (`start`) and the
+// sector it is kept in (`lock`): for the unit finder's comparison of views.
+export const homeOutlook = (position, side = 'front') => {
+  const outlook = outlookOf(planWing, position, roomViews, side)
+  return { ...outlook, start: { ...WING_START, ...outlook.view } }
 }
 
 // `?calibrate` in the address shows a Setup panel for each home's view: its
@@ -160,7 +174,8 @@ export default function ViewOverlay({ wing = towers[0].id, floor = null, unit = 
   const facing = BACK_HOMES.includes(home) ? side : 'front'
   const outlook = tower === planWing && !top ? outlookOf(tower, home, rooms, facing) : null
   // While calibrating, only a home whose edges are set is locked, so the edges can be found.
-  const lock = locked && outlook?.lock && (!setting || outlook.sector) ? outlook.lock : null
+  // Calibrating needs to tilt to find the top and bottom limits, so the height is not held then.
+  const lock = locked && outlook?.lock && (!setting || outlook.sector) ? setting ? { ...outlook.lock, level: undefined, maxFov: undefined } : outlook.lock : null
   const start = locked && outlook ? { ...WING_START, ...outlook.view } : WING_START
   const pickHome = position => { setRadarUnit(position); setSide('front'); setLocked(true); setAimed(count => count + 1) }
   const pickSide = next => { setSide(next); setLocked(true); setAimed(count => count + 1) }

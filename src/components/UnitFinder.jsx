@@ -2,12 +2,16 @@ import { forwardRef, useEffect, useId, useLayoutEffect, useMemo, useRef, useStat
 import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
 import { ArrowIcon } from './Brand.jsx'
+import PanoramaViewer from './PanoramaViewer.jsx'
 import SheetSwitch from './SheetSwitch.jsx'
+import { BACK_HOMES, homeOutlook } from './ViewOverlay.jsx'
+import { wing as planWing } from '../content/floorPlans.js'
 import {
   activeFilters, area, bounds, emptyFilters, facets, features, featureLabel, filterHomes, floorBands, floorRuns,
-  groupByType, optionCounts, ordinal, planById, sortGroups, sortHomes, sorts, span,
+  groupByType, isOpen, optionCounts, ordinal, planById, sortGroups, sortHomes, sorts, span,
 } from '../content/inventory.js'
-import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
+import { nearestFloor, wingPanoramas } from '../content/panoramas.js'
+import useMediaQuery, { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
 const MAX_COMPARE = 3
 const facetByKey = Object.fromEntries(facets.map(facet => [facet.key, facet]))
@@ -16,20 +20,26 @@ const Icon = ({ d }) => <svg viewBox="0 0 24 24"><path d={d} /></svg>
 
 // Remembered for the session, so coming back from a plan finds the same search.
 let remembered = { filters: emptyFilters(), view: 'plans', sort: { plans: 'type', homes: 'floor-asc' }, compare: [], look: 'plan' }
+// The comparison as it was when one of its plans was opened (its view, the
+// differences switch and where it was scrolled), so the plan's back button
+// returns to exactly that.
+let compareReturn = null
 
 // Search by unit, after Zenith's finder: facets narrow every home in Wing A;
 // results read as plan types (cards) or as single homes (a list);
 // up to three plan types compare side by side. `onOpenPlan` receives
 // { plan } or { home } and opens the Floor Plans page.
-const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan, onView }, ref) {
+const UnitFinder = forwardRef(function UnitFinder({ reopen = null, onClose, onOpenPlan, onView }, ref) {
   const [filters, setFilters] = useState(remembered.filters)
   const [view, setView] = useState(remembered.view)
   const [sort, setSort] = useState(remembered.sort)
   const [compare, setCompare] = useState(remembered.compare)
   const [look, setLook] = useState(remembered.look)   // plan cards show the drawing, or its whole sheet
-  const [comparing, setComparing] = useState(false)
+  const [comparing, setComparing] = useState(() => reopen === 'compare' && remembered.compare.length > 1 && Boolean(compareReturn))
   const [filtersOpen, setFiltersOpen] = useState(false)    // phones and tablets fold the filters away
   const compareButton = useRef(null)
+  // Coming back from a compared plan restores the comparison once; opened again later, it starts afresh.
+  const restoring = useRef(reopen === 'compare' ? compareReturn : null)
   const scroller = useRef(null)
   const panelId = useId()
   useEffect(() => { remembered = { filters, view, sort, compare, look } }, [filters, view, sort, compare, look])
@@ -51,7 +61,7 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan, onView 
   const reset = () => setFilters(emptyFilters())
   const toggleCompare = id => setCompare(value => value.includes(id) ? value.filter(item => item !== id) : value.length < MAX_COMPARE ? [...value, id] : value)
   const showHomes = id => { setFilters(value => ({ ...value, type: [id] })); setView('homes') }
-  const closeCompare = () => { setComparing(false); requestAnimationFrame(() => compareButton.current?.focus({ preventScroll: true })) }
+  const closeCompare = () => { restoring.current = null; setComparing(false); requestAnimationFrame(() => compareButton.current?.focus({ preventScroll: true })) }
 
   const chipFacet = key => <ChipFacet key={key} facet={facetByKey[key]} filters={filters} onToggle={id => toggle(key, id)} />
 
@@ -149,7 +159,8 @@ const UnitFinder = forwardRef(function UnitFinder({ onClose, onOpenPlan, onView 
       </div>
     </div>
 
-    {comparing && <CompareDialog ids={compare} results={results} look={look} onLook={setLook} onClose={closeCompare} onOpen={plan => onOpenPlan({ plan })} />}
+    {comparing && <CompareDialog ids={compare} results={results} look={look} restore={restoring.current} onLook={setLook} onClose={closeCompare}
+      onOpen={(plan, state) => { compareReturn = state; onOpenPlan({ plan, from: 'compare' }) }} />}
   </div>
 })
 
@@ -299,24 +310,220 @@ function roomRows(types) {
   }).filter(Boolean)]).filter(([, rows]) => rows.length)
 }
 
+// The comparison's details as sections of rows, one cell per plan type:
+// areas (the largest marked with how much larger it is), features, then
+// every room's size. `same` marks a row that reads alike in every plan.
+function compareSections(types) {
+  const areaRow = (name, key) => {
+    const values = types.map(type => type[key])
+    const most = Math.max(...values), least = Math.min(...values)
+    return { name, cells: values.map(value => ({ value, gain: most > least && value === most ? most - least : 0 })) }
+  }
+  const textRow = (name, value) => ({ name, cells: types.map(type => ({ text: String(value(type)) })) })
+  const sections = [
+    { title: 'Areas', rows: [
+      textRow('Configuration', type => type.configuration),
+      areaRow('RERA carpet area', 'reraArea'),
+      areaRow('Deck area', 'deck'),
+      areaRow('Total area', 'totalArea'),
+      textRow('Bedrooms', type => type.bedrooms),
+      textRow('Toilets', type => type.bathrooms),
+    ] },
+    { title: 'Features', rows: features.map(feature => ({ name: feature.label, cells: types.map(type => ({ yes: type.features.includes(feature.id) })) })) },
+    ...roomRows(types).map(([title, list]) => ({ title, note: 'Width × depth, as printed', rows: list.map(row => ({ name: row.name, cells: row.cells.map(room => ({ room })) })) })),
+  ]
+  const key = cell => cell.room !== undefined ? `${cell.room?.size ?? ''}|${cell.room?.note ?? ''}` : String(cell.text ?? cell.value ?? cell.yes)
+  for (const section of sections) for (const row of section.rows) row.same = new Set(row.cells.map(key)).size === 1
+  return sections
+}
+
+const Tag = ({ children }) => <span className="whitespace-nowrap rounded-sm bg-gold-500/15 px-1.5 py-0.5 text-[0.52rem] font-medium uppercase tracking-[0.14em] text-gold-800">{children}</span>
+
+function CompareCell({ cell, many }) {
+  if (cell.value !== undefined) return <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+    <span className={cell.gain ? 'font-medium text-gold-700' : ''}><span className="num text-[0.95rem]">{area(cell.value)}</span> <span className="text-[0.58rem] uppercase tracking-[0.12em] text-muted">sq.ft</span></span>
+    {cell.gain > 0 && <Tag>+<span className="num">{area(cell.gain)}</span> sq.ft</Tag>}
+  </span>
+  if (cell.yes !== undefined) return cell.yes
+    ? <span className="flex items-center gap-2 text-[0.8rem]"><svg viewBox="0 0 24 24" aria-hidden="true" className="size-4 shrink-0 fill-none stroke-gold-700 stroke-[2.2]"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>Yes</span>
+    : <span className="text-[0.8rem] text-muted">No</span>
+  if (cell.room !== undefined) {
+    const room = cell.room
+    if (!room) return <span className="text-[0.8rem] text-muted">None</span>
+    if (!room.size) return <span className="text-[0.8rem] text-muted">{room.note}</span>
+    return <span className="flex flex-col gap-0.5">
+      <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className={`num text-[0.95rem] ${room.largest ? 'font-medium text-gold-700' : ''}`}>{room.size}</span>
+        {room.largest && <Tag>{many ? 'Largest' : 'Larger'}</Tag>}
+      </span>
+      <span className="text-[0.62rem] text-muted">{room.area && <><span className="num">≈ {area(room.area)}</span> sq.ft</>}{room.note && <>{room.area ? ' · ' : ''}{room.note}</>}</span>
+    </span>
+  }
+  return <span className={`text-[0.9rem] ${/^\d/.test(cell.text) ? 'num' : ''}`}>{cell.text}</span>
+}
+
+// Laptops read a row across: its name, then each plan. Narrow screens (and
+// narrow split windows) put the name above the plans' values, so nothing
+// scrolls sideways.
+function CompareDetails({ types, sections, matching, onlyDiff, onOpen }) {
+  const grid = 'grid gap-x-4 grid-cols-[minmax(7rem,0.8fr)_repeat(var(--plans),minmax(0,1fr))] @max-[36rem]:grid-cols-[repeat(var(--plans),minmax(0,1fr))] @max-[36rem]:gap-x-2.5'
+  const many = types.length > 2
+  return <div className="finder-in mx-auto w-full max-w-[64rem] @container 3xl:max-w-[76rem]" style={{ '--plans': types.length }}>
+    {/* Each plan's card, kept in view while the rows scroll (not on short
+        screens, where it would cover most of them). */}
+    <div className="sticky top-0 z-1 bg-cream-100 pb-3 pt-1 short:static [box-shadow:0_14px_14px_-12px_var(--color-cream-100)]">
+      <div className={`${grid} px-4`}>
+        <div className="self-end pb-1 @max-[36rem]:hidden">
+          <p className="text-[0.58rem] uppercase leading-relaxed tracking-[0.16em] text-muted">Gold marks the larger area or room</p>
+        </div>
+        {types.map(type => {
+          const found = matching[type.id]
+          return <div key={type.id} className="flex min-w-0 flex-col gap-2 rounded-sm border border-line bg-cream-50 p-3 @max-[36rem]:p-2.5">
+            <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-1">
+              <span className="font-display text-[clamp(1.1rem,3.4cqi,1.6rem)] uppercase leading-none">Unit <span className="num">{type.unit}</span></span>
+              <span className="text-[0.6rem] font-medium uppercase tracking-[0.18em] text-accent">{type.configuration}</span>
+            </div>
+            <p className="text-[0.58rem] uppercase leading-relaxed tracking-[0.14em] text-muted">
+              {type.floor ? <><span className="num">{ordinal(type.floor)}</span> floor only</> : found ? <><span className="num">{found.homes.length}</span> {found.homes.length === 1 ? 'home' : 'homes'} · floors <span className="num">{floorRuns(found.floors)}</span></> : 'No home matches your filters'}
+            </p>
+            <button type="button" className="chip mt-auto flex w-full items-center justify-center gap-2 px-2!" onClick={() => onOpen(type.id)} aria-label={`View the plan of Unit ${type.unit}, ${type.configuration}`}>
+              View plan<ArrowIcon className="h-2.5 w-5 shrink-0 fill-none stroke-current stroke-[1.1] @max-[36rem]:hidden" />
+            </button>
+          </div>
+        })}
+      </div>
+    </div>
+
+    <div className="flex flex-col gap-4 pb-2">
+      {sections.map(section => {
+        const rows = onlyDiff ? section.rows.filter(row => !row.same) : section.rows
+        const id = `compare-${section.title.toLowerCase().replace(/\W+/g, '-')}`
+        return <div key={section.title} className="glass-panel rounded-sm p-1 pb-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 px-3 pb-2 pt-3">
+            <h3 id={id} className="eyebrow">{section.title}</h3>
+            {section.note && <p className="text-[0.58rem] uppercase tracking-[0.14em] text-muted">{section.note}</p>}
+          </div>
+          {rows.length
+            ? <div role="table" aria-labelledby={id}>
+              <div role="row" className="sr-only">
+                <span role="columnheader">Detail</span>
+                {types.map(type => <span key={type.id} role="columnheader">Unit {type.unit}, {type.configuration}</span>)}
+              </div>
+              {rows.map(row => <div key={row.name} role="row" className={`${grid} items-center gap-y-1.5 rounded-sm px-3 py-2.5 odd:bg-plum-700/[0.05]`}>
+                <span role="rowheader" className="text-[0.62rem] font-medium uppercase leading-snug tracking-[0.14em] text-fg/80 @max-[36rem]:col-span-full">{row.name}</span>
+                {row.cells.map((cell, i) => <span key={types[i].id} role="cell" className="min-w-0"><CompareCell cell={cell} many={many} /></span>)}
+              </div>)}
+            </div>
+            : <p className="px-3 pb-2 text-[0.72rem] text-muted">The same in every plan.</p>}
+        </div>
+      })}
+      <p className="px-1 text-[0.58rem] leading-relaxed tracking-[0.06em] text-muted">
+        Room sizes as printed on the plan sheets, width × depth. Room areas are worked out from those sizes and are indicative. A room is marked larger only where two or more plans have it on its own.
+      </p>
+    </div>
+  </div>
+}
+
+// The homes' views side by side: the drone photograph taken at the height of
+// one floor (chosen here, one of the open floors that were flown), turned to
+// each home's outlook and kept within it, as in the view from a plan. All the
+// homes of a floor share one photograph, so the comparison is fair. A plan of
+// one floor only (Unit 05 on the 7th) shows the height nearest its own floor.
+// Laptops and landscape screens set the views side by side, each as tall as
+// the sheet; portrait screens show one at a time, chosen by unit, so a drag
+// on the picture is never mistaken for a scroll of the page.
+function CompareViews({ types }) {
+  const flights = wingPanoramas[planWing]
+  const offered = flights.filter(flight => isOpen(flight.floor))
+  const [floor, setFloor] = useState(() => offered[offered.length >> 1]?.floor ?? flights[0].floor)
+  const [sides, setSides] = useState(() => Object.fromEntries(types.map(type => [type.id, 'front'])))
+  const [chosen, setChosen] = useState(types[0].id)
+  const single = useMediaQuery('(max-width: 63.999rem) and (min-height: 34.001rem)')   // the stack layout
+  const viewers = useRef({})
+  const heightOf = type => type.floor ? nearestFloor(planWing, type.floor) : floor
+  // Front and back turn the view in place, as the view from a plan does.
+  const turn = (type, side) => {
+    setSides(value => ({ ...value, [type.id]: side }))
+    const outlook = homeOutlook(type.unit, side)
+    viewers.current[type.id]?.focus(outlook.start, outlook.lock)
+  }
+  const shown = single ? types.filter(type => type.id === chosen) : types
+
+  return <div className="finder-in flex min-h-full flex-col gap-3 split:h-full">
+    <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+      <div role="group" aria-label="Height of the views" className="flex flex-wrap items-center gap-1.5">
+        <p className="eyebrow mr-2">At the height of floor</p>
+        {offered.map(flight => <button key={flight.floor} type="button" className="chip num min-w-11 px-3!" aria-pressed={floor === flight.floor}
+          aria-label={`Floor ${flight.floor}`} onClick={() => setFloor(flight.floor)}>{flight.floor}</button>)}
+      </div>
+      {single && types.length > 1 && <div role="group" aria-label="Unit to show" className="flex flex-wrap gap-1.5">
+        {types.map(type => <button key={type.id} type="button" className="chip" aria-pressed={chosen === type.id} onClick={() => setChosen(type.id)}>
+          Unit <span className="num ml-1">{type.unit}</span>
+        </button>)}
+      </div>}
+    </div>
+
+    <ul style={{ '--plans': shown.length }} className="grid min-h-0 flex-1 gap-[clamp(0.75rem,1.6vw,1.75rem)] split:grid-cols-[repeat(var(--plans),minmax(0,1fr))]">
+      {shown.map(type => {
+        const side = sides[type.id]
+        const outlook = homeOutlook(type.unit, side)
+        const height = heightOf(type)
+        const flight = flights.find(item => item.floor === height)
+        return <li key={type.id} className="flex min-h-0 min-w-0 flex-col gap-2.5">
+          <div data-own-gesture className="relative min-h-[15rem] flex-1 overflow-hidden rounded-sm border border-line bg-plum-950 short:min-h-[9rem] stack:aspect-[4/3] stack:min-h-0 stack:flex-none">
+            <PanoramaViewer key={type.id} ref={handle => { viewers.current[type.id] = handle }} className="absolute inset-0"
+              scenes={flights} active={String(height)} start={outlook.start} lock={outlook.lock} spinning={false}
+              label={`Aerial photograph from Wing ${planWing} at the height of floor ${height}, facing the ${side} outlook of Unit ${type.unit}. Drag to look around.`} />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <div className="flex min-w-0 items-baseline gap-2">
+              <span className="font-display text-[1.35rem] uppercase leading-none">Unit <span className="num">{type.unit}</span></span>
+              <span className="text-[0.6rem] font-medium uppercase tracking-[0.18em] text-accent">{type.configuration}</span>
+            </div>
+            {/* Only the corner homes (01 and 04) have a back view. */}
+            {BACK_HOMES.includes(type.unit) && <div role="group" aria-label={`Unit ${type.unit}'s outlook`} className="flex gap-1.5">
+              {[['front', 'Front'], ['back', 'Back']].map(([id, label]) =>
+                <button key={id} type="button" className="chip min-w-[4.75rem] px-3!" aria-pressed={side === id} onClick={() => turn(type, id)}>{label}</button>)}
+            </div>}
+          </div>
+          <p className="text-[0.56rem] uppercase leading-relaxed tracking-[0.16em] text-muted">
+            {BACK_HOMES.includes(type.unit) ? `${side} outlook` : 'Outlook'} · <span className="num">{flight?.height}</span> m up, the height of floor <span className="num">{height}</span>{type.floor && <> · <span className="num">{ordinal(type.floor)}</span> floor plan</>}{!outlook.manual && ' · angle indicative'}
+          </p>
+        </li>
+      })}
+    </ul>
+    <p className="text-[0.56rem] leading-relaxed tracking-[0.06em] text-muted">
+      Aerial photographs of the site taken at the height of the chosen floor, turned to each home's outlook. They are not the view from the home itself; views from each residence vary.
+    </p>
+  </div>
+}
+
 // Up to three plan types side by side, over the whole presentation. It is
 // portalled into the page frame, so the full-screen gate still covers it.
 // It opens on the plans alone (client, 16 Oct 2026); "Full detail plan"
 // swaps them for the details alone: areas, features and every room's size.
-function CompareDialog({ ids, results, look, onLook, onClose, onOpen }) {
+function CompareDialog({ ids, results, look, restore, onLook, onClose, onOpen: openPlan }) {
   const root = useRef(null)
   const sheet = useRef(null)
-  const [view, setView] = useState('plans')
+  const [view, setView] = useState(restore?.view ?? 'plans')
+  const [onlyDiff, setOnlyDiff] = useState(restore?.onlyDiff ?? false)   // the details: only the rows where the plans differ
+  // Opening a plan remembers this view, so coming back finds it as it was.
+  const onOpen = id => openPlan(id, { view, onlyDiff, scroll: sheet.current?.scrollTop ?? 0 })
+  useLayoutEffect(() => { if (restore?.scroll && sheet.current) sheet.current.scrollTop = restore.scroll }, [])
   const types = ids.map(planById)
   const matching = Object.fromEntries(groupByType(results).map(group => [group.type.id, group]))
   // Opacity only: a hidden ancestor would take focus away from the close button.
+  // Coming back from a plan, the finder under it must not show: the cream
+  // ground is there at once (the plan page left on cream) and only the
+  // comparison's contents fade in.
   useLayoutEffect(() => {
     root.current.querySelector('[data-close]')?.focus({ preventScroll: true })
     if (prefersReducedMotion()) return
     const context = gsap.context(() => {
-      gsap.timeline({ defaults: { ease: 'silk' } })
-        .from(root.current, { opacity: 0, duration: 0.5 })
-        .from('[data-compare-sheet]', { opacity: 0, y: 16, duration: 0.8 }, 0.1)
+      const timeline = gsap.timeline({ defaults: { ease: 'silk' } })
+      if (restore) timeline.from('[data-compare-head]', { opacity: 0, duration: 0.6 })
+      else timeline.from(root.current, { opacity: 0, duration: 0.5 })
+      timeline.from('[data-compare-sheet]', { opacity: 0, y: 16, duration: 0.8 }, 0.1)
     }, root)
     return () => context.revert()
   }, [])
@@ -329,98 +536,66 @@ function CompareDialog({ ids, results, look, onLook, onClose, onOpen }) {
   }, [onClose])
   // Each view starts at its top.
   const show = next => { setView(next); if (sheet.current) sheet.current.scrollTop = 0 }
-  const rows = [
-    ['Configuration', type => type.configuration],
-    ['RERA carpet area', type => `${area(type.reraArea)} sq.ft`],
-    ['Deck area', type => `${area(type.deck)} sq.ft`],
-    ['Total area', type => `${area(type.totalArea)} sq.ft`],
-    ['Bedrooms', type => type.bedrooms],
-    ['Toilets', type => type.bathrooms],
-    ...features.map(feature => [feature.label, type => type.features.includes(feature.id) ? 'Yes' : '—']),
-    ['Homes matching your filters', type => matching[type.id]?.homes.length ?? 0],
-    ['Floors', type => matching[type.id] ? floorRuns(matching[type.id].floors) : '—'],
-  ]
-  const rooms = roomRows(types)
-  const columns = types.length + 1
+  const sections = compareSections(types)
   const drawing = type => type[look === 'sheet' ? 'sheet' : 'image']
+  const frameRatio = Math.min(...types.map(type => drawing(type).ratio))
   const heading = type => <div className="flex items-baseline justify-between gap-2">
     <span className="font-display text-[1.5rem] uppercase leading-none">Unit <span className="num">{type.unit}</span>{type.floor && <span className="ml-2 align-middle font-sans text-[0.55rem] tracking-[0.16em] text-muted"><span className="num">{ordinal(type.floor)}</span> floor</span>}</span>
     <span className="text-[0.6rem] font-medium uppercase tracking-[0.18em] text-accent">{type.configuration}</span>
   </div>
-  const groupRow = label => <tr className="border-t border-line">
-    <th scope="colgroup" colSpan={columns} className="pt-4 pb-1.5 text-[0.58rem] font-medium uppercase tracking-[0.28em] text-accent">{label}</th>
-  </tr>
 
   return createPortal(<div ref={root} role="dialog" aria-modal="true" aria-label="Compare plan types" data-tone="light"
     className="absolute inset-0 z-70 flex flex-col bg-cream-100 px-(--gutter) pb-[max(clamp(0.75rem,3vh,2rem),var(--credit-space))] text-fg">
-    <div className="flex min-h-(--header-h) shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2">
-      <p className="eyebrow">Compare · {types.map(type => type.label).join(' · ')}{view === 'details' && ' · Full details'}</p>
+    <div data-compare-head className="flex min-h-(--header-h) shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 py-2">
+      <p className="eyebrow">Compare · {types.map(type => type.label).join(' · ')}{view === 'details' && ' · Full details'}{view === 'views' && ' · Views'}</p>
       <div className="ml-auto flex flex-wrap items-center justify-end gap-3">
         {view === 'plans'
           ? <>
             <SheetSwitch value={look} onChange={onLook} />
+            <button type="button" className="btn-lux whitespace-nowrap bg-transparent!" onClick={() => show('views')}>Compare views<ArrowIcon className="shrink-0" /></button>
             <button type="button" className="btn-lux whitespace-nowrap" onClick={() => show('details')}>Full detail plan<ArrowIcon className="shrink-0" /></button>
           </>
-          : <button type="button" className="chip" onClick={() => show('plans')}>Back to unit plans</button>}
+          : <>
+            {view === 'details' && <button type="button" className="chip" aria-pressed={onlyDiff} onClick={() => setOnlyDiff(value => !value)}>Differences only</button>}
+            <button type="button" className="btn-lux is-back whitespace-nowrap bg-transparent!" onClick={() => show('plans')}>
+              <svg viewBox="0 0 32 12" aria-hidden="true"><path d="M31 6H3m5-5-5 5 5 5" /></svg>Unit plans
+            </button>
+          </>}
         <button type="button" data-close className="btn-icon" onClick={onClose} aria-label="Close comparison"><Icon d="m5 5 14 14M19 5 5 19" /></button>
       </div>
     </div>
 
     <div ref={sheet} data-compare-sheet className="page-scroll min-h-0 flex-1">
       {view === 'plans'
-        // The plans alone, in modest cards centred on the screen (client,
-        // 16 Oct 2026): side by side on laptops, one under another on phones.
-        ? <ul key="plans" className="finder-in grid min-h-full grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),26rem))] content-center-safe justify-center gap-[clamp(1rem,2vw,2rem)] 3xl:grid-cols-[repeat(auto-fit,minmax(16rem,32rem))]">
-          {types.map(type => <li key={type.id} className="flex flex-col gap-2.5">
-            <button type="button" onClick={() => onOpen(type.id)} aria-label={`Open the ${type.label} plan`}
-              className="relative aspect-[4/3] max-h-[52vh] w-full overflow-hidden rounded-sm border border-line bg-cream-50 outline-offset-[-3px]">
-              <img src={drawing(type).src} srcSet={drawing(type).srcSet} sizes="(min-width: 48rem) 33vw, 100vw"
-                alt={`${type.label} ${look === 'sheet' ? 'plan sheet' : 'plan'}`} className="absolute inset-0 size-full object-contain p-3" draggable="false" />
-            </button>
-            {heading(type)}
-            <button type="button" className="btn-lux w-full bg-transparent!" onClick={() => onOpen(type.id)}>View plan<ArrowIcon /></button>
-          </li>)}
+        // The plans alone, as large as the screen allows (client, 16 Oct 2026
+        // and 20 Oct 2026). Laptops and landscape screens set them side by
+        // side, each column as tall as the sheet: the drawing, its name and
+        // its button scale together so the drawing fills its share. Every
+        // plan gets the same box (the shape of the tallest drawing, each
+        // drawing fitted inside), so the plans, names and buttons line up.
+        // Portrait tablets fit two to a row, phones one, each at full width.
+        ? <ul key="plans" style={{ '--plans': types.length, '--ratio': frameRatio }}
+          className="finder-in grid gap-[clamp(1rem,2.2vw,2.75rem)] stack:grid-cols-[repeat(auto-fit,minmax(min(100%,22rem),1fr))] stack:content-start split:h-full split:min-h-[18rem] split:grid-cols-[repeat(var(--plans),minmax(0,1fr))]">
+          {types.map(type => {
+            return <li key={type.id} className="grid min-h-0 min-w-0 place-items-center split:@container-size">
+              {/* 6.25rem: the name and the button below the drawing. */}
+              <div className="flex w-full flex-col gap-2.5 split:w-[min(100cqw,calc((100cqh-6.25rem)*var(--ratio)))]">
+                <button type="button" onClick={() => onOpen(type.id)} aria-label={`Open the ${type.label} plan`} style={{ aspectRatio: frameRatio }}
+                  className="relative w-full overflow-hidden rounded-sm border border-line bg-cream-50 shadow-[0_30px_60px_-34px_rgba(61,42,47,.45)] outline-offset-[-3px]">
+                  <img src={drawing(type).src} srcSet={drawing(type).srcSet} sizes={`(min-width: 64rem) ${Math.round(96 / types.length)}vw, 100vw`}
+                    alt={`${type.label} ${look === 'sheet' ? 'plan sheet' : 'plan'}`} className="absolute inset-0 size-full object-contain p-[3%]" draggable="false" />
+                </button>
+                {heading(type)}
+                <button type="button" className="btn-lux w-full bg-transparent!" onClick={() => onOpen(type.id)}>View plan<ArrowIcon /></button>
+              </div>
+            </li>
+          })}
         </ul>
-        // The details alone: areas and features, then every room's size.
-        : <div key="details" className="finder-in mx-auto w-full max-w-[64rem] 3xl:max-w-[76rem]">
-          <div className="overflow-x-auto pb-2" data-own-gesture>
-            <table className="w-full min-w-[32rem] table-fixed border-collapse text-left">
-              <thead>
-                <tr>
-                  <th scope="col" className="w-[22%]"><span className="sr-only">Detail</span></th>
-                  {types.map(type => <th key={type.id} scope="col" className="px-3 pb-2 align-bottom font-normal [&_.font-display]:text-[1.2rem]">{heading(type)}</th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {groupRow('Areas & features')}
-                {rows.map(([label, value]) => <tr key={label} className="border-t border-line">
-                  <th scope="row" className="py-1.5 pr-3 align-top text-[0.55rem] font-medium uppercase leading-relaxed tracking-[0.18em] text-muted">{label}</th>
-                  {types.map(type => <td key={type.id} className="num px-3 py-1.5 align-top text-[0.74rem] text-fg">{value(type)}</td>)}
-                </tr>)}
-              </tbody>
-              {rooms.map(([group, list]) => <tbody key={group}>
-                {groupRow(`${group} · room dimensions`)}
-                {list.map(row => <tr key={row.name} className="border-t border-line">
-                  <th scope="row" className="py-1.5 pr-3 align-top text-[0.55rem] font-medium uppercase leading-relaxed tracking-[0.18em] text-muted">{row.name}</th>
-                  {row.cells.map((cell, i) => <td key={types[i].id} className="px-3 py-1.5 align-top text-[0.74rem] text-fg">
-                    {!cell ? <span className="text-muted">—</span>
-                      : <>
-                        {cell.size
-                          ? <span className={`num ${cell.largest ? 'font-medium text-accent' : ''}`}>{cell.size}</span>
-                          : <span className="text-[0.72rem] text-muted">{cell.note}</span>}
-                        {cell.size && <span className="block text-[0.6rem] text-muted">
-                          {cell.area && <><span className="num">≈ {area(cell.area)}</span> sq.ft</>}{cell.note && <> · {cell.note}</>}
-                        </span>}
-                      </>}
-                  </td>)}
-                </tr>)}
-              </tbody>)}
-            </table>
-          </div>
-          <p className="mt-2 text-[0.56rem] leading-relaxed tracking-[0.06em] text-muted">
-            Room sizes as printed on the plan sheets, width × depth. Room areas are worked out from those sizes and are indicative. Gold marks the largest of a room where two or more plans have it.
-          </p>
-        </div>}
+        // Each home's outlook side by side, from one height.
+        : view === 'views' ? <CompareViews key="views" types={types} />
+        // The details alone, for talking a visitor through two or three plans:
+        // each plan's card stays at the top while the sections scroll under it.
+        : <CompareDetails key="details" types={types} sections={sections} matching={matching} onlyDiff={onlyDiff} onOpen={onOpen} />}
     </div>
   </div>, document.querySelector('.page-frame') || document.body)
 }

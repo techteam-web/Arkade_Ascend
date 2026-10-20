@@ -26,7 +26,8 @@ const RenderNote = () => <p className="pointer-events-none absolute bottom-0 rig
 export default function ResidencesPage() {
   const { go, menuOpen } = useShell()
   // Visual selection or the unit finder takes over the page; ?finder (from a
-  // plan's "back to results") opens straight into the finder.
+  // plan's "back to results") opens straight into the finder, and
+  // ?finder=compare straight back into the comparison the plan was opened from.
   const [params] = useSearchParams()
   const [mode, setMode] = useState(() => params.has('finder') ? 'finder' : null)
   const visual = mode === 'visual'
@@ -109,7 +110,7 @@ export default function ResidencesPage() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [mode, viewing])
-  const openPlan = ({ plan, home }) => go(`/floor-plans?${home ? `home=${home}` : `plan=${plan}`}&from=finder`)
+  const openPlan = ({ plan, home, from = 'finder' }) => go(`/floor-plans?${home ? `home=${home}` : `plan=${plan}`}&from=${from}`)
 
   return <section className={`page page-scroll flex flex-col gap-8 ${mode ? '' : 'split:grid split:grid-cols-[minmax(0,29rem)_minmax(0,1fr)] split:gap-x-[5vw] 3xl:grid-cols-[minmax(0,36rem)_minmax(0,1fr)]'}`}>
     <div ref={intro} hidden={!!mode} className="flex flex-col justify-center-safe gap-[clamp(1.25rem,4vh,2.5rem)]">
@@ -187,7 +188,7 @@ export default function ResidencesPage() {
           <p className="-mt-2 text-right text-[0.52rem] uppercase tracking-[0.22em] text-muted/90">Architect’s impression</p>
         </div>
         : finder
-          ? <UnitFinder ref={region} onClose={close} onOpenPlan={openPlan} onView={setViewing} />
+          ? <UnitFinder ref={region} reopen={params.get('finder')} onClose={close} onOpenPlan={openPlan} onView={setViewing} />
           : <div ref={art} className="absolute inset-0 flex flex-col">
             <div data-reveal="fade" className="relative min-h-0 flex-1">
               <Suspense fallback={null}><OrbitView sky={false} zoom={1.3} className={FADE} label="Rendered orbit of the Arkade Ascend tower. Drag to turn it." /></Suspense>

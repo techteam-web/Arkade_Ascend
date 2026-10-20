@@ -219,6 +219,12 @@ html { font-size: 100%; }
   .btn-lux svg { width: 1.6rem; height: 0.6rem; stroke: currentColor; stroke-width: 1.1; fill: none; transition: transform .5s var(--ease-silk); }
   .btn-lux:where(:hover, :focus-visible) svg { transform: translateX(4px); }
   .btn-lux:disabled { opacity: .35; pointer-events: none; }
+  /* The page's main action: filled with the satin gold at rest. */
+  .btn-lux.is-solid { color: var(--color-espresso); border-color: transparent; }
+  .btn-lux.is-solid::before { transform: translateX(0); }
+  .btn-lux.is-solid:where(:hover, :focus-visible) { border-color: var(--color-gold-700); }
+  /* A way back: its arrow points and nudges left. */
+  .btn-lux.is-back:where(:hover, :focus-visible) svg { transform: translateX(-4px); }
 
   .btn-icon {
     display: inline-grid; place-items: center; width: 2.9rem; height: 2.9rem; flex: none;

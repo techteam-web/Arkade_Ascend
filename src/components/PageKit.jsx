@@ -48,11 +48,13 @@ export function TemplateNote({ children = 'Indicative content — to be confirme
 // (such as a configuration) are shown as they are. The number and its unit
 // are sized together to fit their own cell, so neighbouring figures can never
 // collide at any width.
-export function Figure({ value, suffix = '', label, decimals = 0, className = '' }) {
+export function Figure({ value, suffix = '', label, decimals = 0, fitTo = value, className = '' }) {
   const numeric = typeof value === 'number'
   const text = numeric ? value.toLocaleString('en-IN') : String(value)
   // Width in ems: figures ~0.66em, letters ~0.74em; the unit is set at 0.36em.
-  const width = text.length * (numeric ? 0.66 : 0.74) + (suffix ? 0.4 + suffix.length * 0.36 * 0.8 : 0)
+  // Figures set side by side can share one size by fitting the widest (`fitTo`).
+  const sized = typeof fitTo === 'number' ? fitTo.toLocaleString('en-IN') : String(fitTo)
+  const width = sized.length * (typeof fitTo === 'number' ? 0.66 : 0.74) + (suffix ? 0.4 + suffix.length * 0.36 * 0.8 : 0)
   const fit = `min(clamp(1.3rem, min(1.8vw, 3.6vh), 2.2rem), ${(100 / width).toFixed(1)}cqi)`
   return <div data-reveal className={`min-w-0 [container-type:inline-size] ${className}`}>
     <p className="num whitespace-nowrap leading-none text-fg" style={{ fontSize: fit }}>
