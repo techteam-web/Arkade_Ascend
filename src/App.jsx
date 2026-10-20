@@ -5,6 +5,7 @@ import FullscreenGate from './app/FullscreenGate.jsx'
 import SiteHeader from './app/SiteHeader.jsx'
 import MenuOverlay from './app/MenuOverlay.jsx'
 import TransitionStage from './app/TransitionStage.jsx'
+import LiftCurtain from './app/LiftCurtain.jsx'
 import Cursor from './app/Cursor.jsx'
 import { ShellContext } from './app/ShellContext.js'
 import { routeForPath } from './app/routes.js'
@@ -35,6 +36,7 @@ export default function App() {
   // Us on gold); it clears it again as it leaves.
   const [tone, setTone] = useState(null)
   const menuButton = useRef(null)
+  const curtain = useRef(null)   // the lift (LiftCurtain), driven by the stage
 
   // Where the Fullscreen API exists it is required; where it does not (for
   // example iPhone Safari) the gate becomes a one-time start screen.
@@ -91,11 +93,14 @@ export default function App() {
   // in the same commit as the new location (layout effect below).
   const menuOpenRef = useRef(menuOpen)
   menuOpenRef.current = menuOpen
+  // A choice in the menu rides the lift too: the menu stays up until the
+  // liquid has covered the screen, then closes beneath it (onCovered).
   const go = useCallback(path => {
     if (menuOpenRef.current && path === location.pathname) { setMenuOpen(false); return }
-    navigate(path, { state: { instant: menuOpenRef.current } })
+    navigate(path, { state: { fromMenu: menuOpenRef.current } })
   }, [navigate, location.pathname])
-  useLayoutEffect(() => { setMenuOpen(false) }, [location.key])
+  useLayoutEffect(() => { if (!location.state?.fromMenu) setMenuOpen(false) }, [location.key])
+  const onCovered = useCallback(() => setMenuOpen(false), [])
   const shell = useMemo(() => ({ openMenu: () => setMenuOpen(true), go, menuOpen, setTone }), [go, menuOpen])
 
   return <ShellContext.Provider value={shell}>
@@ -105,11 +110,12 @@ export default function App() {
       <div className={`page-frame transition-opacity duration-700 ${gated ? 'opacity-0' : 'opacity-100'}`}
         inert={gated ? '' : undefined} aria-hidden={gated || undefined}>
         <div className={`absolute inset-0 transition-opacity duration-700 ${menuOpen ? 'opacity-0' : 'opacity-100'}`} inert={menuOpen ? '' : undefined}>
-          <TransitionStage active={!gated} />
+          <TransitionStage active={!gated} onCovered={onCovered} curtain={curtain} />
         </div>
         <SiteHeader route={route} tone={tone} hidden={menuOpen} menuOpen={menuOpen}
           onMenu={() => setMenuOpen(true)} menuButton={menuButton} />
         <MenuOverlay open={menuOpen} currentId={route.id} onClose={closeMenu} onNavigate={go} />
+        <LiftCurtain ref={curtain} />
       </div>
       <div className="grain" aria-hidden="true" />
       {/* The BrainWing credit: small, at the foot of every screen, above

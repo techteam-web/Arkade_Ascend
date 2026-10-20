@@ -4,6 +4,8 @@ import { sections, pad } from './routes.js'
 import { ArkadeMark, BrandLockup, Roll } from '../components/Brand.jsx'
 import { rera } from '../content/project.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
+import GLImage from '../components/GLImage.jsx'
+import { prefetchImages } from './prefetch.js'
 
 // The menu rides the lift too (DESIGN.md): a plum curtain rises over the page
 // with a domed leading edge, the section names rise out of their masks, and
@@ -160,40 +162,10 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
   </div>
 }
 
-// Every section's picture, stacked; the one under consideration unveils from
-// the bottom up over the last one shown, which then steps back.
+// The picture of the section under consideration, in WebGL: each new one rises
+// in over the last through a liquid front (GLImage). All of them load when
+// the menu first opens, so the rise starts at once.
 function Previews({ shown }) {
-  const root = useRef(null)
-  const last = useRef(shown)
-  // GSAP alone owns the pictures' visibility, so a re-render never reveals or
-  // hides one out of turn.
-  useLayoutEffect(() => {
-    const items = [...root.current.children]
-    const previous = last.current
-    last.current = shown
-    if (previous === shown || prefersReducedMotion()) {
-      items.forEach((item, i) => gsap.set(item, { autoAlpha: i === shown ? 1 : 0, zIndex: i === shown ? 2 : 0, clipPath: 'inset(0% 0% 0% 0%)' }))
-      return
-    }
-    items.forEach((item, i) => { if (i !== shown && i !== previous) gsap.set(item, { autoAlpha: 0, zIndex: 0 }) })
-    gsap.set(items[previous], { zIndex: 1 })
-    gsap.killTweensOf([items[shown], items[shown].firstElementChild])
-    const timeline = gsap.timeline()
-      .set(items[shown], { zIndex: 2, autoAlpha: 1 })
-      .fromTo(items[shown], { clipPath: 'inset(100% 0% 0% 0%)' }, { clipPath: 'inset(0% 0% 0% 0%)', duration: 0.85, ease: 'curtain' }, 0)
-      .fromTo(items[shown].firstElementChild, { scale: 1.14, yPercent: 5 }, { scale: 1, yPercent: 0, duration: 1.3, ease: 'rise' }, 0)
-      .set(items[previous], { autoAlpha: 0, zIndex: 0 }, 0.85)
-    return () => timeline.progress(1)
-  }, [shown])
-
-  return <div ref={root} className="absolute inset-0">
-    {sections.map(route => <div key={route.id} className="invisible absolute inset-0 overflow-hidden">
-      {/* A logo sits a little above centre, clear of the caption below. */}
-      {route.previewLogo
-        ? <div className="absolute inset-0 grid place-items-center bg-[radial-gradient(ellipse_70%_60%_at_55%_42%,#5f444a,#3a272c_55%,#1f1417)] pb-[18vh]">
-          <img src={route.preview} alt="" loading="lazy" draggable="false" className="w-[min(48%,34rem)] select-none" />
-        </div>
-        : <img src={route.preview} alt="" loading="lazy" draggable="false" className="absolute inset-0 size-full select-none object-cover" />}
-    </div>)}
-  </div>
+  useEffect(() => prefetchImages(sections.map(route => ({ src: route.preview })), '62vw'), [])
+  return <GLImage src={sections[shown].preview} sizes="62vw" alt="" ripple={false} />
 }

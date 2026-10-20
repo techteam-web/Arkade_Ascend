@@ -3,6 +3,7 @@ import { gsap, countUp } from '../app/reveal.js'
 import { pad } from '../app/routes.js'
 import { ArkadeMark, Roll } from '../components/Brand.jsx'
 import { PageHeading } from '../components/PageKit.jsx'
+import GLImage from '../components/GLImage.jsx'
 import { landmarks, legacy, portfolio } from '../content/arkadeFamily.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import { useShell } from '../app/ShellContext.js'
@@ -105,8 +106,7 @@ export default function ArkadeFamilyPage() {
 function Frame({ image, focus, ratio, badge, className = '', children }) {
   const [badgeShown, setBadgeShown] = useState(true)
   return <figure data-reveal="mask" data-part-frame className={`relative m-0 shrink-0 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 ${ratio} split:aspect-auto split:min-h-52 split:flex-1 split:shrink ${className}`}>
-    <img data-part-image src={image.src} srcSet={image.srcSet} sizes="(min-width: 64rem) 62vw, 100vw" alt={image.alt} draggable="false"
-      className="absolute inset-0 size-full select-none object-cover" style={{ objectPosition: focus }} />
+    <GLImage src={image.src} srcSet={image.srcSet} sizes="(min-width: 64rem) 62vw, 100vw" alt={image.alt} focus={focus} />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/90 via-ink/35 via-45% to-transparent" />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-ink/45 to-transparent to-60%" />
     {badge && badgeShown && <img src={badge.src} srcSet={badge.srcSet} sizes="6rem" alt={badge.alt} draggable="false" onError={() => setBadgeShown(false)}

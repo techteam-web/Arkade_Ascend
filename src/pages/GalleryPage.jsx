@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import { createPortal } from 'react-dom'
 import { ImageSlot, PageHeading } from '../components/PageKit.jsx'
 import { ChevronIcon } from '../components/Brand.jsx'
@@ -26,7 +27,33 @@ export default function GalleryPage() {
   const root = useRef(null)
   const filtered = gallery.filter(image => image.category === category)
   const selected = filtered[index] || filtered[0]
-  const step = direction => filtered.length && setIndex(value => (value + direction + filtered.length) % filtered.length)
+  // The WebGL strip (gallery/GalleryStage.js); without WebGL, the filmstrip below.
+  const canvas = useRef(null)
+  const stage = useRef(null)
+  const [strip, setStrip] = useState('loading')   // loading | ready | none
+  const step = direction => {
+    if (!filtered.length) return
+    if (stage.current) stage.current.step(direction)
+    else setIndex(value => (value + direction + filtered.length) % filtered.length)
+  }
+  useEffect(() => {
+    let cancelled = false
+    import('./gallery/GalleryStage.js').then(({ createGalleryStage }) => {
+      if (cancelled || !canvas.current) return
+      stage.current = createGalleryStage(canvas.current, { reduced: prefersReducedMotion(), onIndex: setIndex, onOpen: () => setLightbox(true) })
+      if (!stage.current) { setStrip('none'); return }
+      stage.current.setItems(gallery.filter(image => image.category === category), 0)
+      setStrip('ready')
+    }).catch(() => { if (!cancelled) setStrip('none') })
+    return () => { cancelled = true; stage.current?.dispose(); stage.current = null }
+  }, [])
+  // A new tab lays its pictures on the strip.
+  const laid = useRef(category)
+  useEffect(() => {
+    if (laid.current === category) return
+    laid.current = category
+    stage.current?.setItems(filtered, 0)
+  }, [category])
   useStepper(root, { onNext: () => step(1), onPrev: () => step(-1), lock: 650, keys: !lightbox })
 
   useEffect(() => {
@@ -50,8 +77,15 @@ export default function GalleryPage() {
       </div>
     </div>
 
-    <div data-reveal="fade" className="relative min-h-0 overflow-hidden @container-size" role="region" aria-roledescription="carousel" aria-label="Gallery images">
-      {filtered.map((image, i) => {
+    <div data-reveal="fade" data-own-gesture className="relative min-h-0 overflow-hidden @container-size" role="region" aria-roledescription="carousel" aria-label="Gallery images">
+      {/* The renders on a curved strip in WebGL: drag it, or click one to bring it to the centre. */}
+      {strip !== 'none' && <canvas ref={canvas} data-cursor="Drag" aria-hidden="true"
+        className={`absolute inset-0 size-full touch-none transition-opacity duration-700 ${strip === 'ready' ? 'opacity-100' : 'opacity-0'}`} />}
+      {strip !== 'none' && selected && <div key={`${category}-${index}`} className="finder-in pointer-events-none absolute inset-x-0 bottom-0 flex flex-col items-center gap-1.5 text-center">
+        <span className="text-[0.6rem] uppercase tracking-[0.34em] text-gold-200">{selected.category}</span>
+        {describe(selected) && <span className="font-display text-[clamp(1.1rem,min(2vw,3.6vh),1.8rem)] leading-tight text-ivory">{describe(selected)}</span>}
+      </div>}
+      {strip === 'none' && filtered.map((image, i) => {
         const offset = (i - index + filtered.length) % filtered.length
         const pose = offset === 0 ? 'center' : offset === 1 ? 'right' : offset === filtered.length - 1 ? 'left' : 'back'
         // The image on show and two either side load; the rest wait their turn.
@@ -73,6 +107,8 @@ export default function GalleryPage() {
           </figcaption>}
         </figure>
       })}
+      {/* The open picture: the centre one opens full screen from the keyboard too. */}
+      {strip === 'ready' && selected && <button type="button" className="visually-hidden" onClick={() => setLightbox(true)}>View {selected.category} image {index + 1} full screen</button>}
       {/* A tab without renders yet holds the framed placeholder. */}
       {!selected && <div className="absolute left-1/2 top-1/2 aspect-16/10 w-[min(64cqw,calc(100cqh*1.45))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-sm border border-gold-500/30 max-md:w-[min(94cqw,calc(100cqh*1.45))]">
         <ImageSlot label="Renders to follow" />

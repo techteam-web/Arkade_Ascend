@@ -2,7 +2,6 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { Navigate, Route, Routes, useLocation } from 'react-router'
 import { gsap, revealIn, revealOut, primeReveal, settleReveal } from './reveal.js'
 import { routeForPath, sectionIndex } from './routes.js'
-import LiftCurtain from './LiftCurtain.jsx'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import { sceneStore } from '../scenes/sceneStore.js'
 import HomePage from '../pages/HomePage.jsx'
@@ -23,11 +22,11 @@ import ArkadeFamilyPage from '../pages/ArkadeFamilyPage.jsx'
 // earlier one down. From the menu (the old page already hidden) and under
 // reduced motion the swap is immediate. The WebGL scene blends to the new
 // preset underneath at the same time.
-export default function TransitionStage({ active }) {
+// The lift itself lives in the shell (App.jsx), above the menu; `curtain` is its handle.
+export default function TransitionStage({ active, onCovered, curtain }) {
   const location = useLocation()
   const [shown, setShown] = useState(location)
   const stage = useRef(null)
-  const curtain = useRef(null)
   const leaving = useRef(null)
   const arriving = useRef(null)   // the current page's entrance timeline
   // { direction, to } from the moment the lift sets off until it has let the
@@ -66,6 +65,7 @@ export default function TransitionStage({ active }) {
     if (location.state?.instant || prefersReducedMotion()) {
       lifting.current = null
       curtain.current?.clear()
+      onCovered?.()
       setShown(location)
       return
     }
@@ -76,7 +76,7 @@ export default function TransitionStage({ active }) {
     const toRoute = routeForPath(location.pathname)
     const direction = sectionIndex(toRoute.id) >= sectionIndex(fromRoute.id) ? 1 : -1
     lifting.current = { direction, to: location.pathname }
-    leaving.current = gsap.timeline({ onComplete: () => setShown(latest.current) })
+    leaving.current = gsap.timeline({ onComplete: () => { onCovered?.(); setShown(latest.current) } })
       .add(revealOut(stage.current, direction), 0)
       .add(curtain.current.cover({ fromRoute, toRoute, direction }), 0)
       .to({}, { duration: 0.12 })
@@ -120,7 +120,6 @@ export default function TransitionStage({ active }) {
   }, [shown.pathname])
 
   return <>
-    <LiftCurtain ref={curtain} />
     <div ref={stage} className="absolute inset-0" key={shown.pathname}>
       <Routes location={shown}>
         <Route path="/" element={<HomePage />} />

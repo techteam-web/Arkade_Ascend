@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
-import { ImageSlot, PageHeading, RiseImage } from '../components/PageKit.jsx'
+import { ImageSlot, PageHeading } from '../components/PageKit.jsx'
+import GLImage from '../components/GLImage.jsx'
 import { prefetchImages } from '../app/prefetch.js'
 import { ChevronIcon } from '../components/Brand.jsx'
 import { amenityGroups, club } from '../content/project.js'
@@ -91,7 +92,7 @@ export default function AmenitiesPage() {
             several pictures rises through them in turn); one without a
             photograph yet shows the framed placeholder. */}
         {picture
-          ? <RiseImage src={picture.src} srcSet={picture.srcSet} sizes={PHOTO_SIZES} alt={active.name} focus={shownImage?.focus ?? active.focus} />
+          ? <GLImage src={picture.src} srcSet={picture.srcSet} sizes={PHOTO_SIZES} alt={active.name} focus={shownImage?.focus ?? active.focus} />
           : <div className="absolute inset-0"><ImageSlot label="Image to follow" className="pb-[22%]" /></div>}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-3/5 bg-linear-to-t from-ink/85 via-ink/35 to-transparent" />
         <figcaption ref={caption} className="absolute inset-x-0 bottom-0 px-[clamp(1.25rem,3vw,2.5rem)] pb-[clamp(1.1rem,3vh,2.25rem)] text-ivory">

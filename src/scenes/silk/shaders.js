@@ -123,17 +123,36 @@ export const backdropVertex = /* glsl */ `
   void main() { vUv = uv; gl_Position = vec4(position.xy, 0.9999, 1.0); }
 `
 
-// A still gradient with one soft pool of light and a gentle vignette.
+// The ground of every page: the mood's gradient, alive (DESIGN.md). Slow
+// satin folds flow through it (domain-warped noise), a pool of light sits
+// where the mood puts it, and the pointer carries a soft light of its own.
 export const backdropFragment = /* glsl */ `
   uniform vec3 uTop, uBottom, uGlow;
-  uniform vec2 uGlowPos;
-  uniform float uGlowStrength, uVignette, uAspect;
+  uniform vec2 uGlowPos, uPointer;
+  uniform float uGlowStrength, uVignette, uAspect, uTime, uPointerAmt, uLife;
   varying vec2 vUv;
   ${noiseChunk}
+  float vnoise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1, 0)), u.x), mix(hash(i + vec2(0, 1)), hash(i + vec2(1, 1)), u.x), u.y);
+  }
+  float fbm(vec2 p) { float v = 0.0, a = 0.5; for (int i = 0; i < 4; i++) { v += a * vnoise(p); p = p * 2.03 + 7.1; a *= 0.5; } return v; }
   void main() {
     vec3 col = mix(uBottom, uTop, smoothstep(0.0, 1.0, vUv.y));
+    // satin folds drifting across the ground
+    vec2 p = vec2(vUv.x * uAspect, vUv.y) * 1.25;
+    float t = uTime * 0.035;
+    vec2 q = vec2(fbm(p + vec2(0.0, t)), fbm(p + vec2(5.2, -t)));
+    float f = fbm(p + 1.9 * q + vec2(t * 0.7, -t * 0.3));
+    float ridge = smoothstep(0.42, 0.8, f) - smoothstep(0.8, 1.0, f) * 0.5;
+    col = mix(col, col * 1.22 + uGlow * 0.05, ridge * 0.6 * uLife);
+    col *= mix(1.0, 0.9 + 0.1 * smoothstep(0.2, 0.8, q.x), uLife);
     vec2 d = (vUv - uGlowPos) * vec2(uAspect, 1.0);
     col = mix(col, uGlow, uGlowStrength * exp(-dot(d, d) * 1.6));
+    // the pointer's own soft light
+    vec2 pd = (vUv - uPointer) * vec2(uAspect, 1.0);
+    col += uGlow * uPointerAmt * 0.14 * exp(-dot(pd, pd) * 7.0) * uLife;
     vec2 c = (vUv - 0.5) * vec2(min(uAspect, 2.2), 1.0);
     col *= 1.0 - uVignette * smoothstep(0.45, 1.25, length(c));
     gl_FragColor = vec4(col, 1.0);

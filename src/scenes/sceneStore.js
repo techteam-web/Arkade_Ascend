@@ -17,7 +17,7 @@ export const presets = {
   home: {
     top: '#2c1b1f', bottom: '#120b0d', glow: '#5c3f3e', glowPos: [0.5, 0.52], glowStrength: 0.8, vignette: 0.55,
     shadow: '#2a160e', mid: '#946a3d', high: '#f2d5a3', opacity: 0, sheer: 0.42,
-    pose: { x: 0, y: -0.04, rot: -0.12, scale: 1 }, speed: 0.8,
+    pose: { x: 0, y: -0.04, rot: -0.12, scale: 1 }, speed: 0.8, covered: true,
   },
   // Page 2 exactly: the #cea572 gold ground and a champagne veil.
   gilded: {
@@ -45,12 +45,14 @@ export const presets = {
   // Page 3's plum ground.
   homebuyers: still('#4f353b', '#382629', '#5f4449', [0.25, 0.5], 0.35, 0.45),
   plum: still('#553a40', '#3c292e', '#6b4e54', [0.72, 0.6], 0.45, 0.4),
-  tower: still('#24171b', '#0e090a', '#4d3438', [0.64, 0.42], 0.7, 0.55),
+  tower: { ...still('#24171b', '#0e090a', '#4d3438', [0.64, 0.42], 0.7, 0.55), covered: true },
   residences: still('#2a1a1e', '#110a0c', '#553a3a', [0.62, 0.45], 0.6, 0.5),
   // Pages 5 and 6: cream paper.
   cream: still('#f8f3de', '#ebe0bb', '#fffaf0', [0.25, 0.8], 0.45, 0.14),
   amenities: still('#2b1b1f', '#100a0b', '#523838', [0.5, 0.5], 0.6, 0.55),
-  views: still('#1a1012', '#0b0607', '#3a2427', [0.5, 0.5], 0.4, 0.6),
+  views: { ...still('#1a1012', '#0b0607', '#3a2427', [0.5, 0.5], 0.4, 0.6), covered: true },
+  // The Location map covers the whole page.
+  map: { ...still('#f8f3de', '#ebe0bb', '#fffaf0', [0.25, 0.8], 0.45, 0.14), covered: true },
   gallery: still('#26181c', '#0f090a', '#4a3134', [0.5, 0.45], 0.6, 0.55),
   menu: still('#26181c', '#0c0708', '#50363a', [0.74, 0.5], 0.7, 0.6),
 }

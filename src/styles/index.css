@@ -363,6 +363,8 @@ html { font-size: 100%; }
     position: absolute; inset: 0; will-change: transform;
     border-radius: 50% 50% 50% 50% / var(--dome-top, 0px) var(--dome-top, 0px) var(--dome-bottom, 0px) var(--dome-bottom, 0px);
   }
+  /* With the liquid (WebGL 2) the panels stay hidden; they are the fallback. */
+  .lift[data-liquid="true"] .lift-fallback { display: none; }
   .lift-lining { background: linear-gradient(172deg, #5a4046 0%, #3d2a2f 45%, #1b1113 100%); }
   .lift-satin {
     overflow: hidden;
@@ -382,8 +384,10 @@ html { font-size: 100%; }
     font-size: clamp(6.5rem, 34vh, 22rem); line-height: .86; letter-spacing: -.045em; padding-bottom: .04em;
     color: rgba(56, 32, 19, .78); mix-blend-mode: multiply;
   }
-  .lift-digit { display: block; text-align: center; }
-  .lift-digit-next { position: absolute; inset: 0; }
+  /* Both stops share one grid cell, so the display is as wide as the wider. */
+  .lift-display { display: grid; }
+  .lift-digit { grid-area: 1 / 1; display: block; text-align: center; }
+  .lift-digit-next { grid-area: 1 / 1; }
   .lift-name {
     margin: 0; font-family: var(--font-display); text-transform: uppercase; letter-spacing: .16em; padding-left: .16em;
     font-size: clamp(1.1rem, 3.6vh, 2.4rem); color: rgba(47, 28, 20, .86);

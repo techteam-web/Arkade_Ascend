@@ -2,7 +2,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { gsap } from '../app/reveal.js'
 import { prefetchImages } from '../app/prefetch.js'
-import { PageHeading, RiseImage } from '../components/PageKit.jsx'
+import { PageHeading } from '../components/PageKit.jsx'
+import GLImage from '../components/GLImage.jsx'
 import { Roll } from '../components/Brand.jsx'
 import { specifications } from '../content/project.js'
 import { pad } from '../app/routes.js'
@@ -89,8 +90,8 @@ export default function SpecificationsPage() {
     <div ref={panel} id="spec-panel" role="tabpanel" aria-labelledby={`spec-tab-${spec.id}`}
       className="grid shrink-0 items-center gap-8 split:min-h-0 split:shrink md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] md:gap-[4vw]">
       <div ref={frame} data-reveal="mask" className="relative aspect-4/3 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 md:aspect-auto md:h-[min(76cqh,52rem)] md:min-h-72">
-        {/* A new photograph rises in over the last. */}
-        <RiseImage src={current.src} srcSet={current.srcSet} sizes="(min-width: 48rem) 45vw, 100vw" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} focus={current.focus} />
+        {/* A new photograph rises in over the last, through a liquid front; it ripples under the pointer. */}
+        <GLImage src={current.src} srcSet={current.srcSet} sizes="(min-width: 48rem) 45vw, 100vw" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} focus={current.focus} />
         <button ref={opener} type="button" className="btn-icon absolute right-3 top-3 z-1" onClick={() => setLightbox(true)} aria-label={`View ${spec.title} image full screen`}>
           <svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></svg>
         </button>

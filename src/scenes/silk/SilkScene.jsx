@@ -96,29 +96,43 @@ function World({ quality }) {
     const blending = COLOR_KEYS.some(key => Math.abs(theme[key].r - target[key].r) + Math.abs(theme[key].g - target[key].g) + Math.abs(theme[key].b - target[key].b) > 0.002)
       || NUMBER_KEYS.some(key => Math.abs(theme[key] - target[key]) > 0.002)
       || POSE_KEYS.some(key => Math.abs(theme.pose[key] - target.pose[key]) > 0.002)
-    sceneStore.dirty = blending || (theme.opacity > 0.004 && !reducedMotion())
+    // The ground itself is alive (it flows), so it keeps drawing, except where
+    // a page covers it whole (Home's own scene, the orbit, the panoramas, the
+    // map), behind the menu, and under reduced motion.
+    const covered = presets[sceneStore.preset]?.covered || sceneStore.menuOpen
+    sceneStore.dirty = blending || (theme.opacity > 0.004 && !reducedMotion()) || (!covered && !reducedMotion())
   }, -2)
   return <>
-    <Backdrop theme={theme} />
+    <Backdrop theme={theme} pointer={pointer} />
     <Veil theme={theme} pointer={pointer} quality={quality} />
     <CameraRig pointer={pointer} />
   </>
 }
 
-function Backdrop({ theme }) {
+function Backdrop({ theme, pointer }) {
   const { size } = useThree()
+  const clock = useRef(0)
   const material = useMemo(() => new THREE.ShaderMaterial({
     vertexShader: backdropVertex, fragmentShader: backdropFragment,
     depthTest: false, depthWrite: false,
     uniforms: {
       uTop: { value: theme.top }, uBottom: { value: theme.bottom }, uGlow: { value: theme.glow },
       uGlowPos: { value: theme.glowPos }, uGlowStrength: { value: 0 }, uVignette: { value: 0 }, uAspect: { value: 1 },
+      uTime: { value: 0 }, uPointer: { value: new THREE.Vector2(0.5, 0.5) }, uPointerAmt: { value: 0 }, uLife: { value: 1 },
     },
   }), [theme])
-  useFrame(() => {
-    material.uniforms.uGlowStrength.value = theme.glowStrength
-    material.uniforms.uVignette.value = theme.vignette
-    material.uniforms.uAspect.value = size.width / Math.max(size.height, 1)
+  useFrame((_, delta) => {
+    const u = material.uniforms
+    const still = reducedMotion()
+    if (!still) clock.current += Math.min(delta, 0.05)
+    u.uTime.value = clock.current
+    u.uLife.value = still ? 0 : 1
+    u.uGlowStrength.value = theme.glowStrength
+    u.uVignette.value = theme.vignette
+    u.uAspect.value = size.width / Math.max(size.height, 1)
+    const p = pointer.current
+    u.uPointer.value.set(p.x * 0.5 + 0.5, p.y * 0.5 + 0.5)
+    u.uPointerAmt.value = p.amount
   })
   useLayoutEffect(() => () => material.dispose(), [material])
   return <mesh material={material} renderOrder={-10} frustumCulled={false}><planeGeometry args={[2, 2]} /></mesh>
