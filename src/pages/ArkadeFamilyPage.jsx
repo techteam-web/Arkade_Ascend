@@ -113,7 +113,7 @@ function Frame({ image, focus, ratio, badge, className = '', children }) {
       className="pointer-events-none absolute right-[clamp(0.75rem,1.6vw,1.5rem)] top-[clamp(0.75rem,1.6vw,1.5rem)] h-auto w-[clamp(3rem,5.5vw,5.5rem)] select-none drop-shadow-[0_2px_10px_rgba(18,11,13,.45)]" />}
     <figcaption className="absolute inset-x-0 bottom-0 px-[clamp(1.1rem,2.6vw,2.5rem)] pb-[clamp(1rem,3vh,2.25rem)] text-ivory">{children}</figcaption>
     {/* Small, in the photograph's bottom right corner (client, 16 Oct 2026). */}
-    <p className="pointer-events-none absolute bottom-2 right-3 text-[0.5rem] uppercase leading-none tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">Representational image</p>
+    <p className="photo-note absolute bottom-2 right-2.5">Representational image</p>
   </figure>
 }
 

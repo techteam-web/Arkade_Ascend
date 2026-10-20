@@ -94,7 +94,7 @@ export default function SpecificationsPage() {
         <button ref={opener} type="button" className="btn-icon absolute right-3 top-3 z-1" onClick={() => setLightbox(true)} aria-label={`View ${spec.title} image full screen`}>
           <svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></svg>
         </button>
-        <p className="pointer-events-none absolute bottom-2.5 left-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">{current.note ?? 'Representational image'}</p>
+        <p className="photo-note absolute bottom-2.5 left-3">{current.note ?? 'Representational image'}</p>
       </div>
       <div data-reveal>
         <p className="eyebrow num">{pad(index + 1)} / {pad(specifications.length)}</p>

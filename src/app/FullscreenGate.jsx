@@ -40,6 +40,10 @@ export default function FullscreenGate({ open, resumed, keyboardLocked, supporte
   const lockup = useRef(null)
   // Loading is shown once, on the first opening; a paused gate is ready at once.
   const [ready, setReady] = useState(resumed)
+  // What the gate says is fixed when it opens, so it never reads "paused"
+  // while it lifts away after the first tap.
+  const [paused, setPaused] = useState(resumed)
+  useEffect(() => { if (open) setPaused(resumed) }, [open, resumed])
   const loaded = useRef({ value: 0, target: 0 })
 
   // Real progress: each file or the fonts settling moves the target; the
@@ -111,18 +115,18 @@ export default function FullscreenGate({ open, resumed, keyboardLocked, supporte
     <div ref={panel} className="lift-panel" style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 46%, #2d1e22, #170e10 62%, #0c0708)' }} />
     <button ref={button} type="button" onClick={onEnter}
       className="gate-content group absolute inset-0 flex h-full w-full cursor-pointer flex-col items-center justify-center-safe overflow-y-auto px-6 py-10 text-center text-ivory outline-none"
-      aria-label={resumed ? 'Resume the presentation in full screen' : 'Enter the Arkade Ascend presentation in full screen'}>
+      aria-label={paused ? 'Resume the presentation in full screen' : 'Enter the Arkade Ascend presentation in full screen'}>
       {/* The lift shaft and its counter, climbing with the loading. */}
-      {!resumed && <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-(--gutter) top-0 w-px">
+      {!paused && <span aria-hidden="true" className={`pointer-events-none absolute bottom-0 left-(--gutter) top-0 w-px transition-opacity duration-1000 ${ready ? 'opacity-40' : ''}`}>
         <span className="absolute inset-0 bg-gold-500/15" />
         <span ref={shaft} className="absolute inset-0 origin-bottom scale-y-0 bg-linear-to-t from-gold-500 via-gold-300 to-gold-100" />
         <span className="absolute left-3 whitespace-nowrap text-left" style={{ bottom: '0%' }}>
-          <span ref={counter} className="num block text-[clamp(1.5rem,3vw,2.5rem)] leading-none text-gold-100">00</span>
+          <span ref={counter} className={`num block text-[clamp(1.5rem,3vw,2.5rem)] leading-none text-gold-100 transition-opacity duration-700 ${ready ? 'opacity-0' : ''}`}>00</span>
           <span className={`mt-1 block text-[0.52rem] uppercase tracking-[0.3em] transition-opacity duration-700 ${ready ? 'opacity-0' : 'text-gold-300/70'}`}>Loading</span>
         </span>
       </span>}
 
-      {resumed && <span className="gate-rise eyebrow mb-8 short:mb-4">Presentation paused</span>}
+      {paused && <span className="gate-rise eyebrow mb-8 short:mb-4">Presentation paused</span>}
       {/* The white Arkade Ascend · Malad West lockup, drawing itself in. */}
       <span ref={lockup} className="gate-rise block w-[min(36rem,78vw)] short:w-[min(24rem,58vw)]">
         <AscendLockup className="block aspect-[1029/162] h-auto w-full text-white" />
@@ -135,14 +139,15 @@ export default function FullscreenGate({ open, resumed, keyboardLocked, supporte
         </span>
         <span className="text-left">
           <span className="block font-display text-[clamp(1.1rem,2.2vw,1.6rem)] uppercase tracking-[0.06em]">
-            {resumed ? 'Tap to resume' : 'Tap anywhere to begin'}
+            <span className="pointer-fine:hidden">{paused ? 'Tap to resume' : 'Tap anywhere to begin'}</span>
+            <span className="hidden pointer-fine:inline">{paused ? 'Click to resume' : 'Click anywhere to begin'}</span>
           </span>
           <span className="mt-1 block text-[0.64rem] uppercase tracking-[0.28em] text-gold-300/80">
             {supported ? 'Opens in full screen' : 'Best viewed in landscape'}
           </span>
         </span>
       </span>
-      <span className={`mt-12 max-w-md text-[0.68rem] leading-relaxed tracking-[0.08em] text-ivory/55 transition-opacity delay-200 duration-1000 short:mt-5 ${ready ? 'opacity-100' : 'opacity-0'}`}>
+      <span className={`mt-12 max-w-md text-[0.68rem] leading-relaxed tracking-[0.08em] text-ivory/60 [text-wrap:balance] transition-opacity delay-200 duration-1000 short:mt-5 ${ready ? 'opacity-100' : 'opacity-0'}`}>
         {supported
           ? keyboardLocked || holdToLeave ? 'This presentation is viewed in full screen only. Press and hold Esc to leave.' : 'This presentation is viewed in full screen only. Leaving full screen pauses it.'
           : 'Full screen is not available in this browser, so the presentation opens in the window.'}

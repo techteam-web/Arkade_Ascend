@@ -22,7 +22,7 @@ export const legacy = {
   // the standard is shown until the full version is confirmed.
   certifications: [
     { name: 'ISO 9001', scope: 'Quality management systems' },
-    { name: 'ISO 45001:2018', scope: 'Occupational health & safety management systems' },
+    { name: 'ISO\u00a045001:2018', scope: 'Occupational health & safety management systems' },
   ],
   image: { src: '/arkade-family/legacy-skyline-1600.webp', srcSet: '/arkade-family/legacy-skyline-1600.webp 1600w, /arkade-family/legacy-skyline-2880.webp 2880w', alt: 'A city of residential towers among trees at sunset, a rainbow over the skyline' },
   // The client's "Trusted for timely delivery" seal, at the photograph's top

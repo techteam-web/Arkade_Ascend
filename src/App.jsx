@@ -41,6 +41,13 @@ export default function App() {
   const gated = !bypassGate && (fullscreen.supported ? !fullscreen.active : !started)
   useEffect(() => { if (!gated) setEverStarted(true) }, [gated])
   useEffect(() => { if (gated) setMenuOpen(false) }, [gated])
+  // The pointer's follower waits until the gate has lifted away.
+  useEffect(() => {
+    const html = document.documentElement
+    if (gated) { html.setAttribute('data-gated', ''); return }
+    const timer = setTimeout(() => html.removeAttribute('data-gated'), 1100)
+    return () => clearTimeout(timer)
+  }, [gated])
   // The menu has its own quiet mood. Closing it
   // without navigating restores the page's own mood; after a navigation the
   // new page's mood (set by the route effect) stands.

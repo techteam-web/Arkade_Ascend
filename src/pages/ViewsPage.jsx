@@ -203,6 +203,7 @@ export default function ViewsPage() {
     {/* Shade the corners that carry text, so it reads over bright sky. */}
     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(18,11,13,.62),transparent_30%,transparent_62%,rgba(18,11,13,.85))]" />
     <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_55%_42%_at_0%_0%,rgba(18,11,13,.55),transparent)]" />
+    <div className="pointer-events-none absolute inset-x-0 top-0 h-[46%] bg-linear-to-b from-ink/70 via-ink/35 to-transparent sm:hidden" />
 
     <div className="page pointer-events-none flex flex-col justify-between">
       <div className="flex"><PageHeading id="views" title="Views" subtitle="The city from above" className="pointer-events-auto flex-1" /></div>
@@ -228,7 +229,7 @@ export default function ViewsPage() {
           </>}
         </div>
       </div>
-      <p className="pointer-events-none absolute bottom-1.5 right-(--gutter) text-[0.5rem] uppercase tracking-plus text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.6)] max-sm:bottom-6">Shot on location</p>
+      <p className="photo-note absolute bottom-1.5 right-(--gutter) max-sm:bottom-6">Shot on location</p>
       <p className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.5rem] uppercase tracking-plus text-ivory/45">
         <span className="num">360</span>° aerial panorama<span className="max-sm:hidden"> · views from each residence vary</span>
       </p>

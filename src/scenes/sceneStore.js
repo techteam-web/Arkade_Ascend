@@ -16,7 +16,7 @@ export const presets = {
   // Espresso night with the gold veil across the title.
   home: {
     top: '#2c1b1f', bottom: '#120b0d', glow: '#5c3f3e', glowPos: [0.5, 0.52], glowStrength: 0.8, vignette: 0.55,
-    shadow: '#2a160e', mid: '#946a3d', high: '#f2d5a3', opacity: 0.92, sheer: 0.42,
+    shadow: '#2a160e', mid: '#946a3d', high: '#f2d5a3', opacity: 0, sheer: 0.42,
     pose: { x: 0, y: -0.04, rot: -0.12, scale: 1 }, speed: 0.8,
   },
   // Page 2 exactly: the #cea572 gold ground and a champagne veil.

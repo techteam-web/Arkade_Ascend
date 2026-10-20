@@ -150,6 +150,12 @@ html { font-size: 100%; }
     padding: calc(var(--header-h) + 0.5rem) var(--gutter) max(clamp(1rem, 4vh, 3rem), var(--credit-space));
     color: var(--tone-fg);
   }
+  /* A page that scrolls fades out as it passes through the credit's band at
+     the foot, so nothing reads under the BrainWing logo. */
+  .page.page-scroll {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--credit-space) - .25rem), transparent calc(100% - var(--credit-space) + 1.25rem));
+    mask-image: linear-gradient(to bottom, #000 calc(100% - var(--credit-space) - .25rem), transparent calc(100% - var(--credit-space) + 1.25rem));
+  }
   .page-scroll {
     overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
     scrollbar-width: thin; scrollbar-color: color-mix(in oklab, var(--color-gold-500) 50%, transparent) transparent;
@@ -387,6 +393,7 @@ html { font-size: 100%; }
      cursor, larger over anything that answers a click, naming what it does. */
   .cursor { position: fixed; left: 0; top: 0; z-index: 120; pointer-events: none; opacity: 0; transition: opacity .4s; }
   .cursor[data-shown="true"] { opacity: 1; }
+  :root[data-gated] .cursor { opacity: 0; }
   .cursor-ring { position: absolute; left: 0; top: 0; width: 0; height: 0; }
   .cursor-circle {
     position: absolute; left: -1.25rem; top: -1.25rem; width: 2.5rem; height: 2.5rem; border-radius: 50%;
@@ -452,6 +459,16 @@ html { font-size: 100%; }
   }
   @media (max-width: 63.999rem) and (orientation: portrait) { .home-word { font-size: 19.5cqw; top: calc(var(--win-top) + var(--win-h) * .62); } }
   .home-scale { position: absolute; top: var(--win-top); height: var(--win-h); left: calc(50% + var(--win-w) / 2 + clamp(.75rem, 2.2cqw, 2.25rem)); width: clamp(3rem, 12cqw, 10rem); color: var(--color-gold-200); }
+  /* With the 3D tower the scale stands at the screen's right, clear of it. */
+  .home-scale-side {
+    position: absolute; z-index: 10; color: var(--color-gold-200);
+    right: calc(var(--gutter) + clamp(1.5rem, 5cqw, 6rem)); width: clamp(3rem, 9cqw, 8.5rem);
+    top: calc(var(--header-h) + 5cqh); height: calc(100cqh - var(--header-h) - var(--foot-h) - 7cqh);
+  }
+  @media (max-width: 63.999rem) and (orientation: portrait) {
+    .home-scale-side { right: var(--gutter); width: 3.25rem; top: calc(var(--header-h) + 3cqh); height: calc(100cqh - var(--header-h) - var(--foot-h) - 6cqh); }
+  }
+  @media (max-height: 34rem) { .home-scale-side { top: calc(var(--header-h) + .5rem); height: calc(100cqh - var(--header-h) - 1.5rem - var(--credit-space)); right: var(--gutter); } .home-scale-mark { display: none; } }
   .home-scale-mark {
     position: absolute; left: clamp(1rem, 1.6cqw, 1.5rem); bottom: calc(var(--at) * 100%); translate: 0 50%; margin: 0; white-space: nowrap;
     font-size: clamp(.5rem, .62cqw, .62rem); letter-spacing: .22em; text-transform: uppercase; color: color-mix(in oklab, var(--color-gold-200) 70%, transparent);
@@ -518,6 +535,13 @@ html { font-size: 100%; }
     translate: 0 -200%; transition: translate .4s var(--ease-silk);
   }
   .skip-link:focus-visible { translate: 0 0; }
+  /* A small note set over a photograph (Architect’s impression, Representational
+     image): on its own soft dark pill, so it reads over any part of a picture. */
+  .photo-note {
+    display: inline-block; margin: 0; padding: .32rem .62rem; border-radius: 999px; line-height: 1; white-space: nowrap; pointer-events: none;
+    background: rgba(18, 11, 13, .52); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+    font-size: .5rem; letter-spacing: .2em; text-transform: uppercase; color: rgba(246, 239, 228, .9);
+  }
   .visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
   /* SplitText line masks; letters turn about their foot as they rise. */

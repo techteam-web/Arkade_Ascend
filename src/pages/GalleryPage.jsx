@@ -64,14 +64,12 @@ export default function GalleryPage() {
             className={`size-full select-none ${image.fit === 'contain' ? 'object-contain' : 'object-cover'}`} style={{ objectPosition: image.focus }} />
           {pose === 'center'
             ? <button type="button" data-cursor="View" className="absolute inset-0 cursor-zoom-in" onClick={() => setLightbox(true)} aria-label={`View ${image.category} image full screen`} />
-            : pose !== 'back' && <button type="button" tabIndex={-1} className="absolute inset-0" onClick={() => step(pose === 'left' ? -1 : 1)} aria-label={pose === 'left' ? 'Previous image' : 'Next image'} />}
-          {pose === 'center' && <p className="pointer-events-none absolute right-3 top-3 text-[0.5rem] uppercase tracking-[0.2em] text-ivory/75 [text-shadow:0_1px_6px_rgba(0,0,0,.6)]">{image.note ?? RENDER_NOTE}</p>}
+            : pose !== 'back' && <button type="button" tabIndex={-1} data-cursor={pose === 'left' ? 'Previous' : 'Next'} className="absolute inset-0" onClick={() => step(pose === 'left' ? -1 : 1)} aria-label={pose === 'left' ? 'Previous image' : 'Next image'} />}
           {pose === 'center' && <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 bg-linear-to-t from-espresso/85 to-transparent px-5 pb-4 pt-14">
             <span className="min-w-0">
               <span className="block text-[0.6rem] uppercase tracking-[0.34em] text-gold-200">{image.category}</span>
               {describe(image) && <span className="mt-1.5 block font-display text-[clamp(1rem,min(1.8vw,3.4vh),1.6rem)] leading-tight text-ivory">{describe(image)}</span>}
             </span>
-            <span className="num text-[0.7rem] text-ivory/80">{pad(i + 1)} / {pad(filtered.length)}</span>
           </figcaption>}
         </figure>
       })}

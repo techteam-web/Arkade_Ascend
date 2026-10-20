@@ -99,7 +99,7 @@ export default function AmenitiesPage() {
           <h2 data-amenity-copy className="display mt-3 text-[clamp(1.5rem,min(2.8vw,5vh),2.8rem)] normal-case leading-[1.1]">{active.line}</h2>
         </figcaption>
         {active.image && <div className="absolute right-3 top-3 flex items-center gap-3">
-          <p className="pointer-events-none text-[0.5rem] uppercase tracking-[0.2em] text-ivory/60 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">{shownImage?.note ?? active.note ?? 'Representational image'}</p>
+          <p className="photo-note">{shownImage?.note ?? active.note ?? 'Representational image'}</p>
           <button ref={opener} type="button" className="btn-icon" onClick={() => setLightbox(true)} aria-label={`View ${active.name} full screen`}>
             <svg viewBox="0 0 24 24"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" /></svg>
           </button>

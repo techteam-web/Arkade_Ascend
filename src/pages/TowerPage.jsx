@@ -31,7 +31,7 @@ export default function TowerPage() {
 
     <div className="page pointer-events-none flex flex-col">
       {/* Subheading to follow from the client. */}
-      <div className="pointer-events-auto max-w-md"><PageHeading id="tower" title="The Tower" subtitle="Rise to a life extraordinaire" /></div>
+      <div className="pointer-events-auto max-w-md"><PageHeading id="tower" title="The Tower" /></div>
       {/* The tower in figures, from the brochure. */}
       <dl className="pointer-events-auto mt-[clamp(1.25rem,4vh,2.75rem)] flex gap-[clamp(1.5rem,3vw,3.25rem)] max-sm:hidden short:hidden">
         {[[37, 'Storeys'], [2, 'Wings']].map(([value, label]) => <div key={label} data-reveal className="flex flex-col-reverse">
@@ -46,7 +46,7 @@ export default function TowerPage() {
     </div>
 
     {/* The drag hint, until the first move. */}
-    <div aria-hidden="true" className={`pointer-events-none absolute inset-x-0 top-1/2 flex justify-center transition-opacity duration-700 ${moved ? 'opacity-0' : 'opacity-100'}`}>
+    <div aria-hidden="true" className={`pointer-events-none absolute inset-x-0 top-[71%] flex justify-center transition-opacity duration-700 ${moved ? 'opacity-0' : 'opacity-100'}`}>
       <p className="flex items-center gap-4 rounded-full border border-ivory/25 bg-ink/40 px-5 py-3 text-ivory backdrop-blur-sm">
         <ChevronIcon direction="left" className="h-3.5 w-3 stroke-current stroke-[1.4]" />
         <span className="text-[0.64rem] font-medium uppercase tracking-[0.3em]"><span className="pointer-coarse:hidden">Drag to orbit</span><span className="hidden pointer-coarse:inline">Swipe to orbit</span></span>
@@ -64,6 +64,6 @@ export default function TowerPage() {
       </div>
     </div>
     {/* Bottom right (client, 16 Oct 2026): the BrainWing credit holds the bottom left. */}
-    <p className="pointer-events-none absolute bottom-(--credit-bottom) right-(--gutter) text-[0.52rem] uppercase tracking-[0.22em] text-ivory/75 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Architect’s impression</p>
+    <p className="photo-note absolute bottom-(--credit-bottom) right-(--gutter)">Architect’s impression</p>
   </section>
 }

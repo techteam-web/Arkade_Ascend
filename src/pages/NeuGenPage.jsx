@@ -27,7 +27,7 @@ const chapters = [
 ]
 
 export default function NeuGenPage() {
-  const { go } = useShell()
+  const { go, setTone } = useShell()
   const [chapter, setChapter] = useState(0)
   const root = useRef(null)
   const previous = useRef(null)
@@ -37,6 +37,11 @@ export default function NeuGenPage() {
   useStepper(root, { onNext: () => change(c => c + 1), onPrev: () => change(c => c - 1), lock: 650 })
 
   useEffect(() => { setScenePreset(chapters[chapter].scene) }, [chapter])
+  // Over the gold grounds (the two framed openings, the gilded spread) the
+  // header and the credit take the dark tone, so they read on gold.
+  const gold = ['arrival', 'gilded'].includes(chapters[chapter].scene)
+  useEffect(() => { setTone(gold ? 'light' : null) }, [gold, setTone])
+  useEffect(() => () => setTone(null), [setTone])
 
   // Line splits are made once, after the fonts settle.
   useLayoutEffect(() => {
@@ -282,6 +287,6 @@ function Together({ active }) {
       </div>
     </div>
     {/* Bottom right, under the chapter controls: the BrainWing credit holds the bottom left. */}
-    <p className="pointer-events-none absolute bottom-(--credit-bottom) right-(--gutter) text-[0.52rem] uppercase tracking-[0.2em] text-ivory/70 [text-shadow:0_1px_6px_rgba(0,0,0,.5)]">Representational image</p>
+    <p className="photo-note absolute bottom-(--credit-bottom) right-(--gutter)">Representational image</p>
   </Chapter>
 }
