@@ -4,3 +4,6 @@ dist
 
 # Full-size source renders (not served)
 source-renders/
+
+# graphify code graph (rebuild with: graphify update .)
+graphify-out/
