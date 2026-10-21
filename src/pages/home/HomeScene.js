@@ -295,6 +295,10 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
   }
 
   let ready = false
+  // The arrival waits for start(): Home is built behind the start gate, and
+  // its signature (the light climbing, the camera riding with it) must play
+  // once the visitor can see it.
+  let wanted = false, begun = false
   new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load(MODEL, gltf => {
     if (disposed) return
     const model = gltf.scene
@@ -315,8 +319,8 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
     tower.userData.radius = Math.max(size.x, size.z) * scale / 2
     tower.visible = true
     ready = true
-    begin()
-  }, undefined, () => { if (!disposed) { tower.visible = false; ready = true; begin() } })
+    if (wanted) begin()
+  }, undefined, () => { if (!disposed) { tower.visible = false; ready = true; if (wanted) begin() } })
 
   // --- post: a bloom for the band, the windows and the satin's highlights ---
   const composer = new EffectComposer(renderer)
@@ -415,6 +419,8 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
 
   // --- the arrival ---
   const begin = () => {
+    if (begun) return
+    begun = true
     resize()
     if (reduced) { onRise?.(1); needsRender = true; onReady?.(); return }
     const rise = { value: 0 }
@@ -490,6 +496,7 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
   })
 
   return {
+    start() { wanted = true; if (ready) begin() },
     dispose() {
       disposed = true
       intro?.kill()

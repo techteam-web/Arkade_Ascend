@@ -104,7 +104,7 @@ export default function App() {
   }, [navigate, location.pathname])
   useLayoutEffect(() => { if (!location.state?.fromMenu) setMenuOpen(false) }, [location.key])
   const onCovered = useCallback(() => setMenuOpen(false), [])
-  const shell = useMemo(() => ({ openMenu: () => setMenuOpen(true), go, menuOpen, setTone }), [go, menuOpen])
+  const shell = useMemo(() => ({ openMenu: () => setMenuOpen(true), go, menuOpen, setTone, gated }), [go, menuOpen, gated])
 
   return <ShellContext.Provider value={shell}>
     <a href="#content" onClick={skip} className="skip-link">Skip to content</a>

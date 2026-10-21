@@ -26,8 +26,11 @@ const MARKS = [
 ]
 
 export default function HomePage() {
-  const { go } = useShell()
+  const { go, gated } = useShell()
   const canvas = useRef(null)
+  const scene = useRef(null)
+  const gatedNow = useRef(gated)
+  gatedNow.current = gated
   const scale = useRef(null)
   const [stage, setStage] = useState('loading')   // loading | ready | none (no WebGL)
 
@@ -40,22 +43,25 @@ export default function HomePage() {
     if (counter) counter.textContent = String(Math.round(value * STOREYS)).padStart(2, '0')
   }
 
+  // The scene loads at once (behind the start gate on a first visit); its
+  // arrival plays when the gate has opened.
   useEffect(() => {
-    let scene = null
     let cancelled = false
     paintRise(prefersReducedMotion() ? 1 : 0)
     import('./home/HomeScene.js').then(({ createHomeScene }) => {
       if (cancelled || !canvas.current) return
-      scene = createHomeScene(canvas.current, {
+      scene.current = createHomeScene(canvas.current, {
         reduced: prefersReducedMotion(),
         low: matchMedia('(max-width: 900px), (pointer: coarse)').matches,
         onRise: paintRise,
         onReady: () => { if (!cancelled) setStage('ready') },
       })
-      if (!scene) { setStage('none'); paintRise(1) }
+      if (!scene.current) { setStage('none'); paintRise(1); return }
+      if (!gatedNow.current) scene.current.start()
     }).catch(() => { if (!cancelled) { setStage('none'); paintRise(1) } })
-    return () => { cancelled = true; scene?.dispose() }
+    return () => { cancelled = true; scene.current?.dispose(); scene.current = null }
   }, [])
+  useEffect(() => { if (!gated) scene.current?.start() }, [gated])
 
   return <section className="page home-stage overflow-hidden p-0" aria-label="Arkade Ascend, Malad West">
     <h1 tabIndex={-1} className="visually-hidden outline-none">Arkade Ascend, Malad West</h1>
