@@ -39,22 +39,26 @@ float edge(vec2 uv, float seed) {
   return (ripple + dome) * uWobble;
 }
 
-// The surface of the liquid: a flowing height field, lit like satin metal.
+// The surface of the liquid: long, soft folds running with the flow, lit
+// like satin (a broad sheen across the folds rather than glints), with a
+// little slow warping so it never stands still.
 vec3 shade(vec2 uv, vec3 deep, vec3 base, vec3 high, float shine, float seed) {
-  vec2 p = vec2(uv.x * uAspect, uv.y) * 1.5;
-  vec2 flow = vec2(uTime * 0.05, -uTime * 0.11 * uDirection);
-  float h = fbm(p + flow + fbm(p * 1.3 - flow + seed) * 0.9);
-  float hx = fbm(p + vec2(0.01, 0.0) + flow + fbm(p * 1.3 - flow + seed) * 0.9);
-  float hy = fbm(p + vec2(0.0, 0.01) + flow + fbm(p * 1.3 - flow + seed) * 0.9);
-  vec3 n = normalize(vec3((h - hx) * 28.0, (h - hy) * 28.0, 1.0));
-  vec3 l = normalize(vec3(-0.45, 0.6, 0.65));
-  float diffuse = smoothstep(0.15, 0.95, clamp(dot(n, l) * 0.5 + 0.5, 0.0, 1.0));
-  vec3 r = reflect(-l, n);
-  float spec = pow(max(r.z, 0.0), 26.0);
-  // long satin streaks along the flow
-  float streak = smoothstep(0.62, 1.0, sin((uv.x * uAspect * 0.8 + h * 2.4 + uv.y * 0.6) * 9.0 + uTime * 0.6) * 0.5 + 0.5);
-  vec3 col = mix(deep, base, diffuse);
-  col = mix(col, high, clamp(spec * shine + streak * 0.22 * shine, 0.0, 1.0));
+  vec2 p = vec2(uv.x * uAspect, uv.y);
+  vec2 flow = vec2(uTime * 0.04, -uTime * 0.09 * uDirection);
+  // folds: stretched along the travel, gently warped
+  vec2 q = vec2(p.x * 1.1, p.y * 0.42) + flow;
+  float warp = fbm(q * 0.8 + seed) * 1.4;
+  float fold = sin(q.x * 3.2 + warp * 2.2 + seed) * 0.5 + 0.5;
+  float fine = fbm(vec2(p.x * 2.6, p.y * 0.9) + flow * 1.3 + seed) * 0.35;
+  float h = fold * 0.75 + fine;
+  // slope across the folds, for the light
+  float ahead = sin((q.x + 0.01) * 3.2 + warp * 2.2 + seed) * 0.5 + 0.5;
+  float slope = (ahead - fold) * 40.0;
+  float lit = clamp(0.5 + slope * 0.32 + (h - 0.5) * 0.6, 0.0, 1.0);
+  vec3 col = mix(deep, base, smoothstep(0.05, 0.85, lit));
+  // satin sheen: a soft, wide highlight on the crests of the folds
+  float sheen = pow(smoothstep(0.55, 1.0, lit), 2.0);
+  col = mix(col, high, clamp(sheen * 0.55 * shine, 0.0, 1.0));
   return col;
 }
 
