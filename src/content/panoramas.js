@@ -66,6 +66,12 @@ export const topView = {
 // the radar on the mini plan turns by this much more than the view does.
 export const planHeading = { A: 0, B: 0 }
 
+// The one height every view is held at, in degrees below the horizon: Unit 01's
+// front view as set (client, 20 Oct 2026, from floor 16). Every home's outlook,
+// front and back, uses it in place of its own start pitch, so turning from one
+// to another never tilts; the drone view opens at it too.
+export const outlookPitch = 10.4
+
 // Each home's view, set by hand, per wing (the same on every floor), in degrees:
 //   start    where the view opens when the home is chosen: { yaw, pitch, fov }
 //            (yaw 0 is the panorama's front, positive turns right; pitch
@@ -76,7 +82,7 @@ export const planHeading = { A: 0, B: 0 }
 //   tilt     [top, bottom]: the pitch of the picture's top and bottom edges
 //            (negative is above the horizon, positive below); the view is kept
 //            between them. Left out: -30 to 60.
-//   back     every home also looks out at the back (client, 16 Oct 2026):
+//   back     the corner homes (Units 01 and 04) also look out at the back:
 //            the same { start, outlook, tilt } for that view, chosen with Back view.
 // A home left out, or a part left out, uses the estimate from its place on the
 // plan (labelled "angle indicative" on screen). Set them with `?calibrate` in

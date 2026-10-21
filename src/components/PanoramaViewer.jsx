@@ -12,8 +12,10 @@ import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 // A lock keeps the whole picture inside one outlook: { yaw, span, pitch: [min, max] }
 // in radians (the sector's centre and width, and the tilt range). While it is
 // on the view cannot leave it (zooming out stops where the sector's edges meet
-// the screen's) and the slow turn is off. focus() flies to a view and then
-// applies the lock, so nothing jumps; focus(view, null) frees the view.
+// the screen's) and the slow turn is off. With `level` (a pitch) the view is
+// also held at that height and never tilts, and `maxFov` caps how far it
+// zooms out. focus() flies straight to where the lock will hold the view and
+// then applies it, so nothing moves on landing; focus(view, null) frees it.
 const LEVELS = [
   { tileSize: 256, size: 256, fallbackOnly: true },
   { tileSize: 512, size: 512 },
@@ -39,11 +41,11 @@ function applyLock(params, lock) {
   if (!lock || !params.width || !params.height) return params
   const { width, height } = params
   const span = Math.min(lock.span, MAX_SPAN)
-  params.fov = Math.min(params.fov, vfovFor(span, width, height), lock.pitch[1] - lock.pitch[0])
+  params.fov = Math.min(params.fov, vfovFor(span, width, height), lock.pitch[1] - lock.pitch[0], lock.maxFov ?? Infinity)
   const halfH = hfovFor(params.fov, width, height) / 2
   const halfV = params.fov / 2
   params.yaw = lock.yaw + clamp(wrap(params.yaw - lock.yaw), -(span / 2 - halfH), span / 2 - halfH)
-  params.pitch = clamp(params.pitch, lock.pitch[0] + halfV, lock.pitch[1] - halfV)
+  params.pitch = lock.level ?? clamp(params.pitch, lock.pitch[0] + halfV, lock.pitch[1] - halfV)
   return params
 }
 const HIDDEN = { opacity: 0, rect: { relativeWidth: 0, relativeHeight: 0 } }
@@ -106,14 +108,21 @@ const PanoramaViewer = forwardRef(function PanoramaViewer({ scenes, active, star
       if (!view) return
       lockRef.current = null
       hold()
-      const fov = lock ? Math.min(zoom ?? view.fov(), vfovFor(Math.min(lock.span, MAX_SPAN) * 0.98, view.width(), view.height())) : zoom ?? view.fov()
-      const to = { yaw: view.yaw() + wrap(yaw - view.yaw()), pitch, fov }
+      // Where the view will rest: the zoom limits of the viewer itself, then
+      // the lock's, so yaw, pitch and zoom arrive together in one movement.
+      const width = view.width(), height = view.height()
+      const target = { yaw, pitch, fov: Math.min(zoom ?? view.fov(), 100 * deg, width && height ? vfovFor(120 * deg, width, height) : Infinity), width, height }
+      if (lock) applyLock(target, lock)
+      const turn = wrap(target.yaw - view.yaw())
+      const to = { yaw: view.yaw() + turn, pitch: target.pitch, fov: target.fov }
+      // A longer turn takes a little longer (a half turn about 1.3 s), so it never whips round.
+      const duration = 0.8 + 0.5 * Math.abs(turn) / Math.PI
       pending.current = lock
       const done = () => { pending.current = undefined; lockRef.current = lock; if (!lock) release() }
       if (prefersReducedMotion()) { view.setParameters({ ...to, roll: 0 }); done(); return }
       const proxy = aim.current
       Object.assign(proxy, { yaw: view.yaw(), pitch: view.pitch(), fov: view.fov() })
-      gsap.to(proxy, { ...to, duration: 0.9, ease: 'power2.inOut', overwrite: true,
+      gsap.to(proxy, { ...to, duration, ease: 'sine.inOut', overwrite: true,
         onUpdate: () => view.setParameters({ yaw: proxy.yaw, pitch: proxy.pitch, fov: proxy.fov, roll: 0 }), onComplete: done })
     },
     look(direction) {

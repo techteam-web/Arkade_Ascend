@@ -15,6 +15,8 @@ import {
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+// Pill buttons that sit side by side in the narrow column.
+const COMPACT = 'whitespace-nowrap gap-2.5! px-4! tracking-[0.2em]!'
 const Icon = ({ d }) => <svg viewBox="0 0 24 24"><path d={d} /></svg>
 const [VIEW_W, VIEW_H] = typicalPlan.viewBox
 
@@ -47,6 +49,7 @@ export default function FloorPlansPage() {
   const [params, setParams] = useSearchParams()
   const { pending, floor, type, home } = resolve(params)
   const fromFinder = params.get('from') === 'finder'
+  const fromCompare = params.get('from') === 'compare'   // opened from the finder's comparison
   const [hovered, setHovered] = useState(null)
   const [fullscreen, setFullscreen] = useState(false)
   const [view, setView] = useState('plan')   // the drawing, or its whole sheet
@@ -100,13 +103,14 @@ export default function FloorPlansPage() {
   return <section data-tone="light" className="page page-scroll flex flex-col gap-[clamp(1rem,3vh,1.75rem)] split:grid split:grid-cols-[minmax(0,24rem)_minmax(0,1fr)] split:grid-rows-[auto_minmax(0,1fr)] split:gap-x-[4vw] 3xl:grid-cols-[minmax(0,30rem)_minmax(0,1fr)]">
     <div className="flex shrink-0 flex-col gap-[clamp(1rem,3vh,1.75rem)] split:col-start-1">
       <PageHeading id="floor-plans" title="Floor Plans" subtitle={subtitle.filter(Boolean).map(keep).join('\u00a0· ')} />
-      <div data-reveal className="-mt-2 flex flex-wrap gap-x-6">
+      {/* The way back is an outlined pill; the view, the one filled pill. The
+          drone view is a home's own outlook, so only a unit's plan offers it. */}
+      {(type || fromFinder || fromCompare) && <div data-reveal className="-mt-1 flex flex-wrap gap-2">
         {type && <BackButton onClick={() => show({ unit: null })}>Typical floor plan</BackButton>}
-        {fromFinder && <BackButton onClick={() => go('/residences?finder')}>Back to the unit finder</BackButton>}
-        <button type="button" className="flex min-h-11 items-center gap-3 self-start text-[0.62rem] font-medium uppercase tracking-[0.24em] text-accent" onClick={() => setViewing(true)}>
-          See view<ArrowIcon className="h-3 w-7 fill-none stroke-current stroke-[1.1]" />
-        </button>
-      </div>
+        {fromFinder && <BackButton onClick={() => go('/residences?finder')}>Unit finder</BackButton>}
+        {fromCompare && <BackButton onClick={() => go('/residences?finder=compare')}>Compare</BackButton>}
+        {type && <button type="button" className={`btn-lux is-solid ${COMPACT}`} onClick={() => setViewing(true)}>See view<ArrowIcon /></button>}
+      </div>}
     </div>
 
     <div className="relative flex min-h-[min(60vh,var(--plan-h))] shrink-0 flex-col split:col-start-2 split:row-span-2 split:row-start-1 split:min-h-0 short:min-h-[82vh]!"
@@ -135,7 +139,7 @@ export default function FloorPlansPage() {
         : <FloorOverview floor={floor} hovered={hovered} onHover={setHovered} onFloor={n => show({ floor: n, unit: null })} onOpen={unit => show({ unit })} onFinder={() => go('/residences?finder')} />}
     </div>
 
-    {viewing && <ViewOverlay wing={wing} floor={floor} unit={type?.unit} onClose={() => setViewing(false)} />}
+    {viewing && type && <ViewOverlay wing={wing} floor={floor} unit={type?.unit} onClose={() => setViewing(false)} />}
     {fullscreen && <PlanFullscreen plan={plan} zones={zones} title={title} switcher={switcher} hovered={hovered} onHover={setHovered}
       onPick={unit => show({ unit })} onClose={closeFullscreen} />}
   </section>
@@ -149,8 +153,8 @@ const floorZones = floor => positions.map(position => {
 })
 
 function BackButton({ onClick, children }) {
-  return <button type="button" className="flex min-h-11 items-center gap-3 self-start text-[0.62rem] font-medium uppercase tracking-[0.24em] text-accent" onClick={onClick}>
-    <svg viewBox="0 0 32 12" aria-hidden="true" className="h-3 w-7 fill-none stroke-current stroke-[1.1]"><path d="M31 6H3m5-5-5 5 5 5" /></svg>{children}
+  return <button type="button" className={`btn-lux is-back bg-transparent! ${COMPACT}`} onClick={onClick}>
+    <svg viewBox="0 0 32 12" aria-hidden="true"><path d="M31 6H3m5-5-5 5 5 5" /></svg>{children}
   </button>
 }
 
@@ -230,9 +234,13 @@ function FloorOverview({ floor, hovered, onHover, onFloor, onOpen, onFinder }) {
       </li>)}
     </ul>
 
-    <button type="button" data-reveal className="group -mt-2 flex min-h-11 items-center gap-3 self-start text-[0.62rem] font-medium uppercase tracking-[0.24em] text-accent" onClick={onFinder}>
-      Search all <span className="num">{homes.length}</span> homes in the unit finder<ArrowIcon className="h-3 w-7 fill-none stroke-current stroke-[1.1] transition-[translate] duration-500 group-hover:translate-x-1" />
-    </button>
+    {/* The entrance moves the wrapper: the pill's own transform transition
+        would fight it and leave the pill short of its place. */}
+    <div data-reveal className="shrink-0">
+      <button type="button" className="btn-lux w-full bg-transparent!" onClick={onFinder}>
+        <span className="whitespace-nowrap">Search all <span className="num">{homes.length}</span> homes</span><ArrowIcon />
+      </button>
+    </div>
   </>
 }
 
@@ -288,42 +296,44 @@ function FloorRail({ floor, onFloor }) {
   </div>
 }
 
-// One home's plan: its areas, its rooms, and the other homes on the floor.
+// One home's plan, in one panel: its areas, the other homes on the floor, and
+// its rooms (the list scrolls within the panel when the window is short).
 function UnitDetails({ type, floor, onShow }) {
   const of = homesOfType(type).map(home => home.floor)
   const neighbours = floorZones(floor).filter(entry => entry.type)
-  return <>
-    <div className="grid grid-cols-3 gap-3 border-y border-line py-4">
-      <Figure value={type.reraArea} suffix="sq.ft" label="RERA carpet" />
-      <Figure value={type.deck} suffix="sq.ft" label="Deck" />
-      <Figure value={type.totalArea} suffix="sq.ft" label="Total area" />
+  // The three areas share one size, set by the widest.
+  const widest = Math.max(type.reraArea, type.deck, type.totalArea)
+  return <div data-reveal className="glass-panel flex min-h-0 flex-1 flex-col rounded-sm p-[clamp(0.9rem,2.2vh,1.4rem)] stack:flex-none">
+    <div className="grid grid-cols-3 divide-x divide-line">
+      <Figure value={type.reraArea} fitTo={widest} suffix="sq.ft" label="RERA carpet" className="pr-3" />
+      <Figure value={type.deck} fitTo={widest} suffix="sq.ft" label="Deck" className="px-3" />
+      <Figure value={type.totalArea} fitTo={widest} suffix="sq.ft" label="Total area" className="pl-3" />
     </div>
-    <div data-reveal role="group" aria-label={floor ? `Homes on floor ${floor}` : 'Homes on the typical floor'}>
-      <p className="eyebrow mb-2">{floor ? 'On this floor' : 'On the typical floor'}</p>
-      <div className="flex flex-wrap gap-1.5">
-        {neighbours.map(entry => <button key={entry.id} type="button" className="chip" aria-pressed={entry.id === type.unit}
+    <div role="group" aria-label={floor ? `Homes on floor ${floor}` : 'Homes on the typical floor'} className="mt-[clamp(0.8rem,2vh,1.1rem)] border-t border-line pt-[clamp(0.8rem,2vh,1.1rem)]">
+      <p className="eyebrow mb-2.5">{floor ? 'On this floor' : 'On the typical floor'}</p>
+      <div className="grid grid-cols-[repeat(auto-fill,minmax(6rem,1fr))] gap-1.5">
+        {neighbours.map(entry => <button key={entry.id} type="button" className="chip flex items-center justify-center px-2!" aria-pressed={entry.id === type.unit}
           aria-label={`Unit ${entry.id}, ${entry.type.configuration}`} onClick={() => onShow(entry.id)}>
           <span className="num">{entry.id}</span><span className="ml-2 opacity-70">{entry.type.configuration}</span>
         </button>)}
       </div>
     </div>
-    <div data-reveal className="flex min-h-0 flex-1 flex-col">
+    <div className="mt-[clamp(0.8rem,2vh,1.1rem)] flex min-h-0 flex-1 flex-col border-t border-line pt-[clamp(0.8rem,2vh,1.1rem)]">
       <p className="eyebrow mb-2">Room schedule</p>
-      <ul className="page-scroll -mx-2 min-h-0 flex-1 px-2 py-1 [mask-image:linear-gradient(transparent,#000_0.6rem,#000_calc(100%-0.9rem),transparent)] stack:max-h-[36vh] stack:flex-none">
-        {type.rooms.map(room => <li key={room.name} className="flex min-h-10 items-center justify-between gap-4 border-b border-line pl-1">
-          <span className="flex items-center gap-3">
-            <span className="size-1.5 rounded-full bg-plum-700/25" />
-            <span className="text-[0.7rem] font-medium uppercase tracking-[0.14em] text-fg">{room.name}</span>
-          </span>
-          <span className="num text-[0.8rem] text-muted">{room.size}</span>
+      <ul className="page-scroll -mx-1 min-h-0 flex-1 px-1 stack:max-h-[36vh] stack:flex-none">
+        {type.rooms.map(room => <li key={room.name} className="flex min-h-9 items-center justify-between gap-4 rounded-sm px-2.5 odd:bg-plum-700/[0.06]">
+          <span className="text-[0.66rem] font-medium uppercase tracking-[0.14em] text-fg">{room.name}</span>
+          <span className="num text-[0.78rem] text-fg/75">{room.size}</span>
         </li>)}
       </ul>
-      <p className="mt-3 text-[0.6rem] uppercase leading-relaxed tracking-[0.16em] text-muted">
-        {type.features.length ? `${type.features.map(featureLabel).join(' · ')} · ` : ''}
-        <span className="num">{of.length}</span> {of.length === 1 ? 'home' : 'homes'} · {type.floor ? <><span className="num">{ordinal(type.floor)}</span> floor only</> : <>floors <span className="num">{floorRuns(of)}</span></>}
-      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        {type.features.map(id => <span key={id} className="rounded-sm bg-gold-500/15 px-2 py-1 text-[0.55rem] font-medium uppercase tracking-[0.14em] text-gold-800">{featureLabel(id)}</span>)}
+        <span className="ml-auto text-[0.58rem] uppercase tracking-[0.16em] text-muted">
+          <span className="num">{of.length}</span> {of.length === 1 ? 'home' : 'homes'} · {type.floor ? <><span className="num">{ordinal(type.floor)}</span> floor only</> : <>floors <span className="num">{floorRuns(of)}</span></>}
+        </span>
+      </div>
     </div>
-  </>
+  </div>
 }
 
 // Where the home sits on the floor, on the typical plan. North points to the
