@@ -131,8 +131,8 @@ export default function NeuGenPage() {
         className="group relative flex min-h-11 min-w-11 items-center justify-end gap-4 text-ivory">
         {/* The name shows on hover or focus, outside the button's own box, so
             the hit area stays small and never reaches into the page. */}
-        <span className={`pointer-events-none absolute right-full mr-3 whitespace-nowrap text-[0.58rem] uppercase tracking-[0.3em] transition-all duration-500 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-80 group-focus-visible:translate-x-0 group-focus-visible:opacity-80`}>{item.label}</span>
-        <span className={`h-px transition-all duration-700 ${chapter === index ? 'w-6 bg-gold-200' : 'w-2.5 bg-ivory/40 group-hover:w-4'}`} />
+        <span className={`pointer-events-none absolute right-full mr-3 whitespace-nowrap text-[0.58rem] uppercase tracking-[0.3em] transition-[translate,opacity] duration-500 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-80 group-focus-visible:translate-x-0 group-focus-visible:opacity-80`}>{item.label}</span>
+        <span className={`h-px transition-[width,background-color] duration-700 ${chapter === index ? 'w-6 bg-gold-200' : 'w-2.5 bg-ivory/40 group-hover:w-4'}`} />
         <span className="num w-5 text-[0.68rem] opacity-80">{pad(index + 1)}</span>
       </button>)}
     </nav>
