@@ -30,6 +30,10 @@ export default function SpecificationsPage() {
   const tabs = useRef([])
   const spec = specifications[index]
   const current = pictureOf(spec, spec.items[shown])
+  // The note names the photograph on screen, changing once the new one has risen in.
+  const notes = useRef(new Map())
+  notes.current.set(current.src, current.note ?? 'Representational image')
+  const [shownNote, setShownNote] = useState(null)
 
   // Every photograph loads ahead, so each category and feature shows at once.
   useEffect(() => prefetchImages(specifications.flatMap(item => [{ src: item.image, srcSet: item.srcSet }, ...item.items.map(entry => ({ src: entry.image }))]).filter(image => image.src), '(min-width: 48rem) 45vw, 100vw'), [])
@@ -77,10 +81,11 @@ export default function SpecificationsPage() {
   // photograph the top of the screen and the rest flows beneath it.
   return <section className="absolute inset-0 overflow-hidden" aria-label="Specifications">
     <div ref={frame} data-reveal="mask" className="absolute split:inset-y-0 split:left-[34%] split:right-0 split:[mask-image:linear-gradient(90deg,transparent,#000_34%)] stack:inset-x-0 stack:top-0 stack:h-[46cqh] stack:[mask-image:linear-gradient(transparent,#000_0%,#000_62%,transparent)]">
-      <GLImage drift src={current.src} srcSet={current.srcSet} sizes="(min-width: 64rem) 66vw, 100vw" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} focus={current.focus} />
+      <GLImage drift src={current.src} srcSet={current.srcSet} sizes="(min-width: 64rem) 66vw, 100vw" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} focus={current.focus}
+        onShown={src => setShownNote(notes.current.get(src) ?? null)} />
       {/* The photograph fades out at its left and its foot (a mask), into whatever ground is there. */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(18,11,13,.55),transparent_22%,transparent_60%,rgba(18,11,13,.6))] stack:bg-[linear-gradient(180deg,rgba(18,11,13,.72),rgba(18,11,13,.35)_34%,transparent_52%)]" />
-      <p className="photo-note absolute split:right-(--gutter) split:bottom-(--credit-bottom) stack:right-[calc(var(--gutter)+3.4rem)] stack:top-[calc(46cqh-5.55rem)]">{current.note ?? 'Representational image'}</p>
+      <p className="photo-note absolute split:right-(--gutter) split:bottom-(--credit-bottom) stack:right-[calc(var(--gutter)+3.4rem)] stack:top-[calc(46cqh-5.55rem)]">{shownNote ?? current.note ?? 'Representational image'}</p>
     </div>
 
     {/* Above the content layer, so its empty space never covers the button. */}
@@ -98,7 +103,7 @@ export default function SpecificationsPage() {
             className={`group flex min-h-11 shrink-0 items-center gap-4 text-left transition-colors duration-500 stack:rounded-full stack:border stack:px-4 split:border-b split:border-line split:py-[clamp(0.35rem,1.2vh,0.75rem)] ${index === i ? 'text-gold-200 stack:border-gold-500 stack:bg-gold-500 stack:text-espresso' : 'text-fg/65 hover:text-fg stack:border-line'}`}>
             <span className={`num hidden text-[0.68rem] split:inline ${index === i ? 'text-gold-300' : 'text-muted'}`}>{pad(i + 1)}</span>
             <span className="text-[0.74rem] font-medium uppercase tracking-[0.18em] split:font-display split:text-[clamp(1.1rem,min(1.7vw,3.4vh),1.8rem)] split:normal-case split:tracking-[0.01em] split:transition-[translate] split:duration-700 split:ease-silk split:group-hover:translate-x-1.5"><Roll>{item.title}</Roll></span>
-            <span className={`ml-auto hidden h-px bg-gold-300 transition-[width] duration-700 ease-silk split:block ${index === i ? 'w-8' : 'w-0'}`} />
+            <span className={`ml-auto hidden h-px bg-gold-300 transition-[width] duration-700 ease-silk split:block ${index === i ? 'w-8' : 'w-0 group-hover:w-5 group-focus-visible:w-5'}`} />
           </button>)}
         </div>
       </div>

@@ -128,18 +128,18 @@ export default function NeuGenPage() {
 
     <nav data-reveal="fade" aria-label="Chapters" className="absolute right-(--gutter) top-1/2 z-10 hidden -translate-y-1/2 flex-col items-end gap-1 xl:flex short:hidden">
       {chapters.map((item, index) => <button key={item.id} type="button" onClick={() => change(index)} aria-current={chapter === index ? 'step' : undefined}
-        className="group relative flex min-h-11 min-w-11 items-center justify-end gap-4 text-ivory">
+        className={`group relative flex min-h-11 min-w-11 items-center justify-end gap-4 transition-colors duration-700 ${gold ? 'text-plum-900' : 'text-ivory'}`}>
         {/* The name shows on hover or focus, outside the button's own box, so
             the hit area stays small and never reaches into the page. */}
         <span className={`pointer-events-none absolute right-full mr-3 whitespace-nowrap text-[0.58rem] uppercase tracking-[0.3em] transition-[translate,opacity] duration-500 translate-x-2 opacity-0 group-hover:translate-x-0 group-hover:opacity-80 group-focus-visible:translate-x-0 group-focus-visible:opacity-80`}>{item.label}</span>
-        <span className={`h-px transition-[width,background-color] duration-700 ${chapter === index ? 'w-6 bg-gold-200' : 'w-2.5 bg-ivory/40 group-hover:w-4'}`} />
+        <span className={`h-px transition-[width,background-color] duration-700 ${chapter === index ? (gold ? 'w-6 bg-plum-900' : 'w-6 bg-gold-200') : `w-2.5 group-hover:w-4 ${gold ? 'bg-plum-900/40' : 'bg-ivory/40'}`}`} />
         <span className="num w-5 text-[0.68rem] opacity-80">{pad(index + 1)}</span>
       </button>)}
     </nav>
 
-    <div data-reveal="fade" className="absolute inset-x-(--gutter) bottom-[max(clamp(1rem,4vh,2.5rem),var(--credit-space))] z-10 flex items-center justify-between gap-4 text-ivory">
+    <div data-reveal="fade" className={`absolute inset-x-(--gutter) bottom-[max(clamp(1rem,4vh,2.5rem),var(--credit-space))] z-10 flex items-center justify-between gap-4 transition-colors duration-700 ${gold ? 'text-plum-900' : 'text-ivory'}`}>
       <p className="num text-[0.72rem]" aria-live="polite">
-        <span className="text-gold-200">{pad(chapter + 1)}</span> / {pad(chapters.length)}<span className="visually-hidden">, {chapters[chapter].label}</span>
+        <span className={gold ? 'font-medium' : 'text-gold-200'}>{pad(chapter + 1)}</span> / {pad(chapters.length)}<span className="visually-hidden">, {chapters[chapter].label}</span>
       </p>
       <div className="flex items-center gap-3">
         <button type="button" className="btn-icon" onClick={() => change(c => c - 1)} disabled={chapter === 0} aria-label="Previous chapter">
@@ -199,18 +199,21 @@ function Arrival({ active }) {
   </Chapter>
 }
 
-// Page 2: the gilded silk spread, text left and lockup right.
+// Page 2: the gilded silk spread, text left and lockup right. On the pale
+// gold the type and the lockup are the darkest plum (at least 4.5:1, as on
+// About Us's gold), not the brochure's white.
 function Masterpiece({ active }) {
   return <Chapter active={active} label="A masterpiece made for those who think ahead">
-    <div className="page page-scroll grid [align-content:safe_center] items-center gap-y-16 text-ivory md:grid-cols-2 sm:pr-[calc(var(--gutter)+4rem)] short:gap-y-6">
-      <h2 data-ch="lines" className="mx-auto max-w-[30ch] text-center text-[clamp(0.8rem,1.15vw,1.15rem)] font-medium uppercase leading-[2.2] tracking-[0.24em] drop-shadow-[0_1px_12px_rgba(90,60,30,.35)]">
+    <div className="page page-scroll grid [align-content:safe_center] items-center gap-y-16 text-plum-900 md:grid-cols-2 sm:pr-[calc(var(--gutter)+4rem)] short:gap-y-6">
+      <h2 data-ch="lines" className="mx-auto max-w-[30ch] text-center text-[clamp(0.8rem,1.15vw,1.15rem)] font-medium uppercase leading-[2.2] tracking-[0.24em]">
         A masterpiece made for those who think ahead.
       </h2>
       {/* The Arkade Ascend lockup scales with the viewport, inside its column. */}
       <div data-ch className="flex w-full flex-col items-center">
-        <p className="mb-4 text-[0.6rem] uppercase tracking-[0.9em] pl-[0.9em] text-ivory/85 short:mb-3">Presenting</p>
-        <img src="/logo/arkade-ascend-white.webp" alt="Arkade Ascend, Malad West" width="2400" height="373" draggable="false"
-          className="h-auto w-[min(100%,clamp(17rem,30vw,32rem))] select-none drop-shadow-[0_1px_16px_rgba(90,60,30,.35)]" />
+        <p className="mb-4 text-[0.6rem] font-medium uppercase tracking-[0.9em] pl-[0.9em] text-plum-800 short:mb-3">Presenting</p>
+        {/* The white lockup used as a mask, filled with the plum. */}
+        <div role="img" aria-label="Arkade Ascend, Malad West"
+          className="aspect-[2400/373] w-[min(100%,clamp(17rem,30vw,32rem))] bg-plum-900 [mask:url(/logo/arkade-ascend-white.webp)_center/contain_no-repeat]" />
       </div>
     </div>
   </Chapter>

@@ -94,7 +94,7 @@ primary action, the curtain).
 
 - Eases: `silk` (0.22, 1, 0.36, 1) for arrivals, `curtain` (0.76, 0, 0.24, 1)
   for the lift, `expo.out` for the hero.
-- Durations: the lift about 1.6 s door to door; headline characters 0.9 s,
+- Durations: the lift about 1 s to cover and 0.8 s to clear; headline characters 0.9 s,
   staggered 25 ms; pictures unveil in 1.1 to 1.3 s; small UI 0.3 to 0.5 s.
 - Direction carries meaning: a later section rises, an earlier one descends.
 - Micro-interactions, one per role:

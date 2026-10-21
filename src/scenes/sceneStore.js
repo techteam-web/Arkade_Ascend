@@ -68,7 +68,15 @@ export const sceneStore = {
 }
 
 export function setScenePreset(name) {
-  if (presets[name]) { sceneStore.preset = name; sceneStore.dirty = true }
+  const preset = presets[name]
+  if (!preset) return
+  sceneStore.preset = name
+  sceneStore.dirty = true
+  // The same ground in CSS, under the canvas (.ground): what shows before
+  // WebGL has painted, or without it, so a light page never sits on plum.
+  const style = document.documentElement.style
+  style.setProperty('--ground-top', preset.top)
+  style.setProperty('--ground-bottom', preset.bottom)
 }
 
 // Pages call this to hold their mood while mounted.

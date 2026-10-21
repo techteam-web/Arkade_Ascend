@@ -86,7 +86,7 @@ export default function ArkadeFamilyPage() {
               <span className={`block uppercase stack:text-[0.74rem] stack:font-medium stack:tracking-[0.18em] split:font-display split:text-[clamp(1.05rem,min(1.7vw,3.6vh),1.85rem)] split:leading-tight split:transition-colors split:duration-500 ${selected ? 'split:text-fg' : 'split:text-muted split:group-hover:text-fg'}`}><Roll>{part.label}</Roll></span>
               <span className={`mt-1 hidden text-[0.58rem] uppercase tracking-[0.22em] transition-colors duration-500 split:block ${selected ? 'text-accent' : 'text-muted/80'}`}>{part.hint}</span>
             </span>
-            <span className={`ml-auto hidden h-px shrink-0 self-center bg-accent transition-[width] duration-500 ease-silk split:block ${selected ? 'w-8' : 'w-0'}`} aria-hidden="true" />
+            <span className={`ml-auto hidden h-px shrink-0 self-center bg-accent transition-[width] duration-500 ease-silk split:block ${selected ? 'w-8' : 'w-0 group-hover:w-5 group-focus-visible:w-5'}`} aria-hidden="true" />
           </button>
         })}
       </div>

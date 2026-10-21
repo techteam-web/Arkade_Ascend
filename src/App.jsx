@@ -17,7 +17,6 @@ import useMediaQuery from './hooks/useMediaQuery.js'
 // still plum ground stands in until the silk is ready.
 const silkModule = import('./scenes/silk/SilkScene.jsx')
 const SilkScene = lazy(() => silkModule)
-const PLUM_GROUND = <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_80%_at_30%_20%,#4e373c,#21161a_75%)]" />
 
 // Development-only escape hatch for automated screenshots: ?fullscreen=off
 const bypassGate = import.meta.env.DEV && new URLSearchParams(location.search).get('fullscreen') === 'off'
@@ -108,8 +107,9 @@ export default function App() {
 
   return <ShellContext.Provider value={shell}>
     <a href="#content" onClick={skip} className="skip-link">Skip to content</a>
-    <main id="content" className="fixed inset-0 overflow-hidden bg-espresso">
-      <Suspense fallback={PLUM_GROUND}><SilkScene quality={compact ? 'low' : 'high'} /></Suspense>
+    <main id="content" className="ground fixed inset-0 overflow-hidden">
+      {/* Until the silk has loaded, the page's own ground shows (.ground). */}
+      <Suspense fallback={null}><SilkScene quality={compact ? 'low' : 'high'} /></Suspense>
       <div className={`page-frame transition-opacity duration-700 ${gated ? 'opacity-0' : 'opacity-100'}`}
         inert={gated ? '' : undefined} aria-hidden={gated || undefined}>
         {/* The header comes first in the tab order (after the skip link); it

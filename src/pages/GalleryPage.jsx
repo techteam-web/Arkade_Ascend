@@ -108,7 +108,12 @@ export default function GalleryPage() {
         </figure>
       })}
       {/* The open picture: the centre one opens full screen from the keyboard too. */}
-      {strip === 'ready' && selected && <button type="button" className="visually-hidden" onClick={() => setLightbox(true)}>View {selected.category} image {index + 1} full screen</button>}
+      {/* Over the centre picture, ringed when it has keyboard focus; the
+          pointer passes through it to the strip. */}
+      {strip === 'ready' && selected && <button type="button" onClick={() => setLightbox(true)}
+        className="pointer-events-none absolute left-1/2 top-1/2 h-(--card-h,62%) w-(--card-w,62%) -translate-x-1/2 -translate-y-1/2 rounded-sm opacity-0 outline-2 outline-offset-6 outline-gold-300 focus-visible:opacity-100">
+        <span className="visually-hidden">View {selected.category} image {index + 1} full screen</span>
+      </button>}
       {/* A tab without renders yet holds the framed placeholder. */}
       {!selected && <div className="absolute left-1/2 top-1/2 aspect-16/10 w-[min(64cqw,calc(100cqh*1.45))] -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-sm border border-gold-500/30 max-md:w-[min(94cqw,calc(100cqh*1.45))]">
         <ImageSlot label="Renders to follow" />

@@ -229,7 +229,8 @@ export default function ViewsPage() {
           </>}
         </div>
       </div>
-      <p className="photo-note absolute bottom-1.5 right-(--gutter) max-sm:bottom-6">Shot on location</p>
+      {/* On phones the controls fill the foot, so the note goes up under the menu button. */}
+      <p className="photo-note absolute bottom-1.5 right-(--gutter) max-sm:bottom-auto max-sm:top-[calc(var(--header-h)+0.5rem)]">Shot on location</p>
       <p className="pointer-events-none absolute bottom-1.5 left-1/2 -translate-x-1/2 whitespace-nowrap text-[0.5rem] uppercase tracking-plus text-ivory/45">
         <span className="num">360</span>° aerial panorama<span className="max-sm:hidden"> · views from each residence vary</span>
       </p>

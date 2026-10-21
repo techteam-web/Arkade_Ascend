@@ -108,7 +108,7 @@ const groundFragment = /* glsl */ `
 
 // The ribbons: the brochure's gold satin (src/scenes/silk/shaders.js).
 const RIBBONS = [
-  { width: 1.6, amp: 1.0, freq: 0.55, twist: 1.2, twistFreq: 0.5, phase: 0.4, billow: 0.14, opacity: 0.6, sheer: 0.55, seed: 1.1, at: [0, -1.6, 3.4], rot: -0.18, scale: 0.42 },
+  { width: 1.6, amp: 1.0, freq: 0.55, twist: 1.2, twistFreq: 0.5, phase: 0.4, billow: 0.14, opacity: 0.5, sheer: 0.55, seed: 1.1, at: [0, -1.6, 3.4], rot: -0.18, scale: 0.42 },
   { width: 3.2, amp: 1.25, freq: 0.48, twist: 0.9, twistFreq: 0.34, phase: 2.1, billow: 0.24, opacity: 0.42, sheer: 0.62, seed: 3.7, at: [0, 2.8, -4.2], rot: 0.14, scale: 0.48 },
 ]
 
@@ -137,7 +137,10 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
   key.position.set(-16, 6, 9)
   const rim = new THREE.DirectionalLight('#8ea6d4', 1.2)
   rim.position.set(14, 8, -10)
-  scene.add(key, rim, new THREE.HemisphereLight('#5a3e44', '#120b0d', 0.16))
+  // the fill: plum sky above, and the warm pool of light on the ground
+  // bouncing up, so faces turned from both lights (a ramp's wall seen
+  // edge-on) stay brown rather than going black
+  scene.add(key, rim, new THREE.HemisphereLight('#5a3e44', '#6a3a22', 0.42))
 
   const uniforms = {
     uTime: { value: 0 },
@@ -221,7 +224,9 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
         uFreq: { value: layer.freq }, uTwist: { value: layer.twist }, uTwistFreq: { value: layer.twistFreq },
         uPhase: { value: layer.phase }, uBillow: { value: layer.billow }, uSeed: { value: layer.seed },
         uPointer: { value: new THREE.Vector3() }, uPointerAmt: { value: 0 },
-        uShadow: { value: new THREE.Color('#5a3a22') }, uMid: { value: new THREE.Color('#c9a06a') }, uHigh: { value: new THREE.Color('#fff2d6') },
+        // a light bronze in the folds: after the tone mapping a darker one
+        // reads as a black sliver wherever a ribbon turns edge-on
+        uShadow: { value: new THREE.Color('#a07850') }, uMid: { value: new THREE.Color('#c9a06a') }, uHigh: { value: new THREE.Color('#fff2d6') },
         uLightDir: { value: new THREE.Vector3(-0.62, 0.7, 0.32).normalize() }, uOpacity: { value: 0 }, uSheer: { value: layer.sheer },
       },
     })
@@ -254,6 +259,10 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
         .replace('#include <common>', '#include <common>\nvarying vec3 vWorld;\nuniform float uRise, uBand, uHeight, uTime;\nfloat lhash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }')
         .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>
           float hh = clamp(vWorld.y / uHeight, 0.0, 1.0);
+          // the dusk sky's soft light on whatever faces up (slabs, roofs,
+          // paving), which the low key light only grazes
+          float facingUp = max((vec4(normal, 0.0) * viewMatrix).y, 0.0);
+          totalEmissiveRadiance += diffuseColor.rgb * vec3(0.95, 0.72, 0.6) * facingUp * 0.16;
           float band = exp(-pow((hh - uRise) / 0.008, 2.0)) * uBand;
           float trail = smoothstep(uRise, uRise - 0.08, hh) * step(hh, uRise) * uBand;
           totalEmissiveRadiance += vec3(1.0, 0.7, 0.36) * (band * 2.6 + trail * 0.05);
@@ -323,7 +332,9 @@ export function createHomeScene(canvas, { onRise, onReady, reduced = false, low 
   }, undefined, () => { if (!disposed) { tower.visible = false; ready = true; if (wanted) begin() } })
 
   // --- post: a bloom for the band, the windows and the satin's highlights ---
-  const composer = new EffectComposer(renderer)
+  // Its own multisampled target: the canvas's antialiasing does not reach
+  // the composer's buffers, and the facade's fine slats would shimmer.
+  const composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: low ? 2 : 4 }))
   composer.addPass(new RenderPass(scene, camera))
   // only what is brighter than white glows: the band, the windows, satin highlights
   const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), low ? 0.7 : 0.95, 0.5, 1.2)

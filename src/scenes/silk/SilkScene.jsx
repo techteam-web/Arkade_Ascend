@@ -44,14 +44,13 @@ export default function SilkScene({ quality = 'high' }) {
   )
 }
 
-// Without WebGL the presentation keeps working over a still plum ground.
+// Without WebGL the presentation keeps working over the page's still ground
+// (.ground on <main>, set with the preset).
 class WithoutWebGL extends Component {
   state = { failed: false }
   static getDerivedStateFromError() { return { failed: true } }
   render() {
-    return this.state.failed
-      ? <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_80%_at_30%_20%,#4e373c,#21161a_75%)]" />
-      : this.props.children
+    return this.state.failed ? null : this.props.children
   }
 }
 

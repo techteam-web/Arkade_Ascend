@@ -399,6 +399,8 @@ export default function LiveMap({ origin, places, group, active, hovered, tilted
           // The old buildings on the tower's site are taken out of the tiles.
           container: box.current, style: clearSite(maplibregl, brochureStyle(style), TOWER.site), center: origin, ...ARRIVAL,
           minZoom: 10, maxZoom: 18, maxPitch: 75, attributionControl: false, canvasContextAttributes: { antialias: true },
+          // Under reduced motion labels appear without their fade.
+          fadeDuration: prefersReducedMotion() ? 0 : 300,
           // Phones draw at most two pixels per point: the weather is drawn per pixel.
           pixelRatio: Math.min(devicePixelRatio, quality.current === 'high' ? 3 : 2),
         })

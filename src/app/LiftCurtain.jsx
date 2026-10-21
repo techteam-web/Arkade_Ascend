@@ -93,6 +93,9 @@ const LiftCurtain = forwardRef(function LiftCurtain(_, ref) {
         .to(from.current, { yPercent: -100 * direction, duration: 0.5, ease: 'expo.inOut' }, 0.62)
         .to(to.current, { yPercent: 0, duration: 0.5, ease: 'expo.inOut' }, 0.62)
         .to(name.current, { autoAlpha: 1, y: 0, duration: 0.5, ease: 'rise' }, 0.72)
+        // played a little faster than written: about 1 s to cover, so a
+        // salesperson moving between sections never waits on it
+        .timeScale(1.3)
     },
     // A newer destination while the lift is already travelling: the display
     // shows it, and the stage swaps to it once the screen is covered.
@@ -125,7 +128,7 @@ const LiftCurtain = forwardRef(function LiftCurtain(_, ref) {
           .to(satin.current, { yPercent: -100 * direction, [trail]: dome(), duration: 0.82 }, 0)
           .to(lining.current, { yPercent: -100 * direction, [trail]: dome(), duration: 0.82 }, 0.1)
       }
-      return timeline
+      return timeline.timeScale(1.15)
     },
     // Straight off the screen, as when a navigation is cancelled.
     clear() {

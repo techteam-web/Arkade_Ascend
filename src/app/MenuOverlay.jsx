@@ -22,6 +22,10 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
   // Home is not a row (the home button is); on Home the first row leads.
   const currentIndex = sections.findIndex(route => route.id === currentId)
   const shown = previewed ?? Math.max(0, currentIndex)
+  // The picture's note follows the picture on screen, which rises in after
+  // the section is pointed at.
+  const [pictured, setPictured] = useState(null)
+  const noteAt = pictured ?? shown
 
   // Closed, the menu leaves the layout (display: none) as well as the view.
   useLayoutEffect(() => {
@@ -87,9 +91,9 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
     <div className="menu-content absolute inset-0">
       {/* The section under consideration, as a full-height picture. */}
       <aside className="menu-picture pointer-events-none absolute inset-y-0 right-0 hidden w-(--menu-picture) overflow-hidden lg:block" aria-hidden="true">
-        <Previews shown={shown} />
+        <Previews shown={shown} onShown={src => setPictured(Math.max(0, sections.findIndex(route => route.preview === src)))} />
         <div className="absolute inset-0 bg-linear-to-r from-[#2a1c20] via-[#2a1c20]/20 to-transparent" />
-        {sections[shown].previewNote && <p key={`note-${shown}`} className="menu-caption absolute right-(--gutter) top-[calc(var(--header-h)+0.25rem)] z-10 text-[0.55rem] uppercase tracking-[0.22em] text-ivory/70">{sections[shown].previewNote}</p>}
+        {sections[noteAt].previewNote && <p key={`note-${noteAt}`} className="menu-caption absolute right-(--gutter) top-[calc(var(--header-h)+0.25rem)] z-10 text-[0.55rem] uppercase tracking-[0.22em] text-ivory/70">{sections[noteAt].previewNote}</p>}
         <div className="absolute inset-0 bg-linear-to-t from-ink/90 via-ink/5 to-ink/45" />
         <div className="absolute inset-x-[clamp(2rem,4vw,4.5rem)] bottom-[clamp(2.5rem,10vh,6rem)]">
           <p className="num text-[0.8rem] tracking-[0.3em] text-gold-200">{pad(shown + 1)} / {pad(sections.length)}</p>
@@ -167,7 +171,7 @@ export default function MenuOverlay({ open, currentId, onClose, onNavigate }) {
 // The picture of the section under consideration, in WebGL: each new one rises
 // in over the last through a liquid front (GLImage). All of them load when
 // the menu first opens, so the rise starts at once.
-function Previews({ shown }) {
+function Previews({ shown, onShown }) {
   useEffect(() => prefetchImages(sections.map(route => ({ src: route.preview })), '62vw'), [])
-  return <GLImage src={sections[shown].preview} sizes="62vw" alt="" ripple={false} />
+  return <GLImage src={sections[shown].preview} sizes="62vw" alt="" ripple={false} onShown={onShown} />
 }

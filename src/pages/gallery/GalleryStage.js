@@ -91,6 +91,15 @@ export function createGalleryStage(canvas, { onIndex, onOpen, reduced = false } 
   let disposed = false
 
   const centreOf = i => cards[i]?.centre ?? 0
+  // The centre picture's size on screen, for the page's keyboard target
+  // (--card-w and --card-h on the canvas's parent).
+  const publish = () => {
+    const card = cards[index], box = canvas.parentElement
+    if (!card || !box || !canvas.clientHeight) return
+    const perUnit = canvas.clientHeight / (2 * camera.position.z * Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2))
+    box.style.setProperty('--card-w', `${Math.round(card.width * perUnit)}px`)
+    box.style.setProperty('--card-h', `${Math.round(HEIGHT * perUnit)}px`)
+  }
   const nearest = x => cards.reduce((best, card, i) => Math.abs(wrap(card.centre - x)) < Math.abs(wrap(cards[best].centre - x)) ? i : best, 0)
 
   const fit = () => {
@@ -109,6 +118,7 @@ export function createGalleryStage(canvas, { onIndex, onOpen, reduced = false } 
     camera.position.set(0, 0, Math.max(byHeight, byWidth))
     camera.lookAt(0, 0, 0)
     camera.updateProjectionMatrix()
+    publish()
     needsRender = true
   }
 
@@ -181,6 +191,7 @@ export function createGalleryStage(canvas, { onIndex, onOpen, reduced = false } 
     const to = position + wrap(centreOf(next) - position)
     index = next
     onIndex?.(index)
+    publish()
     if (reduced) { position = to; needsRender = true; return }
     const state = { x: from }
     settle = gsap.to(state, {

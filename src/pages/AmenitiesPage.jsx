@@ -43,8 +43,9 @@ export default function AmenitiesPage() {
   const [run, setRun] = useState({ at: index, slide: 0 })
   const slide = run.at === index ? run.slide : 0      // a new amenity starts at its first
   useEffect(() => { setRun({ at: index, slide: 0 }) }, [index])   // and so does a return to it
+  // Under reduced motion the pictures wait to be chosen (the segments are buttons).
   useEffect(() => {
-    if (!slides || slides.length < 2 || paused) return
+    if (!slides || slides.length < 2 || paused || prefersReducedMotion()) return
     const timer = setTimeout(() => setRun({ at: index, slide: (slide + 1) % slides.length }), SLIDE_MS)
     return () => clearTimeout(timer)
   }, [slides, slide, index, paused])
@@ -54,6 +55,11 @@ export default function AmenitiesPage() {
   useStepper(root, { onNext: () => select(index + 1), onPrev: () => select(index - 1), lock: 600, keys: !lightbox })
   const picture = shownImage ? { src: shownImage.src, srcSet: shownImage.srcSet, note: shownImage.note ?? active.note }
     : active.image && { src: active.image, srcSet: active.srcSet, note: active.note }
+  // The note names the picture on screen: it changes when the new picture has
+  // risen in, not when it is chosen.
+  const notes = useRef(new Map())
+  if (picture) notes.current.set(picture.src, picture.note ?? 'Representational image')
+  const [shownNote, setShownNote] = useState(null)
   const closeLightbox = () => { setLightbox(false); requestAnimationFrame(() => opener.current?.focus({ preventScroll: true })) }
   // The amenities either side load ahead, so stepping shows them at once.
   useEffect(() => prefetchImages([-1, 1].flatMap(step => {
@@ -93,7 +99,8 @@ export default function AmenitiesPage() {
   return <section ref={root} className="absolute inset-0 overflow-hidden" aria-label="Amenities">
     <div data-reveal="fade" className="absolute inset-0 bg-plum-950" aria-live="polite">
       {picture
-        ? <GLImage drift src={picture.src} srcSet={picture.srcSet} sizes="100vw" alt={active.name} focus={shownImage?.focus ?? active.focus} />
+        ? <GLImage drift src={picture.src} srcSet={picture.srcSet} sizes="100vw" alt={active.name} focus={shownImage?.focus ?? active.focus}
+          onShown={src => setShownNote(notes.current.get(src) ?? null)} />
         : <ImageSlot label="Image to follow" className="pb-[22%]" />}
     </div>
     {/* Shade the sides that carry type. */}
@@ -111,13 +118,17 @@ export default function AmenitiesPage() {
           <p data-amenity-copy className="eyebrow flex items-center gap-3 text-gold-300!"><span>{active.group.label}</span><span className="h-px w-8 bg-gold-300/60" aria-hidden="true" /><span className="num">{pad(index + 1)} / {pad(COUNT)}</span></p>
           <h2 key={index} data-amenity-title className="display mt-[clamp(0.6rem,1.8vh,1.1rem)] max-w-[16ch] text-[clamp(2.2rem,min(6.4vw,10.5vh),7rem)] normal-case leading-[0.95] text-ivory [text-shadow:0_2px_30px_rgba(18,11,13,.45)]">{active.line}</h2>
           {active.group.line && <p data-amenity-copy className="mt-[clamp(0.6rem,1.8vh,1.1rem)] font-display text-[clamp(1rem,min(1.5vw,2.8vh),1.5rem)] leading-tight text-gold-200/95">{active.group.line}</p>}
-          {/* One thin segment per picture: the shown one fills over its time. */}
-          {slides && slides.length > 1 && <div aria-hidden="true" className="mt-4 flex w-[clamp(5rem,10vw,8rem)] gap-1.5">
-            {slides.map((picture, k) => <span key={picture.src} className="relative h-[2px] flex-1 overflow-hidden rounded-full bg-ivory/30">
-              {k < slide && <span className="absolute inset-0 bg-gold-300" />}
-              {k === slide && <span key={`${index}-${slide}-${paused}`} className="slide-fill absolute inset-0 bg-gold-300 motion-reduce:animate-none"
-                style={{ '--slide-time': `${SLIDE_MS}ms`, animationPlayState: paused ? 'paused' : 'running' }} />}
-            </span>)}
+          {/* One thin segment per picture: the shown one fills over its time.
+              Each is a button (a 44 px target) that shows its picture. */}
+          {slides && slides.length > 1 && <div role="group" aria-label={`${active.name} pictures`} className="mt-1 flex w-[clamp(9rem,12vw,10.5rem)] gap-1.5">
+            {slides.map((picture, k) => <button key={picture.src} type="button" onClick={() => setRun({ at: index, slide: k })}
+              aria-label={`Picture ${k + 1} of ${slides.length}`} aria-pressed={k === slide} className="group flex h-11 flex-1 items-center">
+              <span className="relative block h-[2px] w-full overflow-hidden rounded-full bg-ivory/30 transition-transform duration-300 group-hover:scale-y-[2] group-focus-visible:scale-y-[2]">
+                {k < slide && <span className="absolute inset-0 bg-gold-300" />}
+                {k === slide && <span key={`${index}-${slide}-${paused}`} className="slide-fill absolute inset-0 bg-gold-300 motion-reduce:animate-none"
+                  style={{ '--slide-time': `${SLIDE_MS}ms`, animationPlayState: paused ? 'paused' : 'running' }} />}
+              </span>
+            </button>)}
           </div>}
         </div>
 
@@ -151,7 +162,7 @@ export default function AmenitiesPage() {
         </div>
       </div>
     </div>
-    <p className="photo-note absolute bottom-(--credit-bottom) right-(--gutter) z-10">{shownImage?.note ?? active.note ?? 'Representational image'}</p>
+    <p className="photo-note absolute bottom-(--credit-bottom) right-(--gutter) z-10">{shownNote ?? picture?.note ?? 'Representational image'}</p>
 
     {/* Portalled into the frame: above the page, still beneath the full-screen gate. */}
     {lightbox && picture && createPortal(<div role="dialog" aria-modal="true" aria-label={`${active.name}, full screen`} onClick={closeLightbox}
@@ -199,9 +210,11 @@ function GroupTabs({ active, onChoose }) {
     {amenityGroups.map(group => {
       const chosen = group === active
       return <button key={group.id} type="button" aria-pressed={chosen} onClick={() => onChoose(group)}
-        className={`group relative flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap text-[clamp(0.66rem,0.78vw,0.84rem)] font-medium uppercase tracking-[0.18em] transition-colors duration-500 ${chosen ? 'text-fg' : 'text-muted hover:text-fg focus-visible:text-fg'}`}>
+        className={`group relative -mx-1 flex min-h-11 shrink-0 items-center gap-2 whitespace-nowrap px-1 text-[clamp(0.66rem,0.78vw,0.84rem)] font-medium uppercase tracking-[0.18em] transition-colors duration-500 focus-visible:outline-offset-[-2px] ${chosen ? 'text-fg' : 'text-muted hover:text-fg focus-visible:text-fg'}`}>
         {group.label}
         <span aria-hidden="true" className={`num hidden text-[0.6rem] tracking-[0.08em] transition-colors duration-500 xl:inline ${chosen ? 'text-accent' : 'text-muted/70'}`}>{pad(group.items.length)}</span>
+        {/* a hairline draws in from the left under the tab pointed at */}
+        {!chosen && <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-px origin-left scale-x-0 bg-accent/70 transition-transform duration-500 ease-silk group-hover:scale-x-100 group-focus-visible:scale-x-100" />}
       </button>
     })}
     {mark && <span aria-hidden="true" className="pointer-events-none absolute bottom-0 left-0 h-[2px] bg-accent transition-[translate,width] duration-500 ease-silk motion-reduce:transition-none"

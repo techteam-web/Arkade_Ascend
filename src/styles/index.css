@@ -150,11 +150,12 @@ html { font-size: 100%; }
     padding: calc(var(--header-h) + 0.5rem) var(--gutter) max(clamp(1rem, 4vh, 3rem), var(--credit-space));
     color: var(--tone-fg);
   }
-  /* A page that scrolls fades out as it passes through the credit's band at
-     the foot, so nothing reads under the BrainWing logo. */
+  /* A page that scrolls fades out as it passes into the credit's band at the
+     foot, gone by the top of the BrainWing logo; content above the band is
+     untouched. */
   .page.page-scroll {
-    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--credit-space) - .25rem), transparent calc(100% - var(--credit-space) + 1.25rem));
-    mask-image: linear-gradient(to bottom, #000 calc(100% - var(--credit-space) - .25rem), transparent calc(100% - var(--credit-space) + 1.25rem));
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--credit-space) - .25rem), transparent calc(100% - var(--credit-space) + .45rem));
+    mask-image: linear-gradient(to bottom, #000 calc(100% - var(--credit-space) - .25rem), transparent calc(100% - var(--credit-space) + .45rem));
   }
   .page-scroll {
     overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain;
@@ -228,7 +229,15 @@ html { font-size: 100%; }
   /* The page's main action: filled with the satin gold at rest. */
   .btn-lux.is-solid { color: var(--color-espresso); border-color: transparent; }
   .btn-lux.is-solid::before { transform: translateX(0); }
-  .btn-lux.is-solid:where(:hover, :focus-visible) { border-color: var(--color-gold-700); }
+  /* On hover the plum lining rises through the gold, the label turning
+     champagne as it rolls (the lift in miniature). */
+  .btn-lux.is-solid::after {
+    content: ''; position: absolute; inset: -1px; z-index: -1; border-radius: inherit;
+    background: linear-gradient(170deg, var(--color-plum-700), var(--color-espresso));
+    transform: translateY(104%); transition: transform .6s var(--ease-silk);
+  }
+  .btn-lux.is-solid:where(:hover, :focus-visible) { color: var(--color-gold-100); border-color: var(--color-gold-500); }
+  .btn-lux.is-solid:where(:hover, :focus-visible)::after { transform: translateY(0); }
   /* A way back: its arrow points and nudges left. */
   .btn-lux.is-back:where(:hover, :focus-visible) svg { transform: translateX(-4px); }
 
@@ -535,6 +544,9 @@ html { font-size: 100%; }
     50% { transform: translate(-6%, -2%); } 67% { transform: translate(5%, 4%); } 83% { transform: translate(-2%, 6%); } 100% { transform: translate(0, 0); }
   }
   /* Shown only when focused, above everything, so keyboard visitors can pass the header. */
+  /* The page's ground under the canvas, in the current preset's colours
+     (setScenePreset sets them). */
+  .ground { background: linear-gradient(180deg, var(--ground-top, #2c1b1f), var(--ground-bottom, #120b0d)); }
   .skip-link {
     position: fixed; left: var(--gutter); top: .75rem; z-index: 130; padding: .8rem 1.2rem; border-radius: 999px;
     background: var(--color-gold-400); color: var(--color-espresso); font-size: .7rem; font-weight: 500; letter-spacing: .2em; text-transform: uppercase;

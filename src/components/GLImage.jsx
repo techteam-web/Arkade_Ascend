@@ -12,6 +12,8 @@ import { sceneStore } from '../scenes/sceneStore.js'
 // reduced motion). It fills its parent, like an <img> with object-fit: cover,
 // around `focus` (an object-position such as "50% 40%"). The browser still
 // picks the file (srcSet and sizes), and without WebGL 2 it is simply that <img>.
+// `onShown(src)` fires once a picture is fully on screen, so a caption or
+// note about the picture can change with it rather than ahead of it.
 const vertex = `#version 300 es
 in vec2 aPosition;
 out vec2 vUv;
@@ -169,13 +171,15 @@ function loadPicture({ src, srcSet, sizes }) {
   return image.decode().then(() => image)
 }
 
-export default function GLImage({ src, srcSet, sizes, alt = '', focus, className = '', ripple = true, drift = false }) {
+export default function GLImage({ src, srcSet, sizes, alt = '', focus, className = '', ripple = true, drift = false, onShown }) {
   const box = useRef(null)
   const canvas = useRef(null)
   const renderer = useRef(null)
   const state = useRef({ from: null, to: null, fromFocus: focus, toFocus: focus, progress: 1, hover: 0, pointer: [0.5, 0.5], target: [0.5, 0.5], zoom: 1, pan: [0, 0], clock: 0, drifting: false })
   const [failed, setFailed] = useState(false)
   const drawing = useRef(0)    // reasons to keep drawing (a change, the pointer)
+  const shown = useRef(onShown)
+  shown.current = onShown
 
   const draw = useRef((time, deltaMs = 0) => {
     const s = state.current
@@ -216,13 +220,16 @@ export default function GLImage({ src, srcSet, sizes, alt = '', focus, className
       s.to = image
       s.toFocus = focus
       renderer.current.keep([s.from, s.to])
-      if (first || prefersReducedMotion()) { s.progress = 1; draw(); return }
+      if (first || prefersReducedMotion()) { s.progress = 1; draw(); shown.current?.(src); return }
       s.progress = 0
       hold()
-      gsap.to(s, { progress: 1, duration: 1.15, ease: 'curtain', onComplete: () => { s.from = s.to; s.fromFocus = s.toFocus; release() } })
+      gsap.to(s, { progress: 1, duration: 1.15, ease: 'curtain', onComplete: () => { s.from = s.to; s.fromFocus = s.toFocus; release(); shown.current?.(src) } })
     }).catch(() => {})
     return () => { cancelled = true }
   }, [src, failed])
+
+  // Without WebGL the <img> shows the new picture at once.
+  useEffect(() => { if (failed) shown.current?.(src) }, [failed, src])
 
   // The drift runs while the picture is on screen and the tab is shown.
   useEffect(() => {
