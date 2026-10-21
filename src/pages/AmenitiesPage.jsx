@@ -93,7 +93,7 @@ export default function AmenitiesPage() {
   return <section ref={root} className="absolute inset-0 overflow-hidden" aria-label="Amenities">
     <div data-reveal="fade" className="absolute inset-0 bg-plum-950" aria-live="polite">
       {picture
-        ? <GLImage src={picture.src} srcSet={picture.srcSet} sizes="100vw" alt={active.name} focus={shownImage?.focus ?? active.focus} />
+        ? <GLImage drift src={picture.src} srcSet={picture.srcSet} sizes="100vw" alt={active.name} focus={shownImage?.focus ?? active.focus} />
         : <ImageSlot label="Image to follow" className="pb-[22%]" />}
     </div>
     {/* Shade the sides that carry type. */}

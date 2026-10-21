@@ -108,7 +108,7 @@ export default function ArkadeFamilyPage() {
 function Frame({ image, focus, ratio, badge, flow = false, className = '', children }) {
   const [badgeShown, setBadgeShown] = useState(true)
   return <figure data-reveal="mask" data-part-frame className={`relative m-0 shrink-0 overflow-hidden rounded-sm border border-gold-500/25 bg-plum-950 ${flow ? 'flex flex-col justify-end' : ''} ${ratio} split:aspect-auto split:min-h-52 split:flex-1 split:shrink ${className}`}>
-    <GLImage src={image.src} srcSet={image.srcSet} sizes="(min-width: 64rem) 62vw, 100vw" alt={image.alt} focus={focus} />
+    <GLImage drift src={image.src} srcSet={image.srcSet} sizes="(min-width: 64rem) 62vw, 100vw" alt={image.alt} focus={focus} />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/90 via-ink/35 via-45% to-transparent" />
     <div className="pointer-events-none absolute inset-0 bg-linear-to-r from-ink/45 to-transparent to-60%" />
     {badge && badgeShown && <img src={badge.src} srcSet={badge.srcSet} sizes="6rem" alt={badge.alt} draggable="false" onError={() => setBadgeShown(false)}

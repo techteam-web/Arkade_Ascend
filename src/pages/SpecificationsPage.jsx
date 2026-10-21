@@ -77,7 +77,7 @@ export default function SpecificationsPage() {
   // photograph the top of the screen and the rest flows beneath it.
   return <section className="absolute inset-0 overflow-hidden" aria-label="Specifications">
     <div ref={frame} data-reveal="mask" className="absolute split:inset-y-0 split:left-[34%] split:right-0 split:[mask-image:linear-gradient(90deg,transparent,#000_34%)] stack:inset-x-0 stack:top-0 stack:h-[46cqh] stack:[mask-image:linear-gradient(transparent,#000_0%,#000_62%,transparent)]">
-      <GLImage src={current.src} srcSet={current.srcSet} sizes="(min-width: 64rem) 66vw, 100vw" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} focus={current.focus} />
+      <GLImage drift src={current.src} srcSet={current.srcSet} sizes="(min-width: 64rem) 66vw, 100vw" alt={`${spec.title}: ${spec.items[shown]?.text ?? spec.line}`} focus={current.focus} />
       {/* The photograph fades out at its left and its foot (a mask), into whatever ground is there. */}
       <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(18,11,13,.55),transparent_22%,transparent_60%,rgba(18,11,13,.6))] stack:bg-[linear-gradient(180deg,rgba(18,11,13,.72),rgba(18,11,13,.35)_34%,transparent_52%)]" />
       <p className="photo-note absolute split:right-(--gutter) split:bottom-(--credit-bottom) stack:right-[calc(var(--gutter)+3.4rem)] stack:top-[calc(46cqh-5.55rem)]">{current.note ?? 'Representational image'}</p>

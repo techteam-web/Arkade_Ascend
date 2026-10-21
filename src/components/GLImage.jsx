@@ -1,14 +1,17 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { gsap } from '../app/reveal.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
+import { sceneStore } from '../scenes/sceneStore.js'
 
 // A picture drawn in WebGL (DESIGN.md): it changes by rising, the new picture
 // coming up through a liquid front (noise-edged, a thin gold seam riding it,
 // both pictures warping as it passes), and under the pointer its surface
-// ripples like water with a faint split of colour. It fills its parent, like
-// an <img> with object-fit: cover, around `focus` (an object-position such as
-// "50% 40%"). The browser still picks the file (srcSet and sizes), and
-// without WebGL 2 it is simply that <img>.
+// ripples like water with a faint split of colour. With `drift`, a picture
+// that fills the page breathes at rest: a slow push in and out, drifting a
+// little, drawn only while it is on screen (not behind the menu, not under
+// reduced motion). It fills its parent, like an <img> with object-fit: cover,
+// around `focus` (an object-position such as "50% 40%"). The browser still
+// picks the file (srcSet and sizes), and without WebGL 2 it is simply that <img>.
 const vertex = `#version 300 es
 in vec2 aPosition;
 out vec2 vUv;
@@ -20,8 +23,8 @@ in vec2 vUv;
 out vec4 outColor;
 uniform sampler2D uFrom, uTo;
 uniform vec4 uFromFit, uToFit;     // cover scale (xy) and offset (zw) per picture
-uniform float uProgress, uTime, uHover, uAspect;
-uniform vec2 uPointer;
+uniform float uProgress, uTime, uHover, uAspect, uZoom;
+uniform vec2 uPointer, uPan;
 float hash(vec2 p) { p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
 float noise(vec2 p) {
   vec2 i = floor(p), f = fract(p);
@@ -35,6 +38,8 @@ vec3 sampleSplit(sampler2D tex, vec2 uv, vec2 shift) {
 }
 void main() {
   vec2 uv = vUv;
+  // the drift: a slow push in, sampled about the centre
+  vec2 base = (uv - 0.5) / uZoom + 0.5 + uPan;
   // the pointer's ripple: rings spreading from under it, fading with distance
   vec2 d = (uv - uPointer) * vec2(uAspect, 1.0);
   float r = length(d);
@@ -48,8 +53,8 @@ void main() {
   float m = smoothstep(front - 0.12, front + 0.02, uv.y * 0.9 + n * 0.35);
   // both pictures bend as the front passes through them
   float bend = sin(uProgress * 3.14159);
-  vec2 fromUv = cover(uv + ripple + vec2(0.0, -bend * 0.05 * (1.0 - m)), uFromFit);
-  vec2 toUv = cover(uv + ripple + vec2(0.0, (1.0 - m) * 0.08 * bend), uToFit);
+  vec2 fromUv = cover(base + ripple + vec2(0.0, -bend * 0.05 * (1.0 - m)), uFromFit);
+  vec2 toUv = cover(base + ripple + vec2(0.0, (1.0 - m) * 0.08 * bend), uToFit);
   vec3 from = sampleSplit(uFrom, fromUv, split);
   vec3 to = sampleSplit(uTo, toUv, split);
   vec3 col = mix(to, from, m);
@@ -96,6 +101,7 @@ function createRenderer(canvas) {
   const u = {
     from: uniform('uFrom'), to: uniform('uTo'), fromFit: uniform('uFromFit'), toFit: uniform('uToFit'),
     progress: uniform('uProgress'), time: uniform('uTime'), hover: uniform('uHover'), aspect: uniform('uAspect'), pointer: uniform('uPointer'),
+    zoom: uniform('uZoom'), pan: uniform('uPan'),
   }
   const textures = new Map()   // image -> texture
   const upload = image => {
@@ -114,7 +120,7 @@ function createRenderer(canvas) {
   }
   const start = performance.now()
   return {
-    draw({ from, to, fromFocus, toFocus, progress, hover, pointer }) {
+    draw({ from, to, fromFocus, toFocus, progress, hover, pointer, zoom = 1, pan = [0, 0] }) {
       const ratio = Math.min(window.devicePixelRatio || 1, 2)
       const width = Math.max(1, Math.round(canvas.clientWidth * ratio)), height = Math.max(1, Math.round(canvas.clientHeight * ratio))
       if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height }
@@ -137,6 +143,8 @@ function createRenderer(canvas) {
       gl.uniform1f(u.hover, hover)
       gl.uniform1f(u.aspect, box)
       gl.uniform2f(u.pointer, pointer[0], pointer[1])
+      gl.uniform1f(u.zoom, zoom)
+      gl.uniform2f(u.pan, pan[0], pan[1])
       gl.drawArrays(gl.TRIANGLES, 0, 3)
     },
     // Keep only the textures of these images.
@@ -161,17 +169,26 @@ function loadPicture({ src, srcSet, sizes }) {
   return image.decode().then(() => image)
 }
 
-export default function GLImage({ src, srcSet, sizes, alt = '', focus, className = '', ripple = true }) {
+export default function GLImage({ src, srcSet, sizes, alt = '', focus, className = '', ripple = true, drift = false }) {
   const box = useRef(null)
   const canvas = useRef(null)
   const renderer = useRef(null)
-  const state = useRef({ from: null, to: null, fromFocus: focus, toFocus: focus, progress: 1, hover: 0, pointer: [0.5, 0.5], target: [0.5, 0.5] })
+  const state = useRef({ from: null, to: null, fromFocus: focus, toFocus: focus, progress: 1, hover: 0, pointer: [0.5, 0.5], target: [0.5, 0.5], zoom: 1, pan: [0, 0], clock: 0, drifting: false })
   const [failed, setFailed] = useState(false)
   const drawing = useRef(0)    // reasons to keep drawing (a change, the pointer)
 
-  const draw = useRef(() => {
+  const draw = useRef((time, deltaMs = 0) => {
     const s = state.current
     if (!renderer.current || !s.to) return
+    if (s.drifting) {
+      // nothing to see behind the menu: hold the drift where it is
+      if (sceneStore.menuOpen) return
+      s.clock += Math.min(deltaMs, 50) / 1000
+      const breath = 0.5 - 0.5 * Math.cos(s.clock * Math.PI * 2 / 22)
+      s.zoom = 1 + 0.045 * breath
+      const margin = (1 - 1 / s.zoom) / 2
+      s.pan = [margin * 0.8 * Math.sin(s.clock * Math.PI * 2 / 31), margin * 0.6 * Math.sin(s.clock * Math.PI * 2 / 37)]
+    }
     s.pointer[0] += (s.target[0] - s.pointer[0]) * 0.12
     s.pointer[1] += (s.target[1] - s.pointer[1]) * 0.12
     renderer.current.draw({ ...s, from: s.from ?? s.to })
@@ -206,6 +223,22 @@ export default function GLImage({ src, srcSet, sizes, alt = '', focus, className
     }).catch(() => {})
     return () => { cancelled = true }
   }, [src, failed])
+
+  // The drift runs while the picture is on screen and the tab is shown.
+  useEffect(() => {
+    if (!drift || failed || prefersReducedMotion()) return
+    const s = state.current
+    let visible = false, held = false
+    const update = () => {
+      const on = visible && document.visibilityState === 'visible'
+      if (on && !held) { held = true; s.drifting = true; hold() }
+      if (!on && held) { held = false; release() }
+    }
+    const observer = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; update() })
+    observer.observe(box.current)
+    document.addEventListener('visibilitychange', update)
+    return () => { observer.disconnect(); document.removeEventListener('visibilitychange', update); if (held) release(); s.drifting = false }
+  }, [drift, failed])
 
   // Redraw on resize.
   useEffect(() => {

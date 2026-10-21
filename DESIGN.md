@@ -114,7 +114,10 @@ primary action, the curtain).
   pictures and the lift carry the life. Everything stops under reduced
   motion.
 - Pictures: `GLImage` changes a picture by rising liquid with a gold seam at
-  its front, and ripples (with a slight colour split) under the pointer.
+  its front, and ripples (with a slight colour split) under the pointer. The
+  photographs that fill a page (About Us, Amenities, Specifications) breathe
+  at rest (`drift`): a slow push in and out over about 22 s, drifting a
+  little, only while on screen and not behind the menu.
 - Reduced motion: no liquid, no follower, no rolls, no orbit; content is
   shown at once.
 
