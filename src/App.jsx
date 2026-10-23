@@ -70,7 +70,7 @@ export default function App() {
     navigate(path, { state: { instant: menuOpenRef.current } })
   }, [navigate, location.pathname])
   useLayoutEffect(() => { setMenuOpen(false) }, [location.key])
-  const shell = useMemo(() => ({ openMenu: () => setMenuOpen(true), go, menuOpen, setTone }), [go, menuOpen])
+  const shell = useMemo(() => ({ openMenu: () => setMenuOpen(true), go, menuOpen, setTone, gated }), [go, menuOpen, gated])
 
   return <ShellContext.Provider value={shell}>
     <main className="fixed inset-0 overflow-hidden bg-espresso">
