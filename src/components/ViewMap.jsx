@@ -1,8 +1,8 @@
 import { forwardRef, useId, useImperativeHandle, useRef } from 'react'
 
-// A wing's floor plan with a radar standing on one home: a fan that points
-// where the panorama looks and opens as wide as the picture does. Press a home
-// on the plan to move the radar there. update() moves the fan straight on the
+// A wing's floor plan with a dot on the home the view is taken from (the fan
+// that showed where the panorama looks was removed, client 23 Oct 2026; its
+// update() stays as a no-op target). Press a home on the plan to move there. update() moves the fan straight on the
 // SVG (the panorama reports every frame it moves), so React never re-renders
 // for it; `heading` is how the panorama's front sits on the plan, in degrees
 // clockwise from the top of the drawing.
@@ -64,14 +64,11 @@ const ViewMap = forwardRef(function ViewMap({ plan, zones, homes, absent = [], d
       </defs>
       {absent.map(position => <polygon key={position} points={zones[position].points} style={{ fill: `url(#${CSS.escape(hatch)})`, pointerEvents: 'none' }} />)}
       {homes.map(position => <polygon key={position} points={zones[position].points} role="button" tabIndex={0}
-        aria-label={`Put the radar on Unit ${position}`} aria-pressed={position === unit}
+        aria-label={`Look out from Unit ${position}`} aria-pressed={position === unit}
         onClick={() => onUnit(position)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onUnit(position) } }}
         style={{ pointerEvents: 'all' }} strokeDasharray={differs.includes(position) ? '16 10' : undefined}
         className={`cursor-pointer outline-none transition-colors duration-300 hover:fill-gold-500/15 focus-visible:fill-gold-500/25 ${differs.includes(position) ? 'fill-plum-700/10 stroke-plum-700 stroke-[6]' : 'fill-transparent'}`} />)}
-      {/* Keyed by home, so the fan is drawn afresh at its new place. */}
-      <g key={unit} ref={node => { turn.current = node; if (node) place(last.current) }} style={{ pointerEvents: 'none' }}>
-        <path ref={wedge} className="fill-gold-500/35 stroke-plum-800 stroke-[6]" strokeDasharray="18 14" />
-      </g>
+      {/* The radar fan was removed (client, 23 Oct 2026); the dot marks the home. */}
       <circle cx={x} cy={y} r="24" className="fill-plum-800 stroke-cream-100 stroke-[8]" style={{ pointerEvents: 'none' }} />
     </svg>
   </div>

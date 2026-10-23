@@ -71,6 +71,19 @@ export const planHeading = { A: 0, B: 0 }
 // front and back, uses it in place of its own start pitch, so turning from one
 // to another never tilts; the drone view opens at it too.
 export const outlookPitch = 10.4
+// The height every view is held at, by flown floor (client, 23 Oct 2026):
+// low floors look up a little, so less of the construction site shows (6
+// degrees at floor 6 and below), easing to straight out (0) by floor 20 and
+// staying level above it. Negative looks up. A floor listed in floorPitch
+// overrides the blend; outlookPitch is kept for the drone view's own opening.
+export const floorPitch = {}
+const LOW = { floor: 6, pitch: -6 }, LEVEL = { floor: 20, pitch: 0 }
+export const pitchAt = floor => {
+  if (floorPitch[floor] !== undefined) return floorPitch[floor]
+  if (!floor) return outlookPitch
+  const t = Math.min(1, Math.max(0, (floor - LOW.floor) / (LEVEL.floor - LOW.floor)))
+  return Math.round((LOW.pitch + (LEVEL.pitch - LOW.pitch) * t) * 10) / 10
+}
 
 // Each home's view, set by hand, per wing (the same on every floor), in degrees:
 //   start    where the view opens when the home is chosen: { yaw, pitch, fov }
@@ -89,14 +102,16 @@ export const outlookPitch = 10.4
 // the address: press a home on the mini plan, use the Setup panel, then
 // "Copy this room" or "Copy all rooms" and paste here. For example:
 //   A: { '01': { start: { yaw: 99.8, pitch: -7.5, fov: 55 }, outlook: [57.2, 159.9] } },
+// Units 01 to 04 face the same way, so their front views are one view
+// (client, 23 Oct 2026): opening on the same direction and sector.
 export const roomViews = {
   A: {
-    '01': { start: { yaw: 1, pitch: 10.4, fov: 82.4 }, outlook: [-56.4, 58.2], tilt: [-29.6, 44.3], back: { start: { yaw: 180, pitch: 21.1, fov: 88.5 }, outlook: [125.7, -125.2], tilt: [-25.7, 46.1] } },
-    '02': { start: { yaw: -2.9, pitch: 5, fov: 72.4 }, outlook: [-55.4, 49.6], tilt: [-30.2, 40.4] },
-    '03': { start: { yaw: 6.3, pitch: 10, fov: 60 }, outlook: [-44.6, 52.1], tilt: [-27.4, null] },
-    '04': { start: { yaw: -4.8, pitch: 10, fov: 88.5 }, outlook: [-56.7, 40.1], tilt: [-29.4, 41.5], back: { start: { yaw: 174.9, pitch: 2.9, fov: 64.7 }, outlook: [126.5, -136.7], tilt: [-28.6, 34.4] } },
-    '05': { start: { yaw: 177.9, pitch: 10, fov: 60 }, outlook: [125.8, -136.4], tilt: [-22.2, 40] },
-    '06': { start: { yaw: -177.3, pitch: 7, fov: 60 }, outlook: [140.6, -135.1], tilt: [-19.3, 34] },
+    '01': { start: { yaw: 17, pitch: 10.4, fov: 78 }, outlook: [-57, 91], tilt: [-42, 48], back: { start: { yaw: 180, pitch: 21.1, fov: 88.5 }, outlook: [110.7, -110.2], tilt: [-25.7, 46.1] } },
+    '02': { start: { yaw: 17, pitch: 5, fov: 78 }, outlook: [-57, 91], tilt: [-42, 48] },
+    '03': { start: { yaw: 17, pitch: 10, fov: 78 }, outlook: [-57, 91], tilt: [-42, 48] },
+    '04': { start: { yaw: 17, pitch: 10, fov: 78 }, outlook: [-57, 91], tilt: [-42, 48], back: { start: { yaw: 174.9, pitch: 2.9, fov: 64.7 }, outlook: [111.5, -121.7], tilt: [-28.6, 34.4] } },
+    '05': { start: { yaw: 177.9, pitch: 10, fov: 60 }, outlook: [110.8, -121.4], tilt: [-22.2, 40] },
+    '06': { start: { yaw: -177.3, pitch: 7, fov: 60 }, outlook: [125.6, -120.1], tilt: [-19.3, 34] },
   },
   B: {},
 }

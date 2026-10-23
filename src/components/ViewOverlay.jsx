@@ -8,7 +8,7 @@ import PanoramaViewer from './PanoramaViewer.jsx'
 import ViewMap, { zoneCentre } from './ViewMap.jsx'
 import { floorExceptions, positions, typicalPlan, wing as planWing } from '../content/floorPlans.js'
 import { ordinal, typeAt } from '../content/inventory.js'
-import { nearestFloor, outlookPitch, planHeading, roomViews, topView, wingPanoramas } from '../content/panoramas.js'
+import { nearestFloor, outlookPitch, pitchAt, planHeading, roomViews, topView, wingPanoramas } from '../content/panoramas.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 
 // The drone panoramas filling the presentation: the view from a wing at the
@@ -44,17 +44,18 @@ const tiltOf = room => Array.isArray(room?.tilt) && room.tilt.every(edge => type
 // (`back` in roomViews), chosen with Front view / Back view. Other homes have
 // the front only, here and in the unit finder's comparison.
 export const BACK_HOMES = ['01', '04']
-const outlookOf = (wingId, position, rooms, side = 'front') => {
+const outlookOf = (wingId, position, rooms, side = 'front', floor) => {
   const home = rooms[wingId]?.[position]
   const room = side === 'back' ? home?.back : home
   const edges = edgesOf(room)
   const estimate = bearingOf(position) + (side === 'back' ? 180 : 0) - planHeading[wingId]
   const yaw = edges ? (edges[0] + spanOf(edges) / 2) * rad : estimate * rad
-  // Every outlook opens at the one standard height (`outlookPitch`), whatever
+  // Every outlook opens at its floor's height (`pitchAt`: set per flown
+  // floor, else the one standard height, `outlookPitch`), whatever
   // pitch its start was set with, and is held there (client, 20 Oct 2026): it
   // turns left and right within its edges but never tilts, and zooms out no
   // further than it opens.
-  const view = { ...(room?.start ? toRadians(room.start) : { yaw }), pitch: outlookPitch * rad }
+  const view = { ...(room?.start ? toRadians(room.start) : { yaw }), pitch: pitchAt(floor) * rad }
   const lock = room?.outlook === false ? null : {
     yaw, span: edges ? spanOf(edges) * rad : OUTLOOK_SPAN, pitch: tiltOf(room), level: view.pitch, maxFov: view.fov ?? WING_START.fov,
   }
@@ -63,8 +64,8 @@ const outlookOf = (wingId, position, rooms, side = 'front') => {
 
 // A Wing A home's outlook as visitors see it, where it opens (`start`) and the
 // sector it is kept in (`lock`): for the unit finder's comparison of views.
-export const homeOutlook = (position, side = 'front') => {
-  const outlook = outlookOf(planWing, position, roomViews, side)
+export const homeOutlook = (position, side = 'front', floor) => {
+  const outlook = outlookOf(planWing, position, roomViews, side, floor)
   return { ...outlook, start: { ...WING_START, ...outlook.view } }
 }
 
@@ -172,7 +173,7 @@ export default function ViewOverlay({ wing = towers[0].id, floor = null, unit = 
   const differs = positions.filter(position => floorExceptions[shownFloor]?.[position])
   const home = absent.includes(radarUnit) ? positions[0] : radarUnit
   const facing = BACK_HOMES.includes(home) ? side : 'front'
-  const outlook = tower === planWing && !top ? outlookOf(tower, home, rooms, facing) : null
+  const outlook = tower === planWing && !top ? outlookOf(tower, home, rooms, facing, flight.floor) : null
   // While calibrating, only a home whose edges are set is locked, so the edges can be found.
   // Calibrating needs to tilt to find the top and bottom limits, so the height is not held then.
   const lock = locked && outlook?.lock && (!setting || outlook.sector) ? setting ? { ...outlook.lock, level: undefined, maxFov: undefined } : outlook.lock : null
@@ -189,7 +190,7 @@ export default function ViewOverlay({ wing = towers[0].id, floor = null, unit = 
     if (lock) handle.focus(outlook.view, lock)
     else if (locked && outlook) handle.focus(outlook.view, null)
     else handle.focus(current, null)
-  }, [radarUnit, facing, locked, aimed, rooms])
+  }, [radarUnit, facing, locked, aimed, rooms, flight.floor])
 
   // The Setup panel (?calibrate): the view's numbers, live, and the home's settings.
   useEffect(() => {
@@ -383,8 +384,8 @@ export default function ViewOverlay({ wing = towers[0].id, floor = null, unit = 
         </div>}
       </div>
 
-      {/* A mini floor plan, bottom right, with a radar at its centre that
-          turns with the picture. Wing B has no plans yet. */}
+      {/* A mini floor plan, bottom right, with a dot on the home the view
+          is taken from (no radar fan). Wing B has no plans yet. */}
       {!top && <div className={`pointer-events-auto mt-auto self-end ${mapOpen ? 'glass-panel w-[min(22rem,100%)] rounded-sm bg-plum-950/90! p-3' : ''}`}>
         <div className="flex items-center justify-between gap-4">
           {mapOpen && <p className="flex items-center gap-2.5 text-[0.62rem] font-medium uppercase tracking-[0.22em] text-fg">
@@ -397,7 +398,7 @@ export default function ViewOverlay({ wing = towers[0].id, floor = null, unit = 
           {tower === planWing
             ? <ViewMap ref={map} plan={typicalPlan} zones={typicalPlan.zones} homes={positions.filter(position => !absent.includes(position))} absent={absent} differs={differs}
               unit={home} onUnit={pickHome} heading={planHeading[tower]}
-              alt={`Floor ${shownFloor} plan of Wing ${tower}, with a radar showing where the view looks`} />
+              alt={`Floor ${shownFloor} plan of Wing ${tower}, marking the home the view is taken from`} />
             : <p className="rounded-sm bg-cream-100 px-4 py-8 text-center text-[0.62rem] uppercase tracking-[0.22em] text-muted" data-tone="light">Wing {tower} plans to follow</p>}
           {(absent.length > 0 || differs.length > 0) && <p className="mt-2 text-[0.52rem] uppercase leading-relaxed tracking-[0.2em] text-fg/80">
             {[...differs.map(position => `Unit ${position} has its own plan on this floor`), ...absent.map(position => `Unit ${position} is not on this floor`)].join(' · ')}
@@ -408,7 +409,7 @@ export default function ViewOverlay({ wing = towers[0].id, floor = null, unit = 
           {tower === planWing && <button type="button" className="chip mt-3 w-full justify-center" aria-pressed={locked} onClick={() => locked ? setLocked(false) : pickHome(home)}>
             {locked ? <>Outlook of Unit <span className="num ml-1">{home}</span>{facing === 'back' && ' · back'} · tap for all round</> : 'Look from this home'}
           </button>}
-          <p className="mt-2 text-[0.52rem] uppercase leading-relaxed tracking-[0.2em] text-muted">The radar shows where the view looks · press a home to look out from it · direction indicative</p>
+          <p className="mt-2 text-[0.52rem] uppercase leading-relaxed tracking-[0.2em] text-muted">Press a home to look out from it · direction indicative</p>
         </div>
       </div>}
     </div>

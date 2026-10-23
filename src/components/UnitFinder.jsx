@@ -444,7 +444,7 @@ function CompareViews({ types }) {
   // Front and back turn the view in place, as the view from a plan does.
   const turn = (type, side) => {
     setSides(value => ({ ...value, [type.id]: side }))
-    const outlook = homeOutlook(type.unit, side)
+    const outlook = homeOutlook(type.unit, side, heightOf(type))
     viewers.current[type.id]?.focus(outlook.start, outlook.lock)
   }
   const shown = single ? types.filter(type => type.id === chosen) : types
@@ -466,8 +466,8 @@ function CompareViews({ types }) {
     <ul style={{ '--plans': shown.length }} className="grid min-h-0 flex-1 gap-[clamp(0.75rem,1.6vw,1.75rem)] split:grid-cols-[repeat(var(--plans),minmax(0,1fr))]">
       {shown.map(type => {
         const side = sides[type.id]
-        const outlook = homeOutlook(type.unit, side)
         const height = heightOf(type)
+        const outlook = homeOutlook(type.unit, side, height)
         const flight = flights.find(item => item.floor === height)
         return <li key={type.id} className="flex min-h-0 min-w-0 flex-col gap-2.5">
           <div data-own-gesture className="relative min-h-[15rem] flex-1 overflow-hidden rounded-sm border border-line bg-plum-950 short:min-h-[9rem] stack:aspect-[4/3] stack:min-h-0 stack:flex-none">

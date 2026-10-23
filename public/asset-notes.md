@@ -244,6 +244,12 @@ architect's impression. Originals map as follows:
   Swimming_Pool_view_Cam_08_final; `lap-pool-evening`:
   Ascend_Swimming_Pool_Evening_final
 
+Updated renders (supplied 22 Oct 2026, two Drive downloads, same framing and
+sizes as before) replaced `lap-pool-evening`, `lap-pool-aerial` (unchanged
+after conversion), `multipurpose-court` (Ascend_Cam41_Multipurpose_Court_Final),
+`amphitheatre-lawn` (Amphitheatre_final), `golf-simulator`, `banquet-hall`
+(Ascend_Banquet_hall_final) and `gym`, converted the same way.
+
 The brochure photographs these replace stay in `public/brochure/` (amenities:
 pickleball, multipurpose-court, kids-play, creche, gym, kick-boxing,
 indoor-games, music-studio, private-screening, hobby-studio, banquet-hall,
