@@ -1,20 +1,58 @@
 import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { gsap } from '../app/reveal.js'
 import { pad, sectionIndex } from '../app/routes.js'
 import { locationGroups, nearby, origin, places, project } from '../content/project.js'
 import { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import BrochureMap from './location/BrochureMap.jsx'
+import { ChevronIcon } from '../components/Brand.jsx'
 
 // MapLibre is large, so the live map loads with this page only.
 const LiveMap = lazy(() => import('./location/LiveMap.jsx'))
 
 export default function LocationPage() {
   const [group, setGroup] = useState(locationGroups[0].id)
+  // On portrait screens the sheet folds down to its title bar, so the map can be seen whole (client, 26 Oct 2026).
+  const [folded, setFolded] = useState(false)
+  // Folding moves only the sheet: the map's framing (the inset) is held as it
+  // was with the sheet open, so the map never moves.
+  const holdInset = useRef(false)
+  const folding = useRef(null)
+  const toggleFold = () => {
+    const sheet = panel.current
+    if (!sheet || folding.current?.isActive()) return
+    const reduced = prefersReducedMotion()
+    if (!folded) {
+      // Close down to the title bar: the content stays while the sheet shrinks.
+      holdInset.current = true
+      const bar = sheet.querySelector('[data-sheet-bar]')
+      const scroller = bar.parentElement
+      const target = bar.getBoundingClientRect().bottom - sheet.getBoundingClientRect().top + parseFloat(getComputedStyle(scroller).paddingBottom) + 1
+      if (reduced) { setFolded(true); return }
+      scroller.scrollTop = 0
+      folding.current = gsap.fromTo(sheet, { height: sheet.offsetHeight }, { height: target, duration: 0.55, ease: 'power3.inOut', onComplete: () => {
+        // Hide the content in this same frame (flushSync), and only then let go of the height,
+        // so the sheet never shows at full size for a frame.
+        flushSync(() => setFolded(true))
+        gsap.set(sheet, { clearProps: 'height' })
+      } })
+    } else {
+      // Open back up to full size from the bar.
+      const from = sheet.offsetHeight
+      setFolded(false)
+      if (reduced) { holdInset.current = false; return }
+      requestAnimationFrame(() => {
+        const to = sheet.offsetHeight
+        folding.current = gsap.fromTo(sheet, { height: from }, { height: to, duration: 0.6, ease: 'power3.inOut', onComplete: () => { gsap.set(sheet, { clearProps: 'height' }); holdInset.current = false } })
+      })
+    }
+  }
   const [active, setActive] = useState(places.find(place => place.group === locationGroups[0].id).id)
   const [hovered, setHovered] = useState(null)
   // Nearby: the brochure's category open in the panel (and on the map).
   const [category, setCategory] = useState(nearby.groups[0].id)
-  const [view, setView] = useState('tilt')   // tilt (3D) | plan (2D) | brochure
+  // The brochure map is no longer offered (client, 26 Oct 2026); it only stands in when the live map cannot load.
+  const [view, setView] = useState('tilt')   // tilt (3D) | plan (2D)
   const [liveFailed, setLiveFailed] = useState(false)
   // What covers the map (header and view switch above, the panel at the
   // side or below), so routes are framed in the part left open.
@@ -54,6 +92,7 @@ export default function LocationPage() {
   // Offsets ignore the entrance's small rises, so this is the settled layout.
   useLayoutEffect(() => {
     const measure = () => {
+      if (holdInset.current) return
       const width = section.current.clientWidth, height = section.current.clientHeight
       const p = panel.current, sw = switcher.current
       const top = Math.max(band.current.offsetHeight, sw.offsetTop + sw.offsetHeight) + 8
@@ -94,9 +133,9 @@ export default function LocationPage() {
         header on phones, where the row has no room. */}
     <div ref={switcher} data-reveal role="group" aria-label="Map view"
       className="absolute left-(--gutter) top-[calc(var(--header-h)+0.25rem)] z-10 flex rounded-full border border-line bg-cream-50/90 p-0.5 shadow-[0_8px_24px_-14px_rgba(61,42,47,.45)] backdrop-blur-sm md:left-[calc(var(--gutter)+13rem)] md:top-[calc((var(--header-h)-3.1rem)/2)]">
-      {[['tilt', '3D'], ['plan', '2D'], ['brochure', 'Brochure map']].map(([id, label]) => {
-        const pressed = id === 'brochure' ? !live : live && view === id
-        return <button key={id} type="button" aria-pressed={pressed} disabled={id !== 'brochure' && liveFailed} onClick={() => setView(id)}
+      {[['tilt', '3D'], ['plan', '2D']].map(([id, label]) => {
+        const pressed = live && view === id
+        return <button key={id} type="button" aria-pressed={pressed} disabled={liveFailed} onClick={() => setView(id)}
           className={`min-h-11 min-w-11 rounded-full px-4 text-[0.58rem] font-medium uppercase tracking-[0.2em] transition-colors duration-500 disabled:opacity-40 ${pressed ? 'bg-plum-700 text-ivory' : 'text-plum-700 hover:text-plum-900'}`}>{label}</button>
       })}
     </div>
@@ -109,8 +148,9 @@ export default function LocationPage() {
 
     {/* The map's disclaimer, bottom right: below the panel on laptops; on
         short screens, where the panel reaches the foot, beside it; on
-        portrait screens above the sheet and the map's attribution. */}
-    <p className="pointer-events-none absolute right-(--gutter) z-10 rounded-full bg-cream-50/85 px-3 py-1 text-[0.52rem] uppercase tracking-[0.16em] text-plum-700 backdrop-blur-sm max-sm:max-w-[calc(100%-2*var(--gutter))] max-sm:text-[0.48rem] bottom-(--note-bottom) short:right-(--beside-panel) short:bottom-[calc(var(--note-bottom)+1.75rem)]"
+        portrait screens at the foot of the page below the sheet, above the
+        map's attribution (client, 26 Oct 2026). */}
+    <p className="pointer-events-none absolute right-(--gutter) z-10 rounded-full bg-cream-50/85 px-3 py-1 text-[0.52rem] uppercase tracking-[0.16em] text-plum-700 backdrop-blur-sm max-sm:max-w-[calc(100%-2*var(--gutter))] max-sm:text-[0.48rem] bottom-(--note-bottom) short:right-(--beside-panel) short:bottom-[calc(var(--note-bottom)+1.75rem)] stack:bottom-[calc(var(--credit-bottom)+1.45rem)] stack:py-0.5"
       style={{ '--note-bottom': inset.bottom ? `${inset.bottom + 30}px` : 'clamp(0.3rem, 1.2vh, 0.75rem)', '--beside-panel': `${inset.right}px` }}>
       Indicative map not to scale · walking distances
     </p>
@@ -120,17 +160,24 @@ export default function LocationPage() {
     <aside ref={panel} data-tone="dark"
       className="absolute z-10 flex flex-col overflow-hidden rounded-md border border-gold-500/20 bg-plum-800/95 text-ivory shadow-[0_32px_80px_-36px_rgba(33,22,26,.8)] lg:bg-plum-800/90 lg:backdrop-blur-md
         split:right-(--gutter) split:top-[calc(var(--header-h)+0.5rem)] split:max-h-[calc(100%-var(--header-h)-0.5rem-clamp(1rem,4vh,2.5rem))] split:w-[clamp(19rem,26vw,27rem)] short:w-[min(19rem,44vw)]
-        stack:inset-x-(--gutter) stack:bottom-[max(clamp(0.75rem,2.5vh,1.5rem),var(--credit-space))] stack:max-h-[min(50%,calc(100%-var(--header-h)-18rem))]">
+        stack:inset-x-(--gutter) stack:bottom-[calc(var(--credit-space)+1.9rem)] stack:max-h-[min(50%,calc(100%-var(--header-h)-18rem))]">
       <div className="page-scroll min-h-0 flex-1 px-[clamp(1.25rem,2.2vw,2.25rem)] py-[clamp(1.1rem,3.5vh,2.5rem)] short:py-4">
-        <div data-reveal className="flex min-h-11 items-center">
+        <div data-reveal data-sheet-bar className="flex min-h-11 items-center gap-3">
           <p className="eyebrow flex items-center gap-4"><span className="num">{pad(sectionIndex('location') + 1)}</span><span>Location</span></p>
+          {/* Portrait screens only: fold the sheet down to this bar, or open it again. */}
+          <button type="button" onClick={toggleFold} aria-expanded={!folded} aria-controls="location-sheet-body"
+            aria-label={folded ? 'Show the places' : 'Hide the places to see the map'}
+            className="btn-icon ml-auto hidden size-11! split:hidden! stack:inline-grid">
+            <ChevronIcon direction="right" className={`transition-transform duration-500 ${folded ? '-rotate-90' : 'rotate-90'}`} />
+          </button>
         </div>
         {/* The brochure's line; on phones and short screens the map takes priority. */}
-        <h1 tabIndex={-1} data-reveal="lines" className="mt-3 font-display text-[clamp(1.1rem,min(1.55vw,3.2vh),1.85rem)] uppercase leading-[1.3] text-gold-400 outline-none max-sm:sr-only short:sr-only">
+        <h1 tabIndex={-1} data-reveal="lines" className={`mt-3 font-display text-[clamp(1.1rem,min(1.55vw,3.2vh),1.85rem)] uppercase leading-[1.3] text-gold-400 outline-none max-sm:sr-only short:sr-only ${folded ? 'stack:sr-only' : ''}`}>
           {project.cityHeadline.map(line => <span key={line} className="block">{line}</span>)}
         </h1>
 
-        <GroupTabs group={group} onChoose={chooseGroup} />
+        <div id="location-sheet-body" className={folded ? 'stack:hidden' : undefined}>
+        <GroupTabs key={folded ? 'folded' : 'open'} group={group} onChoose={chooseGroup} />
 
         {group === 'nearby'
           ? <div ref={list} id="location-places" role="tabpanel" aria-labelledby={`location-tab-${group}`} className="mt-3">
@@ -145,6 +192,7 @@ export default function LocationPage() {
         <p data-reveal="fade" className="mt-3 text-[0.52rem] uppercase leading-relaxed tracking-[0.16em] text-ivory/50">
           {group === 'nearby' ? 'Places as listed in the brochure. Indicative locations from OpenStreetMap and published addresses; walking routes and distances, approximate.' : 'Indicative locations. Walking routes and distances from OpenStreetMap, approximate.'}
         </p>
+        </div>
       </div>
     </aside>
   </section>

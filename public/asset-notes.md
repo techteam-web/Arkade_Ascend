@@ -289,3 +289,11 @@ were resized (Lanczos) to 1600 and 2880 px wide and saved as WebP (quality
 replacing `amphitheatre-*` and `kids-play-*`; the new names keep visitors'
 cached copies of the old renders from showing. The originals were moved out
 of `public/` to `source-renders/amenities/` (not deployed, not in git).
+
+## E-brochure (`public/e-brochure/`)
+
+`Arkade Ascend-E-Brochure.pdf` (supplied 26 Oct 2026, 28 sheets: 1 and 28 single
+pages 648 x 1008 pt, 2 to 27 spreads 1296 x 1008 pt), rendered with mutool at
+200 dpi and saved as WebP quality 80 without metadata: `pNN-3600` and `pNN-1800`
+for the spreads, `pNN-1800` and `pNN-900` for the covers (NN the sheet number).
+The original PDF is `arkade-ascend-e-brochure.pdf`, for the page's Download PDF.

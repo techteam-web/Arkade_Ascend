@@ -56,12 +56,20 @@ export default function useStepper(target, { onNext, onPrev, lock = 1100, axis =
       if (['ArrowDown', 'ArrowRight', 'PageDown'].includes(event.key)) { event.preventDefault(); step(1) }
       if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); step(-1) }
     }
+    // On a touch screen the browser would take a swipe as its own pan and
+    // cancel it (pointercancel) before it is read. The page keeps sideways
+    // swipes, and up-and-down ones too unless the page itself scrolls; pinch
+    // zoom always stays the browser's.
+    const before = element.style.touchAction
+    const scrolls = element.scrollHeight > element.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(element).overflowY)
+    element.style.touchAction = axis === 'y' ? (scrolls ? before : 'pan-x pinch-zoom') : scrolls || axis === 'x' ? 'pan-y pinch-zoom' : 'pinch-zoom'
     element.addEventListener('wheel', wheel, { passive: true })
     element.addEventListener('pointerdown', down)
     element.addEventListener('pointerup', up)
     element.addEventListener('pointercancel', cancel)
     window.addEventListener('keydown', key)
     return () => {
+      element.style.touchAction = before
       clearTimeout(reset)
       element.removeEventListener('wheel', wheel)
       element.removeEventListener('pointerdown', down)

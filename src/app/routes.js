@@ -12,6 +12,7 @@ export const routes = [
   { id: 'location', path: '/location', label: 'Location', hint: 'The city at your command', scene: 'cream', tone: 'light', preview: '/brochure/location-map.webp' },
   { id: 'gallery', path: '/gallery', label: 'Gallery', hint: 'Curated visions of Ascend', scene: 'gallery', preview: '/gallery/exterior/cam12-day-1600.webp', previewNote: 'Architect’s impression' },
   { id: 'av-video', path: '/av-video', label: 'AV Video', hint: 'Arkade Ascend on film', scene: 'views', preview: '/gallery/exterior/cam27-evening-1600.webp', previewNote: 'Architect’s impression' },
+  { id: 'e-brochure', path: '/e-brochure', label: 'E Brochure', hint: 'Arkade Ascend, page by page', scene: 'brochure', tone: 'light', preview: '/e-brochure/p05-1800.webp' },
 ]
 export const sections = routes.filter(route => route.menu !== false)
 

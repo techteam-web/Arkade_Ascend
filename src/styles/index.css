@@ -118,6 +118,8 @@ html { font-size: 100%; }
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     -webkit-tap-highlight-color: transparent;
+    /* Taps act at once (no double-tap zoom wait on controls); pinch zoom stays. */
+    touch-action: manipulation;
     text-rendering: optimizeLegibility;
   }
   button, [role="button"] { cursor: pointer; }
@@ -213,18 +215,18 @@ html { font-size: 100%; }
     background: linear-gradient(110deg, #a67c50, #e8cc9d 45%, #c49a6c);
     transform: translateX(-102%); transition: transform .65s var(--ease-silk);
   }
-  .btn-lux:where(:hover, :focus-visible, [aria-pressed="true"]) { color: var(--color-espresso); border-color: transparent; }
-  .btn-lux:where(:hover, :focus-visible, [aria-pressed="true"])::before { transform: translateX(0); }
+  .btn-lux:where(:focus-visible, [aria-pressed="true"]) { color: var(--color-espresso); border-color: transparent; }
+  .btn-lux:where(:focus-visible, [aria-pressed="true"])::before { transform: translateX(0); }
   .btn-lux:active { transform: scale(0.97); }
   .btn-lux svg { width: 1.6rem; height: 0.6rem; stroke: currentColor; stroke-width: 1.1; fill: none; transition: transform .5s var(--ease-silk); }
-  .btn-lux:where(:hover, :focus-visible) svg { transform: translateX(4px); }
+  .btn-lux:where(:focus-visible) svg { transform: translateX(4px); }
   .btn-lux:disabled { opacity: .35; pointer-events: none; }
   /* The page's main action: filled with the satin gold at rest. */
   .btn-lux.is-solid { color: var(--color-espresso); border-color: transparent; }
   .btn-lux.is-solid::before { transform: translateX(0); }
-  .btn-lux.is-solid:where(:hover, :focus-visible) { border-color: var(--color-gold-700); }
+  .btn-lux.is-solid:where(:focus-visible) { border-color: var(--color-gold-700); }
   /* A way back: its arrow points and nudges left. */
-  .btn-lux.is-back:where(:hover, :focus-visible) svg { transform: translateX(-4px); }
+  .btn-lux.is-back:where(:focus-visible) svg { transform: translateX(-4px); }
 
   .btn-icon {
     display: inline-grid; place-items: center; width: 2.9rem; height: 2.9rem; flex: none;
@@ -233,7 +235,7 @@ html { font-size: 100%; }
     backdrop-filter: blur(6px);
     transition: background .4s var(--ease-silk), color .4s var(--ease-silk), transform .3s var(--ease-silk), border-color .4s;
   }
-  .btn-icon:where(:hover, :focus-visible) { background: var(--color-gold-500); color: var(--color-espresso); border-color: var(--color-gold-500); }
+  .btn-icon:where(:focus-visible) { background: var(--color-gold-500); color: var(--color-espresso); border-color: var(--color-gold-500); }
   .btn-icon:active { transform: scale(.94); }
   .btn-icon:disabled { opacity: .3; pointer-events: none; }
   .btn-icon svg { width: 40%; height: 40%; stroke: currentColor; stroke-width: 1.3; fill: none; }
@@ -245,7 +247,7 @@ html { font-size: 100%; }
     font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; font-weight: 500;
     transition: color .4s, border-color .4s, background .4s;
   }
-  .chip:where(:hover, :focus-visible) { color: var(--tone-fg); border-color: var(--tone-accent); }
+  .chip:where(:focus-visible) { color: var(--tone-fg); border-color: var(--tone-accent); }
   @media (max-width: 40rem) { .chip { padding: 0 0.85rem; letter-spacing: 0.14em; } }
   .chip[aria-pressed="true"], .chip[aria-selected="true"] { color: var(--color-espresso); background: var(--color-gold-500); border-color: var(--color-gold-500); }
   .chip:disabled { opacity: .35; pointer-events: none; }
@@ -294,7 +296,7 @@ html { font-size: 100%; }
     border: 1px solid var(--tone-line); color: var(--tone-muted); font-size: 0.85rem;
     transition: color .4s var(--ease-silk), background-color .4s var(--ease-silk), border-color .4s var(--ease-silk);
   }
-  .floor-key:where(:hover, :focus-visible) { color: var(--tone-fg); border-color: var(--tone-accent); }
+  .floor-key:where(:focus-visible) { color: var(--tone-fg); border-color: var(--tone-accent); }
   .floor-key[aria-pressed="true"] { color: var(--color-espresso); background: var(--color-gold-500); border-color: var(--color-gold-500); }
   .floor-key[aria-pressed="true"] > span { background: var(--color-espresso); }
   /* Floors not open yet: shown faint, with a dashed ring, and never chosen. */
@@ -309,7 +311,7 @@ html { font-size: 100%; }
     background-repeat: no-repeat; background-position: right 1rem center; background-size: 0.7rem;
     transition: border-color .4s;
   }
-  .select-lux:where(:hover, :focus-visible) { border-color: var(--tone-accent); }
+  .select-lux:where(:focus-visible) { border-color: var(--tone-accent); }
   .select-lux option { color: var(--color-plum-800); background: var(--color-cream-50); }
 
   /* Results arriving in the unit finder: a short fade and rise. */
@@ -330,8 +332,8 @@ html { font-size: 100%; }
     background: linear-gradient(110deg, #b48859, #e6c898 50%, #c49a6c);
     opacity: 0; transition: opacity .6s var(--ease-silk);
   }
-  .enter-lux:where(:hover, :focus-visible) { color: var(--color-espresso); border-color: transparent; }
-  .enter-lux:where(:hover, :focus-visible)::after { opacity: 1; }
+  .enter-lux:where(:focus-visible) { color: var(--color-espresso); border-color: transparent; }
+  .enter-lux:where(:focus-visible)::after { opacity: 1; }
   .enter-lux:active { scale: .98; }
 
   .menu-caption { animation: caption-in 1s var(--ease-silk) both; }
@@ -420,7 +422,7 @@ html { font-size: 100%; }
   font: 600 .74rem/1 var(--font-condensed); letter-spacing: .08em; text-transform: uppercase; box-shadow: 0 6px 16px -8px rgba(61, 42, 47, .55);
   transition: translate .4s var(--ease-silk), background-color .4s;
 }
-.map-tower-label:hover > span, .map-tower-label:focus-visible > span { translate: 0 -2px; background: var(--color-gold-300); }
+.map-tower-label:focus-visible > span { translate: 0 -2px; background: var(--color-gold-300); }
 /* The project's label is its logo (the full-colour lockup, Logo-02) on a
    cream card, sized to the screen: small enough on a phone to leave the
    tower in view, larger on big displays (the root font size steps up too). */
@@ -429,12 +431,20 @@ html { font-size: 100%; }
   box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-plum-700) 12%, transparent), 0 8px 20px -10px rgba(61, 42, 47, .5);
 }
 .map-logo > svg { display: block; width: clamp(7rem, 5rem + 6vw, 11.5rem); height: auto; aspect-ratio: 1029 / 162; }
-.map-tower-label:hover > span.map-logo, .map-tower-label:focus-visible > span.map-logo { background: var(--color-cream-50); }
+.map-tower-label:focus-visible > span.map-logo { background: var(--color-cream-50); }
 /* Location: the full-screen map's controls sit on the page gutter, above
    the location sheet when it docks along the bottom (--map-inset-bottom). */
 .location-map .maplibregl-ctrl-bottom-left { left: calc(var(--gutter) - 10px); bottom: calc(var(--map-inset-bottom, 0px) + max(clamp(0.75rem, 3vh, 2rem), var(--credit-space)) - 10px); }
 /* Phones zoom by pinching, so the zoom column gives the small map its room. */
 @media (max-width: 47.999rem) { .location-map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-group { display: none; } }
+/* Portrait screens: the sheet docks along the bottom, so the attribution goes
+   to the foot of the page at the right, below the sheet, beside the
+   BrainWing credit (client, 26 Oct 2026); the zoom column gives way to
+   pinching there, as on phones. */
+@media (max-width: 63.999rem) and (min-height: 34.001rem) {
+  .location-map .maplibregl-ctrl-bottom-left { left: auto; right: calc(var(--gutter) - 10px); bottom: calc(var(--credit-bottom) - 10px); }
+  .location-map .maplibregl-ctrl-bottom-left .maplibregl-ctrl-group { display: none; }
+}
 .maplibregl-ctrl-group { border-radius: 999px !important; overflow: hidden; background: color-mix(in oklab, var(--color-cream-50) 92%, transparent) !important; box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-plum-700) 18%, transparent) !important; }
 .maplibregl-ctrl-group button { width: 2.75rem !important; height: 2.75rem !important; }
 .maplibregl-ctrl-attrib { font: 400 .55rem/1.4 var(--font-sans); background: color-mix(in oklab, var(--color-cream-50) 85%, transparent) !important; color: var(--color-plum-700); }
@@ -451,4 +461,24 @@ html { font-size: 100%; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
   .grain { display: none; }
+}
+
+/* Hover looks only where there is a real hover (a mouse or trackpad): on a
+   touch screen a tapped control would otherwise keep its hover colours. */
+@media (hover: hover) {
+  @layer components {
+    .btn-lux:hover { color: var(--color-espresso); border-color: transparent; }
+    .btn-lux:hover::before { transform: translateX(0); }
+    .btn-lux:hover svg { transform: translateX(4px); }
+    .btn-lux.is-solid:hover { border-color: var(--color-gold-700); }
+    .btn-lux.is-back:hover svg { transform: translateX(-4px); }
+    .btn-icon:hover { background: var(--color-gold-500); color: var(--color-espresso); border-color: var(--color-gold-500); }
+    .chip:hover { color: var(--tone-fg); border-color: var(--tone-accent); }
+    .floor-key:hover { color: var(--tone-fg); border-color: var(--tone-accent); }
+    .select-lux:hover { border-color: var(--tone-accent); }
+    .enter-lux:hover { color: var(--color-espresso); border-color: transparent; }
+    .enter-lux:hover::after { opacity: 1; }
+  }
+  .map-tower-label:hover > span { translate: 0 -2px; background: var(--color-gold-300); }
+  .map-tower-label:hover > span.map-logo { background: var(--color-cream-50); }
 }
