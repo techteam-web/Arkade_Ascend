@@ -20,6 +20,11 @@ const drawing = (name, [width, height], sizes = [1600, 3000]) => ({
 // The whole sheet a drawing was cut from.
 const sheet = (name, size = [7000, 5494], sizes = [1600, 3200]) => drawing(`sheet-${name}`, size, sizes)
 
+// The eco deck: the amenities across both wings, the podium and the ground,
+// numbered 1 to 25 with its key (client's image, 26 Oct 2026; an architect's
+// impression, as printed on it). Shown beside the typical floor plan.
+export const ecoDeck = { ...drawing('eco-deck', [2560, 1678], [1600, 2560]), alt: 'Eco deck: the amenities of Wing A, Wing B, the podium and the ground floor, numbered with their key' }
+
 // The typical floor of Wing A, with each home's outline traced on the
 // 2400-wide drawing (`viewBox`), and a point inside it for its label.
 export const typicalPlan = {

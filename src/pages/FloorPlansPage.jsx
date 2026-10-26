@@ -8,7 +8,7 @@ import { ArrowIcon } from '../components/Brand.jsx'
 import { Figure, PageHeading } from '../components/PageKit.jsx'
 import SheetSwitch from '../components/SheetSwitch.jsx'
 import ViewOverlay from '../components/ViewOverlay.jsx'
-import { floorExceptions, positions, typicalPlan, wing } from '../content/floorPlans.js'
+import { ecoDeck, floorExceptions, positions, typicalPlan, wing } from '../content/floorPlans.js'
 import {
   area, featureLabel, features, floorRuns, floors, homeById, homeId, homes, homesOfType, isOpen, openFloors, openRange, ordinal, planById, planTypes, typeAt,
 } from '../content/inventory.js'
@@ -57,7 +57,7 @@ export default function FloorPlansPage() {
   const sheet = useRef(null)
   const opener = useRef(null)
   // Every unit's drawing and sheet load ahead, so choosing one shows it at once.
-  useEffect(() => prefetchImages([typicalPlan.sheet, ...planTypes.flatMap(item => [item.image, item.sheet])], '(min-width: 64rem) 70vw, 100vw'), [])
+  useEffect(() => prefetchImages([typicalPlan.sheet, ecoDeck, ...planTypes.flatMap(item => [item.image, item.sheet])], '(min-width: 64rem) 70vw, 100vw'), [])
 
   // Every change is written back as Wing A, a floor and a unit.
   const show = ({ floor: nextFloor = floor, unit = type?.unit ?? null }) => {
@@ -89,13 +89,16 @@ export default function FloorPlansPage() {
   const drawing = type
     ? { id: type.id, ...type.image, alt: `Floor plan of ${type.label}, ${type.configuration}, Wing ${wing}` }
     : { id: 'typical', ...typicalPlan, alt: `Typical floor plan of Wing ${wing}${floor ? `, floor ${floor}` : ''}, with its homes outlined` }
-  const whole = view === 'sheet'
-  const plan = whole
+  // The eco deck belongs to the typical floor; a unit's plan falls back to its drawing.
+  const deck = view === 'deck' && !type
+  const whole = view === 'sheet' || deck
+  const plan = deck ? { id: 'eco-deck', ...ecoDeck }
+    : whole
     ? { id: `${drawing.id}-sheet`, ...(type ?? typicalPlan).sheet, alt: `Plan sheet of ${type ? `${type.label}, ${type.configuration}` : 'the typical floor'}, Wing ${wing}, with its key plans and area table` }
     : drawing
   // The outlines and the small key plan belong to the drawing; the sheet has its own.
   const zones = type || whole ? null : floorZones(floor)
-  const switcher = <SheetSwitch value={view} onChange={setView} plain={type ? 'Unit plan' : 'Floor plan'} />
+  const switcher = <SheetSwitch value={type && view === 'deck' ? 'plan' : view} onChange={setView} plain={type ? 'Unit plan' : 'Floor plan'} deck={!type} />
   const title = type ? `${type.label} · ${type.configuration}` : `Wing ${wing} · ${floor ? `Floor ${floor}` : 'Typical floor'}`
 
   // Laptops set the plan beside the heading and the controls; phones and
@@ -123,7 +126,7 @@ export default function FloorPlansPage() {
               <Icon d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5" />
             </button>}
             note={<p className="ml-auto text-right text-[0.58rem] uppercase tracking-[0.26em] text-muted/80 max-sm:hidden">
-              {type || whole ? `Wing ${wing} plan sheet · sizes as printed` : <><span className="pointer-coarse:hidden">Point at a home to see it, click to open its plan</span><span className="hidden pointer-coarse:inline">Tap a home to open its plan</span></>}
+              {deck ? 'Eco deck · architect’s impression' : type || whole ? `Wing ${wing} plan sheet · sizes as printed` : <><span className="pointer-coarse:hidden">Point at a home to see it, click to open its plan</span><span className="hidden pointer-coarse:inline">Tap a home to open its plan</span></>}
             </p>}
             keyPlan={type && !whole && <KeyPlan unit={type.unit} />} />
         </div>
