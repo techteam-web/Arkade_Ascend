@@ -6,7 +6,7 @@
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
     },
     {
-      "source": "/(orbit|views|assets|plans|brochure|gallery|neu-gen|arkade-family|models|fonts|logo|rera|residences|e-brochure)/(.*)",
+      "source": "/(orbit|views|assets|plans|brochure|gallery|neu-gen|arkade-family|models|fonts|logo|rera|residences|e-brochure|ecodeck)/(.*)",
       "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }]
     }
   ],

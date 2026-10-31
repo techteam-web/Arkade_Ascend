@@ -6,8 +6,8 @@ import useStepper from '../hooks/useStepper.js'
 import useMediaQuery, { prefersReducedMotion } from '../hooks/useMediaQuery.js'
 import { useShell } from '../app/ShellContext.js'
 
-// The e-brochure (`Arkade Ascend-E-Brochure.pdf`, supplied 26 Oct 2026) read
-// in the page, on the gold ground. Its 28 sheets are rendered to WebP in
+// The e-brochure (`9x14_in_Arkade Ascend-E-Presenter.pdf`, supplied 30 Oct 2026)
+// read in the page, on the gold ground. Its 28 sheets are rendered to WebP in
 // public/e-brochure/ (see public/asset-notes.md): sheet 1 is the front cover
 // and 28 the back, each a single page; sheets 2 to 27 are two-page spreads.
 // Landscape screens show the brochure as a book: the front cover alone on the
@@ -18,11 +18,12 @@ import { useShell } from '../app/ShellContext.js'
 // of travel (right to left going on, left to right going back), a soft shadow
 // riding its edge like a sheet of paper; nothing slides or fades.
 const SHEETS = 28
-const SPREAD = 1296 / 1008          // a spread's width over its height
-const PAGE = 648 / 1008             // one page's
-const PDF = '/e-brochure/arkade-ascend-e-brochure.pdf'
+const SPREAD = 1296 / 1015.37       // a spread's width over its height
+const PAGE = 648 / 1015.37          // one page's (the covers, a touch shorter, fill it)
+const PDF = '/e-brochure/arkade-ascend-e-presenter.pdf'
 const isSingle = sheet => sheet === 1 || sheet === SHEETS
-const file = (sheet, width) => `/e-brochure/p${String(sheet).padStart(2, '0')}-${width}.webp`
+// `v`: the files keep their names, so caches must not mix two brochures.
+const file = (sheet, width) => `/e-brochure/p${String(sheet).padStart(2, '0')}-${width}.webp?v=2`
 const sources = sheet => isSingle(sheet)
   ? { src: file(sheet, 900), srcSet: `${file(sheet, 900)} 900w, ${file(sheet, 1800)} 1800w` }
   : { src: file(sheet, 1800), srcSet: `${file(sheet, 1800)} 1800w, ${file(sheet, 3600)} 3600w` }
@@ -151,6 +152,6 @@ function Page({ page, wide }) {
   const half = page.half
   return <div className={`relative h-full flex-1 overflow-hidden bg-plum-950/30 ${half === 'left' ? 'rounded-l-[2px]' : half === 'right' ? 'rounded-r-[2px]' : 'rounded-[2px]'}`}>
     <img src={src} srcSet={srcSet} sizes={half ? (wide ? '100vw' : '200vw') : (wide ? '50vw' : '100vw')} alt={`E-brochure page ${PAGES.indexOf(page) + 1}`} draggable="false" decoding="async"
-      className={`absolute top-0 h-full max-w-none select-none ${half ? 'w-[200%]' : 'w-full'} ${half === 'right' ? '-left-full' : 'left-0'}`} />
+      className={`absolute top-0 h-full max-w-none select-none ${half ? 'w-[200%]' : 'w-full object-cover'} ${half === 'right' ? '-left-full' : 'left-0'}`} />
   </div>
 }

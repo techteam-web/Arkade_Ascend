@@ -292,8 +292,18 @@ of `public/` to `source-renders/amenities/` (not deployed, not in git).
 
 ## E-brochure (`public/e-brochure/`)
 
-`Arkade Ascend-E-Brochure.pdf` (supplied 26 Oct 2026, 28 sheets: 1 and 28 single
-pages 648 x 1008 pt, 2 to 27 spreads 1296 x 1008 pt), rendered with mutool at
+`9x14_in_Arkade Ascend-E-Presenter.pdf` (supplied 30 Oct 2026, replacing the
+E-Brochure of 26 Oct; 28 sheets: 1 and 28 single pages 648 x 1008 pt, 2 to 27
+spreads 1296 x 1015.37 pt), rendered with mutool at
 200 dpi and saved as WebP quality 80 without metadata: `pNN-3600` and `pNN-1800`
 for the spreads, `pNN-1800` and `pNN-900` for the covers (NN the sheet number).
-The original PDF is `arkade-ascend-e-brochure.pdf`, for the page's Download PDF.
+The original PDF is `arkade-ascend-e-presenter.pdf`, for the page's Download PDF.
+The page asks for the renders with `?v=2`, since they kept the old file names.
+
+## Ecodeck (`public/ecodeck/`)
+
+`Ascend_A2_Eco Deck Plan.pdf` (supplied 30 Oct 2026, 80 MB, one flattened 3D
+aerial, no 2D plan, so the PDF itself is not served), rendered with mutool at
+260 dpi, cropped to the picture above its printed key (6081 x 3325) and saved as
+WebP quality 80 at 1600, 3200 and 6000 wide. The key's text and the place of
+each number are in `src/content/ecodeck.js`.

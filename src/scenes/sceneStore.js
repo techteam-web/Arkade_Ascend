@@ -45,7 +45,8 @@ export const presets = {
   // Page 3's plum ground.
   homebuyers: still('#4f353b', '#382629', '#5f4449', [0.25, 0.5], 0.35, 0.45),
   plum: still('#553a40', '#3c292e', '#6b4e54', [0.72, 0.6], 0.45, 0.4),
-  // The e-brochure: a still gold ground, lit from above, the brochure over it.
+  // The e-brochure and the Ecodeck: a still gold ground, lit from above, the
+  // brochure or the layout over it.
   brochure: still('#e2c394', '#b38758', '#f6e3bd', [0.5, 0.2], 0.55, 0.32),
   tower: still('#24171b', '#0e090a', '#4d3438', [0.64, 0.42], 0.7, 0.55),
   residences: still('#2a1a1e', '#110a0c', '#553a3a', [0.62, 0.45], 0.6, 0.5),

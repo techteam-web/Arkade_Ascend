@@ -5,6 +5,7 @@ export const routes = [
   { id: 'neu-gen', path: '/neu-gen', label: 'Neu Gen Life', hint: 'The vision', scene: 'arrival', preview: '/neu-gen/landmark-1600.webp' },
   { id: 'tower', path: '/tower', label: 'The Tower', hint: 'Architecture in the round', scene: 'tower', preview: '/gallery/exterior/cam02-twilight-1600.webp', previewNote: 'Architect’s impression' },
   { id: 'residences', path: '/residences', label: 'Residences', hint: 'Find your residence', scene: 'residences', preview: '/gallery/exterior/cam27-evening-1600.webp', previewNote: 'Architect’s impression' },
+  { id: 'ecodeck', path: '/ecodeck', label: 'Ecodeck', hint: 'Layout, level 5', scene: 'brochure', tone: 'light', preview: '/ecodeck/layout-1600.webp', previewNote: 'Architect’s impression' },
   { id: 'floor-plans', path: '/floor-plans', label: 'Floor Plans', hint: 'Every home, floor by floor', scene: 'cream', tone: 'light', preview: '/plans/wing-a/typical-2400.webp' },
   { id: 'specifications', path: '/specifications', label: 'Specifications', hint: 'Crafted in detail', scene: 'plum', preview: '/brochure/specs/living-dining.webp' },
   { id: 'amenities', path: '/amenities', label: 'Amenities', hint: 'Life beyond home', scene: 'amenities', preview: '/brochure/amenities/lap-pool.webp' },
@@ -12,7 +13,7 @@ export const routes = [
   { id: 'location', path: '/location', label: 'Location', hint: 'The city at your command', scene: 'cream', tone: 'light', preview: '/brochure/location-map.webp' },
   { id: 'gallery', path: '/gallery', label: 'Gallery', hint: 'Curated visions of Ascend', scene: 'gallery', preview: '/gallery/exterior/cam12-day-1600.webp', previewNote: 'Architect’s impression' },
   { id: 'av-video', path: '/av-video', label: 'AV Video', hint: 'Arkade Ascend on film', scene: 'views', preview: '/gallery/exterior/cam27-evening-1600.webp', previewNote: 'Architect’s impression' },
-  { id: 'e-brochure', path: '/e-brochure', label: 'E Brochure', hint: 'Arkade Ascend, page by page', scene: 'brochure', tone: 'light', preview: '/e-brochure/p05-1800.webp' },
+  { id: 'e-brochure', path: '/e-brochure', label: 'E Brochure', hint: 'Arkade Ascend, page by page', scene: 'brochure', tone: 'light', preview: '/e-brochure/p05-1800.webp?v=2', previewNote: 'Architect’s impression' },
 ]
 export const sections = routes.filter(route => route.menu !== false)
 
